@@ -1,23 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:real/game_screen.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import './game_screen.dart';
-import 'package:hive/hive.dart';
-import 'package:path_provider/path_provider.dart';
+import 'package:real/provider/provider.dart';
+import 'package:real/screens/gamescreen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized(); // Initialize the Flutter binding
-
-  final appDocumentDirectory = await getApplicationDocumentsDirectory();
-  Hive.init(appDocumentDirectory.path);
 
   runApp(
     ProviderScope(
       child: MaterialApp(
         // app bar
         title: 'Real estate sim',
-    
+
         home: const MyApp(),
         theme: ThemeData.dark().copyWith(
           primaryColor: Colors.blueGrey,
@@ -45,13 +40,6 @@ class Menu extends StatefulWidget {
 }
 
 class _MenuState extends State<Menu> {
-  void startGame(context) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => GameScreen()),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -75,9 +63,8 @@ class _MenuState extends State<Menu> {
                 onPressed: () {
                   HapticFeedback.mediumImpact();
                   // go to game screen widget
-                  Navigator.push(context, MaterialPageRoute(builder: (context) {
-                    return ProviderScope(child: GameScreen());
-                  }));
+                  Navigator.push(context,
+                      MaterialPageRoute(builder: (context) => const GameScreen()));
                 },
                 child: const Text('Start game')),
           ],
