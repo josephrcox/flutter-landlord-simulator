@@ -1,17 +1,30 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
-final storageProvider = Provider<Storage>((ref) {
-  return Storage();
+final counterProvider = StateNotifierProvider<Counter, int>((ref) {
+  return Counter();
 });
 
-class Storage {
-  // provider
+class Counter extends StateNotifier<int> {
+  Counter() : super(-1);
 
-  int _money = 20;
+  bool loaded = false;
 
-  int get getMoney => _money;
-
-  void addMoney() {
-    _money++;
+  void loadFromStorage() async {
+    if (!loaded) {
+      final prefs = await SharedPreferences.getInstance();
+      state = prefs.getInt('counter') ?? 0;
+      set(state);
+    }
+    loaded = true;
   }
+
+  void saveToStorage() async {
+    final prefs = await SharedPreferences.getInstance();
+    prefs.setInt('counter', state);
+  }
+
+  void increment() => state++;
+
+  void set(x) => state = x;
 }

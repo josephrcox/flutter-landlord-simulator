@@ -6,57 +6,35 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'storage.dart';
 
-// stateful
-class GameScreen extends ConsumerStatefulWidget {
+class GameScreen extends ConsumerWidget {
   const GameScreen({Key? key}) : super(key: key);
 
   @override
-  _GameScreenState createState() => _GameScreenState();
-}
+  Widget build(BuildContext context, WidgetRef ref) {
+    ref.read(counterProvider.notifier).loadFromStorage();
+    final count = ref.watch(counterProvider);
 
-class _GameScreenState extends ConsumerState<GameScreen> {
-  // state
-  @override
-  void initState() {
-    super.initState();
-    ref.read(storageProvider);
-  }
+    // whenever counter state changes, print something
+    final counterListener = Provider((ref) {
+      ref.watch(counterProvider);
+    });
+    ref.listen<int>(counterProvider, (int? previousCount, int newCount) {
+      print('The counter changed $newCount');
+      ref.read(counterProvider.notifier).saveToStorage();
+    });
 
-  // state
-  @override
-  void dispose() {
-    super.dispose();
-  }
-
-  // state
-  @override
-  Widget build(
-    BuildContext context,
-  ) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Game Screen'),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          ref.read(counterProvider.notifier).increment();
+        },
+        child: const Icon(Icons.add),
       ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            Text(
-              'Money: ${ref.watch(storageProvider).getMoney}',
-              style: const TextStyle(
-                fontSize: 40,
-              ),
-            ),
-            ElevatedButton(
-              child: const Text('Click'),
-              onPressed: () {
-                setState(() {
-                  ref.watch(storageProvider).addMoney();
-                });
-              },
-            )
-          ],
-        ),
+      appBar: AppBar(title: const Text('Game Screen')),
+      body: Column(
+        children: [
+          Text('$count'),
+        ],
       ),
     );
   }

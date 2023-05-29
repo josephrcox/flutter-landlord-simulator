@@ -3,17 +3,26 @@ import 'package:flutter/services.dart';
 import 'package:real/game_screen.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import './game_screen.dart';
+import 'package:hive/hive.dart';
+import 'package:path_provider/path_provider.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized(); // Initialize the Flutter binding
+
+  final appDocumentDirectory = await getApplicationDocumentsDirectory();
+  Hive.init(appDocumentDirectory.path);
+
   runApp(
-    MaterialApp(
-      // app bar
-      title: 'Real estate sim',
-
-      home: const MyApp(),
-      theme: ThemeData.dark().copyWith(
-        primaryColor: Colors.blueGrey,
-        scaffoldBackgroundColor: Color.fromARGB(255, 83, 83, 83),
+    ProviderScope(
+      child: MaterialApp(
+        // app bar
+        title: 'Real estate sim',
+    
+        home: const MyApp(),
+        theme: ThemeData.dark().copyWith(
+          primaryColor: Colors.blueGrey,
+          scaffoldBackgroundColor: Color.fromARGB(255, 83, 83, 83),
+        ),
       ),
     ),
   );
