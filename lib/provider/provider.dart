@@ -42,6 +42,16 @@ class SaveProvider with ChangeNotifier {
     return isar;
   }
 
+  Isar getIsar() {
+    return isar;
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
   Future<GameSave?> getFirstSave() async {
     _save = await isar.gameSaves.where().findFirst();
     if (_save == null) {
@@ -54,31 +64,19 @@ class SaveProvider with ChangeNotifier {
       notifyListeners();
       return _save;
     }
-    addMoney();
     _loading = false;
     notifyListeners();
+
     return _save;
   }
 
-  void addMoney() async {
-    _timer = Timer.periodic(const Duration(seconds: 1), (timer) async {
-      await isar.writeTxn(() async {
-        final save = await isar.gameSaves.where().findFirst();
-        final newSave = save;
-        newSave?.money += 1;
-        _save = newSave;
-        await isar.gameSaves.put(newSave!);
-        print('added money, new money: ${newSave.money}');
-        notifyListeners();
-      });
-    });
-  }
-
-  @override
-  void dispose() {
-    _timer?.cancel();
-    super.dispose();
+  void triggerLoop() {
+    loop(isar);
   }
 }
 
 final saveProvider = ChangeNotifierProvider((ref) => SaveProvider());
+
+void loop(isar) {
+  print('hi');
+}

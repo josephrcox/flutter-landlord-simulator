@@ -12,11 +12,26 @@ class GameScreen extends ConsumerStatefulWidget {
   _GameScreenState createState() => _GameScreenState();
 }
 
-class _GameScreenState extends ConsumerState<GameScreen> {
+class _GameScreenState extends ConsumerState<GameScreen> with WidgetsBindingObserver{
+
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  // return state
+
+
   @override
   Widget build(BuildContext context) {
-    final saveProvider = ref.watch(saveProviderNotifier); // update this line
+    final saveProvider = ref.watch(saveProviderNotifier);
     final save = saveProvider.save;
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Real estate sim'),

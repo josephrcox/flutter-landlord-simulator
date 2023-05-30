@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -32,16 +34,63 @@ class MyApp extends StatelessWidget {
   }
 }
 
-class Menu extends StatefulWidget {
+class Menu extends ConsumerStatefulWidget {
   const Menu({Key? key}) : super(key: key);
 
   @override
   _MenuState createState() => _MenuState();
 }
 
-class _MenuState extends State<Menu> {
+class _MenuState extends ConsumerState<Menu> with WidgetsBindingObserver {
+  bool shouldLoopContinue = true;
+  bool isLooping = false;
+
+  AppLifecycleState? _notification;
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    switch (state) {
+      case AppLifecycleState.resumed:
+        shouldLoopContinue = true;
+        break;
+      case AppLifecycleState.inactive:
+        shouldLoopContinue = false;
+        break;
+      case AppLifecycleState.paused:
+        shouldLoopContinue = false;
+        break;
+      case AppLifecycleState.detached:
+        shouldLoopContinue = false;
+        break;
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  void startLoop(ref) {
+    if (isLooping) {
+      return;
+    }
+    isLooping = true;
+    final saveProvider = ref.watch(saveProviderNotifier);
+    Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (shouldLoopContinue) {
+        saveProvider.triggerLoop();
+      }
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
+    startLoop(ref);
     return Scaffold(
       appBar: AppBar(
         title: const Text('Real estate sim'),
@@ -63,8 +112,10 @@ class _MenuState extends State<Menu> {
                 onPressed: () {
                   HapticFeedback.mediumImpact();
                   // go to game screen widget
-                  Navigator.push(context,
-                      MaterialPageRoute(builder: (context) => const GameScreen()));
+                  Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => const GameScreen()));
                 },
                 child: const Text('Start game')),
           ],
