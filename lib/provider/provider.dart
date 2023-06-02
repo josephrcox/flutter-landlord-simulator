@@ -91,7 +91,9 @@ class SaveProvider with ChangeNotifier {
         _save?.plotList = PlotList();
         _save?.plotList?.plots = [];
       }
-      _save?.plotList?.plots!.add(Plot());
+      final newPlots = _save?.plotList?.plots?.toList();
+      newPlots?.add(Plot());
+      _save?.plotList?.plots = newPlots;
       await isar.gameSaves.put(_save!);
     });
 
