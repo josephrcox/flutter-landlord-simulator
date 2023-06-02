@@ -71,7 +71,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
                     // displayProperties(),
                     const Spacer(),
                     ElevatedButton(
-                      onPressed: saveProvider.action_purchaseProperty,
+                      onPressed: saveProvider.actionPurchaseProperty,
                       child: const Text('Buy property'),
                     ),
                   ],

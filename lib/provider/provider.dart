@@ -80,7 +80,7 @@ class SaveProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  void action_purchaseProperty() async {
+  void actionPurchaseProperty() async {
     if (_save!.money < 100) {
       return;
     }
