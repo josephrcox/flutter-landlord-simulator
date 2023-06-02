@@ -75,12 +75,12 @@ class _MenuState extends ConsumerState<Menu> with WidgetsBindingObserver {
     super.dispose();
   }
 
-  void startLoop(ref) {
+  void startLoop(ref, saveProvider) {
     if (isLooping) {
       return;
     }
     isLooping = true;
-    final saveProvider = ref.watch(saveProviderNotifier);
+
     Timer.periodic(const Duration(seconds: 1), (timer) {
       if (shouldLoopContinue) {
         saveProvider.triggerLoop();
@@ -90,7 +90,9 @@ class _MenuState extends ConsumerState<Menu> with WidgetsBindingObserver {
 
   @override
   Widget build(BuildContext context) {
-    startLoop(ref);
+    final saveProvider = ref.watch(saveProviderNotifier);
+
+    startLoop(ref, saveProvider);
     return Scaffold(
       appBar: AppBar(
         title: const Text('Real estate sim'),

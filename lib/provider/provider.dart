@@ -15,6 +15,7 @@ class SaveProvider with ChangeNotifier {
   GameSave? _save;
   late Isar isar;
   Timer? _timer;
+  bool initialized = false;
 
   GameSave? get save => _save;
 
@@ -70,13 +71,36 @@ class SaveProvider with ChangeNotifier {
     return _save;
   }
 
-  void triggerLoop() {
-    loop(isar);
+  void triggerLoop() async {
+    _save?.info_day += 1;
+
+    await isar.writeTxn(() async {
+      await isar.gameSaves.put(_save!);
+    });
+    notifyListeners();
+  }
+
+  void action_purchaseProperty() async {
+    if (_save!.money < 100) {
+      return;
+    }
+    _save!.money -= 1000;
+    await isar.writeTxn(() async {
+      // make sure plotList.plots is an empty array
+      if (_save?.plotList == null) {
+        _save?.plotList = PlotList();
+        _save?.plotList?.plots = [];
+      }
+      _save?.plotList?.plots!.add(Plot());
+      await isar.gameSaves.put(_save!);
+    });
+
+    notifyListeners();
   }
 }
 
 final saveProvider = ChangeNotifierProvider((ref) => SaveProvider());
 
-void loop(isar) {
-  print('hi');
+void loop(isar, save) async {
+  // add day
 }
