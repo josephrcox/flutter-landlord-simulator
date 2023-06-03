@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:isar/isar.dart';
@@ -72,12 +74,56 @@ class SaveProvider with ChangeNotifier {
   }
 
   void triggerLoop() async {
-    _save?.info_day += 1;
+    loop(isar, _save!);
+    notifyListeners();
+  }
 
+  void actionSetRent(int rent, int index) async {
+    if (rent < 0) {
+      return;
+    }
     await isar.writeTxn(() async {
+      final newPlots = _save?.plotList?.plots?.toList();
+      newPlots?[index].rent = rent;
+      _save?.plotList?.plots = newPlots;
       await isar.gameSaves.put(_save!);
     });
+
     notifyListeners();
+  }
+
+  Future<int> actionSearchForResidents(int index) async {
+    int increase = 0;
+
+    await isar.writeTxn(() async {
+      final newPlots = _save?.plotList?.plots?.toList();
+      final plot = newPlots?[index];
+      if (plot!.residents >= plot.maxResidents) {
+        print('this plot is full');
+        return;
+      }
+      if ((plot!.rent / 10) > _save!.money) {
+        print('cant afford to search for residents');
+        return;
+      }
+      // take money, 1/10th of the rent, rounded down to int
+      _save!.money -= (plot.rent / 10).floor();
+      // check if they get a resident by looking at the happiness and halving the % chance
+      final random = Random();
+      final happiness = plot.happiness;
+      final chance = happiness / 2;
+      final roll = random.nextInt(100);
+      if (roll < chance) {
+        plot.residents += 1;
+        increase = 1;
+      }
+
+      _save?.plotList?.plots = newPlots;
+      await isar.gameSaves.put(_save!);
+    });
+
+    notifyListeners();
+    return increase;
   }
 
   void actionPurchaseProperty() async {
@@ -103,6 +149,10 @@ class SaveProvider with ChangeNotifier {
 
 final saveProvider = ChangeNotifierProvider((ref) => SaveProvider());
 
-void loop(isar, save) async {
-  // add day
+void loop(Isar isar, save) async {
+  save?.info_day += 1;
+
+  await isar.writeTxn(() async {
+    await isar.gameSaves.put(save!);
+  });
 }

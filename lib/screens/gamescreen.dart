@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:real/models/gameSave.dart';
 import 'package:real/provider/provider.dart';
@@ -33,17 +34,129 @@ class _GameScreenState extends ConsumerState<GameScreen>
     final save = saveProvider.save;
     var propertyList = save?.plotList;
 
-    Color backgroundColorARGB = const Color.fromARGB(255, 149, 150, 255);
+    // 547AA5
+    Color backgroundColorARGB = Color.fromARGB(255, 36, 59, 80);
+    // 293132
+    Color headerBackgroundColorARGB = Color.fromARGB(255, 37, 68, 97);
+    // 4F5165
+    Color happyColor = Color.fromARGB(255, 17, 95, 51);
+    // F39B6D
+    Color sadColor = Color.fromARGB(255, 121, 50, 41);
 
     // displayProperties()
     Widget displayProperties() {
+      var newRent = null;
+
       if (propertyList != null) {
         return ListView.builder(
+          // dont let scroll down
+          physics: const NeverScrollableScrollPhysics(),
           shrinkWrap: true,
           itemCount: propertyList.plots!.length,
           itemBuilder: (context, index) {
             return ListTile(
-              title: Text(propertyList.plots![index].rent.toString()),
+              splashColor: Color.fromARGB(42, 255, 230, 0),
+              leading: const Icon(Icons.home),
+              tileColor: propertyList.plots![index].happiness < 25
+                  ? sadColor
+                  : happyColor,
+              title: Text('\$${propertyList.plots![index].rent.toString()}'),
+              subtitle: Text(
+                  '${propertyList.plots![index].residents}/${propertyList.plots![index].maxResidents} residents'),
+              trailing:
+                  Text('${propertyList.plots![index].happiness}% happiness'),
+              onLongPress: () {
+                showModalBottomSheet(
+                  context: context,
+                  builder: (context) {
+                    return Padding(
+                      padding: EdgeInsets.only(
+                          bottom: MediaQuery.of(context).viewInsets.bottom,
+                          left: 25,
+                          right: 25),
+                      child: SizedBox(
+                        height: 175,
+                        child: Column(
+                          children: [
+                            const SizedBox(
+                              height: 20,
+                            ),
+                            const Text(
+                              'Raise or lower rent',
+                              style: TextStyle(
+                                  fontSize: 20, fontWeight: FontWeight.bold),
+                            ),
+                            const SizedBox(
+                              height: 10,
+                            ),
+                            Text(
+                                'Current rent: \$${propertyList.plots![index].rent}'),
+                            const SizedBox(
+                              height: 10,
+                            ),
+                            TextField(
+                              decoration: InputDecoration(
+                                  // border
+                                  border: const OutlineInputBorder(
+                                    borderRadius: BorderRadius.all(
+                                      Radius.circular(5),
+                                    ),
+                                  ),
+                                  // show suffix icon if newRent is not null
+                                  suffixIcon: IconButton(
+                                      onPressed: () {
+                                        if (newRent != null) {
+                                          saveProvider.actionSetRent(
+                                              newRent, index);
+                                        }
+                                        Navigator.pop(context);
+                                      },
+                                      icon: const Icon(Icons.check))),
+                              textInputAction: TextInputAction.done,
+                              // have submit button to change rent
+                              keyboardType: TextInputType.number,
+                              autofocus: true,
+                              // on every character change, set newRent to value
+                              onChanged: (value) {
+                                newRent = int.parse(value);
+                              },
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  },
+                );
+              },
+              onTap: () async {
+                // on tap, search for residents
+                final increase =
+                    await saveProvider.actionSearchForResidents(index);
+                if (increase > 0) {
+                  // if residents found, show toast
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      backgroundColor: Color.fromARGB(255, 30, 167, 35),
+                      behavior: SnackBarBehavior.floating,
+                      width: 200,
+                      shape: const RoundedRectangleBorder(
+                        borderRadius: BorderRadius.all(
+                          Radius.circular(5),
+                        ),
+                      ),
+                      duration: const Duration(milliseconds: 600),
+                      content: Text('$increase resident found! 🎉',
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                            color: Colors.white,
+                          )),
+                    ),
+                  );
+                }
+
+                // light haptic
+                HapticFeedback.lightImpact();
+              },
             );
           },
         );
@@ -55,10 +168,9 @@ class _GameScreenState extends ConsumerState<GameScreen>
     return Scaffold(
       appBar: AppBar(
         title: const Text('Real estate sim'),
-        backgroundColor: backgroundColorARGB,
+        backgroundColor: headerBackgroundColorARGB,
         shadowColor: Colors.transparent,
       ),
-      // 239 100 79
       backgroundColor: backgroundColorARGB,
       body: saveProvider.loading
           ? const Center(child: CircularProgressIndicator())
@@ -67,8 +179,11 @@ class _GameScreenState extends ConsumerState<GameScreen>
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: <Widget>[
-                    headerWidget(money: save!.money, day: save.info_day),
-                    // displayProperties(),
+                    headerWidget(
+                        money: save!.money,
+                        day: save.info_day,
+                        background: headerBackgroundColorARGB),
+                    displayProperties(),
                     const Spacer(),
                     ElevatedButton(
                       onPressed: saveProvider.actionPurchaseProperty,
@@ -82,16 +197,19 @@ class _GameScreenState extends ConsumerState<GameScreen>
   }
 }
 
-// header widget that takes money 
-Widget headerWidget({required int money, required int day}) {
-
+// header widget that takes money
+Widget headerWidget(
+    {required int money, required int day, required Color background}) {
   // converts money to string with commas
   String moneyString = money.toString();
   if (moneyString.length > 3) {
-    moneyString = '\$${moneyString.substring(0, moneyString.length - 3)},${moneyString.substring(moneyString.length - 3)}';
+    moneyString =
+        '\$${moneyString.substring(0, moneyString.length - 3)},${moneyString.substring(moneyString.length - 3)}';
   }
 
   return Container(
+    // bg color
+    color: background,
     padding: const EdgeInsets.all(20),
     child: Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -112,4 +230,3 @@ Widget headerWidget({required int money, required int day}) {
     ),
   );
 }
-
