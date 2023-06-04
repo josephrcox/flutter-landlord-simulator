@@ -6,18 +6,23 @@ part 'gameSave.g.dart';
 class GameSave {
   Id id = Isar.autoIncrement;
 
-  String info_name;
-  int info_day;
   int money;
+
+  String infoName;
+
+  int infoDay;
+  int infoYear;
+
   PlotList? plotList;
-  
+
   int rulesNewPropCost;
   double rulesTaxRate;
 
   GameSave({
-    this.info_name = 'Save 1',
     this.money = 55000,
-    this.info_day = 1,
+    this.infoName = 'Save 1',
+    this.infoDay = 1,
+    this.infoYear = 1,
     this.plotList,
     this.rulesNewPropCost = 50000,
     this.rulesTaxRate = 0.1,
@@ -43,4 +48,3 @@ class Plot {
     this.happiness = 50,
   });
 }
-

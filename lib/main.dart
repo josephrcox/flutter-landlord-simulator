@@ -18,7 +18,7 @@ void main() async {
         home: const MyApp(),
         theme: ThemeData.dark().copyWith(
           primaryColor: Colors.blueGrey,
-          scaffoldBackgroundColor: Color.fromARGB(255, 83, 83, 83),
+          scaffoldBackgroundColor: const Color.fromARGB(255, 83, 83, 83),
         ),
       ),
     ),
@@ -45,7 +45,7 @@ class _MenuState extends ConsumerState<Menu> with WidgetsBindingObserver {
   bool shouldLoopContinue = true;
   bool isLooping = false;
 
-  AppLifecycleState? _notification;
+  @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     switch (state) {
       case AppLifecycleState.resumed:

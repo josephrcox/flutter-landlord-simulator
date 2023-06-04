@@ -105,11 +105,16 @@ class SaveProvider with ChangeNotifier {
     await isar.writeTxn(() async {
       final newPlots = _save?.plotList?.plots?.toList();
       newPlots?[index].rent = rent;
-      print(percentageRentIncrease.toInt());
 
       if (percentageRentIncrease > 1) {
-        newPlots?[index].happiness -=
-            percentageRentIncrease.toInt() * newPlots[index].residents;
+        final decrease =
+            percentageRentIncrease.toInt() * newPlots![index].residents;
+        newPlots[index].happiness -= decrease;
+      } else if (percentageRentIncrease < 1) {
+        final increase =
+            (percentageRentIncrease.round() * newPlots![index].residents)
+                .round();
+        newPlots[index].happiness += increase;
       }
 
       _save?.plotList?.plots = newPlots;
@@ -130,7 +135,7 @@ class SaveProvider with ChangeNotifier {
         print('this plot is full');
         return;
       }
-      if ((plot!.rent / 10) > _save!.money) {
+      if ((plot.rent / 10) > _save!.money) {
         print('cant afford to search for residents');
         return;
       }
@@ -140,8 +145,10 @@ class SaveProvider with ChangeNotifier {
       final random = Random();
       final happiness = plot.happiness;
       final chance = happiness / 2;
-      final roll = random.nextInt(100);
-      if (roll < chance) {
+      final multiplierBasedOnRentCost = plot.rent / 1000;
+      final roll = random.nextInt(100) * multiplierBasedOnRentCost;
+
+      if ((roll) < chance) {
         plot.residents += 1;
         increase = 1;
       }
@@ -178,22 +185,32 @@ class SaveProvider with ChangeNotifier {
 final saveProvider = ChangeNotifierProvider((ref) => SaveProvider());
 
 void loop(Isar isar, save, resetting) async {
-  if (save == null || resetting) {
+  if (save == null || resetting || save?.plotList == null) {
     return;
   }
-  save?.info_day += 1;
+
+  save?.infoDay += 1;
 
   int profit = 0;
+  //////////////////////////
+  /////////////////
+  // Calculations
+  /////////////////
+  //////////////////////////
 
+  //// Calculate rent
   profit = calculateRent(profit, save?.plotList?.plots);
   profit -= (profit * save?.rulesTaxRate).floor();
 
+  //// Calculate residents leaving
   if (save?.plotList?.plots != null) {
-    save?.plotList.plots = calculateResidentsLeaving(save?.plotList?.plots);
+    save = calculateResidentsLeaving(save);
   }
 
+  //// Calculate happiness (random changes based on things)
   save?.plotList.plots = calculateHappiness(save?.plotList?.plots);
 
+  // Add profit to money
   save?.money += profit;
   final firstSave = await isar.gameSaves.where().findFirst();
   if (firstSave == null) {
@@ -208,32 +225,35 @@ int calculateRent(int money, List<Plot>? plots) {
   if (plots == null) {
     return money;
   }
-  plots.forEach((plot) {
+  for (var plot in plots) {
     money += ((plot.rent * plot.residents) / 30).floor();
-  });
+  }
 
   return money;
 }
 
-List<Plot> calculateResidentsLeaving(List<Plot> plots) {
-  // iterate over plots
-  for (var i = 0; i < plots.length; i++) {
+GameSave calculateResidentsLeaving(GameSave save) {
+  var plots = save.plotList!.plots;
+
+  for (var i = 0; i < plots!.length; i++) {
     final plot = plots[i];
     // if happiness is 0, remove all residents
     if (plot.happiness <= 0) {
       plot.residents = 0;
-      return plots;
+      save.plotList!.plots = plots;
+      return save;
     }
     final random = Random();
     final roll = random.nextInt((plot.happiness / 1.5).floor() + 1);
     // roll based on happiness, if the roll matches happiness then remove a resident
     if (roll == (plot.happiness / 1.5).floor() && plot.residents > 0) {
       plot.residents -= 1;
+      save.money -= (plot.rent / 10).floor();
       continue;
     }
   }
 
-  return plots;
+  return save;
 }
 
 List<Plot> calculateHappiness(List<Plot> plots) {
@@ -242,7 +262,9 @@ List<Plot> calculateHappiness(List<Plot> plots) {
   for (var i = 0; i < plots.length; i++) {
     final roll = random.nextInt(100);
     final plot = plots[i];
-    if (roll < plot.happiness && roll.isEven) {
+    if (plot.residents == 0) {
+      plot.happiness = 50;
+    } else if (roll < plot.happiness && roll.isEven) {
       plot.happiness += 1;
       continue;
     } else if (roll < plot.happiness && roll.isOdd) {
@@ -255,3 +277,11 @@ List<Plot> calculateHappiness(List<Plot> plots) {
 
   return plots;
 }
+
+
+
+
+
+
+
+
