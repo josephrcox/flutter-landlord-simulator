@@ -10,12 +10,17 @@ class GameSave {
   int info_day;
   int money;
   PlotList? plotList;
+  
+  int rulesNewPropCost;
+  double rulesTaxRate;
 
   GameSave({
     this.info_name = 'Save 1',
-    this.money = 1000,
+    this.money = 55000,
     this.info_day = 1,
     this.plotList,
+    this.rulesNewPropCost = 50000,
+    this.rulesTaxRate = 0.1,
   });
 }
 
@@ -32,7 +37,7 @@ class Plot {
   int happiness; // out of 100
 
   Plot({
-    this.rent = 200,
+    this.rent = 400,
     this.residents = 0,
     this.maxResidents = 10,
     this.happiness = 50,
