@@ -226,8 +226,6 @@ List<Plot> calculateResidentsLeaving(List<Plot> plots) {
     }
     final random = Random();
     final roll = random.nextInt((plot.happiness / 1.5).floor() + 1);
-    print(
-        'Roll was $roll, number to match is ${(plot.happiness / 1.5).floor()}');
     // roll based on happiness, if the roll matches happiness then remove a resident
     if (roll == (plot.happiness / 1.5).floor() && plot.residents > 0) {
       plot.residents -= 1;

@@ -118,7 +118,12 @@ class _GameScreenState extends ConsumerState<GameScreen>
                               autofocus: true,
                               // on every character change, set newRent to value
                               onChanged: (value) {
-                                newRent = int.parse(value);
+                                // try to parse number out of value, if not, set to null
+                                try {
+                                  newRent = int.parse(value);
+                                } catch (e) {
+                                  newRent = null;
+                                }
                               },
                             ),
                           ],
