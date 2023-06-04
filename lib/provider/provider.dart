@@ -18,6 +18,7 @@ class SaveProvider with ChangeNotifier {
   late Isar isar;
   Timer? _timer;
   bool initialized = false;
+  bool resetting = false;
 
   GameSave? get save => _save;
 
@@ -69,12 +70,29 @@ class SaveProvider with ChangeNotifier {
     }
     _loading = false;
     notifyListeners();
-
+    resetting = false;
     return _save;
   }
 
+  void resetGame() async {
+    resetting = true;
+    final newSave = GameSave();
+    await isar.writeTxn(() async {
+      await isar.gameSaves.put(newSave);
+    });
+    _save = await isar.gameSaves.where().findFirst();
+    resetting = false;
+
+    notifyListeners();
+  }
+
   void triggerLoop() async {
-    loop(isar, _save!);
+    final firstSave = await isar.gameSaves.where().findFirst();
+    if (firstSave == null) {
+      getFirstSave();
+      return;
+    }
+    loop(isar, _save!, resetting);
     notifyListeners();
   }
 
@@ -82,10 +100,20 @@ class SaveProvider with ChangeNotifier {
     if (rent < 0) {
       return;
     }
+    final percentageRentIncrease = rent / _save!.plotList!.plots![index].rent;
+
     await isar.writeTxn(() async {
       final newPlots = _save?.plotList?.plots?.toList();
       newPlots?[index].rent = rent;
+      print(percentageRentIncrease.toInt());
+
+      if (percentageRentIncrease > 1) {
+        newPlots?[index].happiness -=
+            percentageRentIncrease.toInt() * newPlots[index].residents;
+      }
+
       _save?.plotList?.plots = newPlots;
+
       await isar.gameSaves.put(_save!);
     });
 
@@ -127,10 +155,10 @@ class SaveProvider with ChangeNotifier {
   }
 
   void actionPurchaseProperty() async {
-    if (_save!.money < 100) {
+    if (_save!.money < _save!.rulesNewPropCost) {
       return;
     }
-    _save!.money -= 1000;
+    _save!.money -= _save!.rulesNewPropCost;
     await isar.writeTxn(() async {
       // make sure plotList.plots is an empty array
       if (_save?.plotList == null) {
@@ -149,10 +177,83 @@ class SaveProvider with ChangeNotifier {
 
 final saveProvider = ChangeNotifierProvider((ref) => SaveProvider());
 
-void loop(Isar isar, save) async {
+void loop(Isar isar, save, resetting) async {
+  if (save == null || resetting) {
+    return;
+  }
   save?.info_day += 1;
 
+  int profit = 0;
+
+  profit = calculateRent(profit, save?.plotList?.plots);
+  profit -= (profit * save?.rulesTaxRate).floor();
+
+  if (save?.plotList?.plots != null) {
+    save?.plotList.plots = calculateResidentsLeaving(save?.plotList?.plots);
+  }
+
+  save?.plotList.plots = calculateHappiness(save?.plotList?.plots);
+
+  save?.money += profit;
+  final firstSave = await isar.gameSaves.where().findFirst();
+  if (firstSave == null) {
+    return;
+  }
   await isar.writeTxn(() async {
     await isar.gameSaves.put(save!);
   });
+}
+
+int calculateRent(int money, List<Plot>? plots) {
+  if (plots == null) {
+    return money;
+  }
+  plots.forEach((plot) {
+    money += ((plot.rent * plot.residents) / 30).floor();
+  });
+
+  return money;
+}
+
+List<Plot> calculateResidentsLeaving(List<Plot> plots) {
+  // iterate over plots
+  for (var i = 0; i < plots.length; i++) {
+    final plot = plots[i];
+    // if happiness is 0, remove all residents
+    if (plot.happiness <= 0) {
+      plot.residents = 0;
+      return plots;
+    }
+    final random = Random();
+    final roll = random.nextInt((plot.happiness / 1.5).floor() + 1);
+    print(
+        'Roll was $roll, number to match is ${(plot.happiness / 1.5).floor()}');
+    // roll based on happiness, if the roll matches happiness then remove a resident
+    if (roll == (plot.happiness / 1.5).floor() && plot.residents > 0) {
+      plot.residents -= 1;
+      continue;
+    }
+  }
+
+  return plots;
+}
+
+List<Plot> calculateHappiness(List<Plot> plots) {
+  final random = Random();
+
+  for (var i = 0; i < plots.length; i++) {
+    final roll = random.nextInt(100);
+    final plot = plots[i];
+    if (roll < plot.happiness && roll.isEven) {
+      plot.happiness += 1;
+      continue;
+    } else if (roll < plot.happiness && roll.isOdd) {
+      plot.happiness -= 1;
+      continue;
+    } else {
+      continue;
+    }
+  }
+
+  return plots;
 }

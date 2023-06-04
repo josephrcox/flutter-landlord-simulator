@@ -31,7 +31,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
   @override
   Widget build(BuildContext context) {
     final saveProvider = ref.watch(saveProviderNotifier);
-    final save = saveProvider.save;
+    var save = saveProvider.save;
     var propertyList = save?.plotList;
 
     // 547AA5
@@ -57,7 +57,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
             return ListTile(
               splashColor: Color.fromARGB(42, 255, 230, 0),
               leading: const Icon(Icons.home),
-              tileColor: propertyList.plots![index].happiness < 25
+              tileColor: propertyList.plots![index].happiness < 40
                   ? sadColor
                   : happyColor,
               title: Text('\$${propertyList.plots![index].rent.toString()}'),
@@ -170,6 +170,15 @@ class _GameScreenState extends ConsumerState<GameScreen>
         title: const Text('Real estate sim'),
         backgroundColor: headerBackgroundColorARGB,
         shadowColor: Colors.transparent,
+        actions: [
+          IconButton(
+            onPressed: () {
+              saveProvider.resetGame();
+              save = saveProvider.save;
+            },
+            icon: const Icon(Icons.refresh),
+          ),
+        ],
       ),
       backgroundColor: backgroundColorARGB,
       body: saveProvider.loading
@@ -181,13 +190,14 @@ class _GameScreenState extends ConsumerState<GameScreen>
                   children: <Widget>[
                     headerWidget(
                         money: save!.money,
-                        day: save.info_day,
+                        day: save!.info_day,
                         background: headerBackgroundColorARGB),
                     displayProperties(),
                     const Spacer(),
                     ElevatedButton(
                       onPressed: saveProvider.actionPurchaseProperty,
-                      child: const Text('Buy property'),
+                      // set rulesNewPropCost to money string with commas
+                      child: Text('Buy property (${save!.rulesNewPropCost})'),
                     ),
                   ],
                 ),
