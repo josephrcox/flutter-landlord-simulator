@@ -40,11 +40,31 @@ class Plot {
   int residents;
   int maxResidents;
   int happiness; // out of 100
+  Upgrades? plotUpgrades;
 
   Plot({
     this.rent = 400,
     this.residents = 0,
     this.maxResidents = 10,
     this.happiness = 50,
+    this.plotUpgrades,
   });
 }
+
+@embedded
+class Upgrades {
+  bool swimmingPool;
+
+  Upgrades({
+    this.swimmingPool = false,
+  });
+
+  Map<String, dynamic> toJson() {
+    return {
+      'swimmingPool': swimmingPool,
+    };
+  }
+}
+
+
+

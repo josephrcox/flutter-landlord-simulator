@@ -5,6 +5,11 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:real/provider/provider.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
+import 'dart:convert';
+
+import '../models/gameSave.dart';
+
+import '../configSettings.dart';
 
 class GameScreen extends ConsumerStatefulWidget {
   const GameScreen({Key? key}) : super(key: key);
@@ -106,53 +111,121 @@ class _GameScreenState extends ConsumerState<GameScreen>
       );
     }
 
-    void openUpgradesMenu(index) {
+    void openUpgradesMenu(plotIndex) {
+      Upgrades? upgrades = propertyList?.plots?[plotIndex].plotUpgrades;
+      Map<String, bool> upgradesMap = Map.from(upgrades!.toJson());
+
       showModalBottomSheet(
         context: context,
         builder: (context) {
-          return Padding(
-            padding: EdgeInsets.only(
-              bottom: MediaQuery.of(context).viewInsets.bottom,
-              left: 25,
-              right: 25,
-            ),
-            child: SizedBox(
-              height: 175,
-              child: Column(
-                children: [
-                  const SizedBox(height: 20),
-                  const Text(
-                    'Upgrades',
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  Text('Current rent: \$${propertyList?.plots![index].rent}'),
-                  const SizedBox(height: 10),
-                  TextField(
-                    decoration: InputDecoration(
-                      border: const OutlineInputBorder(
-                        borderRadius: BorderRadius.all(
-                          Radius.circular(5),
+          return StatefulBuilder(
+            // Wrap the content with StatefulBuilder
+            builder: (BuildContext context, StateSetter setState) {
+              return Padding(
+                padding: EdgeInsets.only(
+                  bottom: MediaQuery.of(context).viewInsets.bottom,
+                  left: 25,
+                  right: 25,
+                ),
+                child: SizedBox(
+                  child: Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Column(
+                      children: [
+                        const SizedBox(height: 10),
+                        const Text(
+                          'Upgrades',
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
-                      ),
-                      suffixIcon: IconButton(
-                        onPressed: () {
-                          Navigator.pop(context);
-                        },
-                        icon: const Icon(Icons.check),
-                      ),
+                        const SizedBox(height: 20),
+                        ListView.builder(
+                          shrinkWrap: true,
+                          itemCount: upgradesMap.length,
+                          itemBuilder: (context, index) {
+                            String propertyName =
+                                upgradesMap.keys.elementAt(index);
+                            bool propertyValue =
+                                upgradesMap.values.elementAt(index);
+
+                            return InkWell(
+                              onTap: () async {
+                                final success =
+                                    await saveProvider.actionToggleUpgrade(
+                                        plotIndex, propertyName, !propertyValue);
+                                if (success) {
+                                  setState(
+                                    () {
+                                      upgradesMap[propertyName] =
+                                          !propertyValue; // Toggle the boolean value
+                                      save = saveProvider.save;
+                                    },
+                                  );
+                                }
+                              },
+                              child: Container(
+                                color:
+                                    propertyValue ? Colors.green : Colors.red,
+                                child: Row(
+                                  children: [
+                                    Expanded(
+                                      child: Padding(
+                                        padding: const EdgeInsets.all(16.0),
+                                        child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            Row(
+                                              children: [
+                                                Text(
+                                                  configUpgrades[propertyName]![
+                                                          'name']
+                                                      .toString(),
+                                                  style: const TextStyle(
+                                                    color: Colors.white,
+                                                    fontWeight: FontWeight.bold,
+                                                    fontSize: 16,
+                                                  ),
+                                                ),
+                                                const Spacer(),
+                                                Text(
+                                                  propertyValue
+                                                      ? 'Enabled'
+                                                      : 'Not enabled',
+                                                  style: const TextStyle(
+                                                    color: Colors.white,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                            const SizedBox(height: 5),
+                                            Text(
+                                              configUpgrades[propertyName]![
+                                                      'desc']
+                                                  .toString(),
+                                            ),
+                                            const SizedBox(height: 5),
+                                            Text(
+                                              '\$${configUpgrades[propertyName]!["cost"].toString()}',
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                      ],
                     ),
-                    textInputAction: TextInputAction.done,
-                    keyboardType: TextInputType.number,
-                    autofocus: true,
-                    onChanged: (value) {},
                   ),
-                ],
-              ),
-            ),
+                ),
+              );
+            },
           );
         },
       );

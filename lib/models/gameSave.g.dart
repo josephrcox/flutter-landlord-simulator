@@ -61,7 +61,11 @@ const GameSaveSchema = CollectionSchema(
   idName: r'id',
   indexes: {},
   links: {},
-  embeddedSchemas: {r'PlotList': PlotListSchema, r'Plot': PlotSchema},
+  embeddedSchemas: {
+    r'PlotList': PlotListSchema,
+    r'Plot': PlotSchema,
+    r'Upgrades': UpgradesSchema
+  },
   getId: _gameSaveGetId,
   getLinks: _gameSaveGetLinks,
   attach: _gameSaveAttach,
@@ -1215,13 +1219,19 @@ const PlotSchema = Schema(
       name: r'maxResidents',
       type: IsarType.long,
     ),
-    r'rent': PropertySchema(
+    r'plotUpgrades': PropertySchema(
       id: 2,
+      name: r'plotUpgrades',
+      type: IsarType.object,
+      target: r'Upgrades',
+    ),
+    r'rent': PropertySchema(
+      id: 3,
       name: r'rent',
       type: IsarType.long,
     ),
     r'residents': PropertySchema(
-      id: 3,
+      id: 4,
       name: r'residents',
       type: IsarType.long,
     )
@@ -1238,6 +1248,13 @@ int _plotEstimateSize(
   Map<Type, List<int>> allOffsets,
 ) {
   var bytesCount = offsets.last;
+  {
+    final value = object.plotUpgrades;
+    if (value != null) {
+      bytesCount += 3 +
+          UpgradesSchema.estimateSize(value, allOffsets[Upgrades]!, allOffsets);
+    }
+  }
   return bytesCount;
 }
 
@@ -1249,8 +1266,14 @@ void _plotSerialize(
 ) {
   writer.writeLong(offsets[0], object.happiness);
   writer.writeLong(offsets[1], object.maxResidents);
-  writer.writeLong(offsets[2], object.rent);
-  writer.writeLong(offsets[3], object.residents);
+  writer.writeObject<Upgrades>(
+    offsets[2],
+    allOffsets,
+    UpgradesSchema.serialize,
+    object.plotUpgrades,
+  );
+  writer.writeLong(offsets[3], object.rent);
+  writer.writeLong(offsets[4], object.residents);
 }
 
 Plot _plotDeserialize(
@@ -1262,8 +1285,13 @@ Plot _plotDeserialize(
   final object = Plot(
     happiness: reader.readLongOrNull(offsets[0]) ?? 50,
     maxResidents: reader.readLongOrNull(offsets[1]) ?? 10,
-    rent: reader.readLongOrNull(offsets[2]) ?? 400,
-    residents: reader.readLongOrNull(offsets[3]) ?? 0,
+    plotUpgrades: reader.readObjectOrNull<Upgrades>(
+      offsets[2],
+      UpgradesSchema.deserialize,
+      allOffsets,
+    ),
+    rent: reader.readLongOrNull(offsets[3]) ?? 400,
+    residents: reader.readLongOrNull(offsets[4]) ?? 0,
   );
   return object;
 }
@@ -1280,8 +1308,14 @@ P _plotDeserializeProp<P>(
     case 1:
       return (reader.readLongOrNull(offset) ?? 10) as P;
     case 2:
-      return (reader.readLongOrNull(offset) ?? 400) as P;
+      return (reader.readObjectOrNull<Upgrades>(
+        offset,
+        UpgradesSchema.deserialize,
+        allOffsets,
+      )) as P;
     case 3:
+      return (reader.readLongOrNull(offset) ?? 400) as P;
+    case 4:
       return (reader.readLongOrNull(offset) ?? 0) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -1394,6 +1428,22 @@ extension PlotQueryFilter on QueryBuilder<Plot, Plot, QFilterCondition> {
     });
   }
 
+  QueryBuilder<Plot, Plot, QAfterFilterCondition> plotUpgradesIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'plotUpgrades',
+      ));
+    });
+  }
+
+  QueryBuilder<Plot, Plot, QAfterFilterCondition> plotUpgradesIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'plotUpgrades',
+      ));
+    });
+  }
+
   QueryBuilder<Plot, Plot, QAfterFilterCondition> rentEqualTo(int value) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.equalTo(
@@ -1499,4 +1549,90 @@ extension PlotQueryFilter on QueryBuilder<Plot, Plot, QFilterCondition> {
   }
 }
 
-extension PlotQueryObject on QueryBuilder<Plot, Plot, QFilterCondition> {}
+extension PlotQueryObject on QueryBuilder<Plot, Plot, QFilterCondition> {
+  QueryBuilder<Plot, Plot, QAfterFilterCondition> plotUpgrades(
+      FilterQuery<Upgrades> q) {
+    return QueryBuilder.apply(this, (query) {
+      return query.object(q, r'plotUpgrades');
+    });
+  }
+}
+
+// coverage:ignore-file
+// ignore_for_file: duplicate_ignore, non_constant_identifier_names, constant_identifier_names, invalid_use_of_protected_member, unnecessary_cast, prefer_const_constructors, lines_longer_than_80_chars, require_trailing_commas, inference_failure_on_function_invocation, unnecessary_parenthesis, unnecessary_raw_strings, unnecessary_null_checks, join_return_with_assignment, prefer_final_locals, avoid_js_rounded_ints, avoid_positional_boolean_parameters, always_specify_types
+
+const UpgradesSchema = Schema(
+  name: r'Upgrades',
+  id: 3176977477447023689,
+  properties: {
+    r'swimmingPool': PropertySchema(
+      id: 0,
+      name: r'swimmingPool',
+      type: IsarType.bool,
+    )
+  },
+  estimateSize: _upgradesEstimateSize,
+  serialize: _upgradesSerialize,
+  deserialize: _upgradesDeserialize,
+  deserializeProp: _upgradesDeserializeProp,
+);
+
+int _upgradesEstimateSize(
+  Upgrades object,
+  List<int> offsets,
+  Map<Type, List<int>> allOffsets,
+) {
+  var bytesCount = offsets.last;
+  return bytesCount;
+}
+
+void _upgradesSerialize(
+  Upgrades object,
+  IsarWriter writer,
+  List<int> offsets,
+  Map<Type, List<int>> allOffsets,
+) {
+  writer.writeBool(offsets[0], object.swimmingPool);
+}
+
+Upgrades _upgradesDeserialize(
+  Id id,
+  IsarReader reader,
+  List<int> offsets,
+  Map<Type, List<int>> allOffsets,
+) {
+  final object = Upgrades(
+    swimmingPool: reader.readBoolOrNull(offsets[0]) ?? false,
+  );
+  return object;
+}
+
+P _upgradesDeserializeProp<P>(
+  IsarReader reader,
+  int propertyId,
+  int offset,
+  Map<Type, List<int>> allOffsets,
+) {
+  switch (propertyId) {
+    case 0:
+      return (reader.readBoolOrNull(offset) ?? false) as P;
+    default:
+      throw IsarError('Unknown property with id $propertyId');
+  }
+}
+
+extension UpgradesQueryFilter
+    on QueryBuilder<Upgrades, Upgrades, QFilterCondition> {
+  QueryBuilder<Upgrades, Upgrades, QAfterFilterCondition> swimmingPoolEqualTo(
+      bool value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'swimmingPool',
+        value: value,
+      ));
+    });
+  }
+}
+
+extension UpgradesQueryObject
+    on QueryBuilder<Upgrades, Upgrades, QFilterCondition> {}

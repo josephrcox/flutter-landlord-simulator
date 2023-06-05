@@ -8,6 +8,8 @@ import 'package:real/models/gameSave.dart';
 
 import 'dart:async';
 
+import '../configSettings.dart';
+
 Timer? timer;
 
 final saveProviderNotifier =
@@ -19,6 +21,7 @@ class SaveProvider with ChangeNotifier {
   Timer? _timer;
   bool initialized = false;
   bool resetting = false;
+  bool pauseLoop = false;
 
   GameSave? get save => _save;
 
@@ -68,6 +71,17 @@ class SaveProvider with ChangeNotifier {
       notifyListeners();
       return _save;
     }
+
+    for (var i = 0; i < _save!.plotList!.plots!.length; i++) {
+      final plot = _save!.plotList!.plots![i];
+      if (plot.plotUpgrades == null) {
+        plot.plotUpgrades = Upgrades();
+        await isar.writeTxn(() async {
+          await isar.gameSaves.put(save!);
+        });
+      }
+    }
+
     _loading = false;
     notifyListeners();
     resetting = false;
@@ -92,7 +106,10 @@ class SaveProvider with ChangeNotifier {
       getFirstSave();
       return;
     }
-    loop(isar, _save!, resetting);
+    if (pauseLoop == false) {
+      loop(isar, _save!, resetting);
+    }
+
     notifyListeners();
   }
 
@@ -123,6 +140,39 @@ class SaveProvider with ChangeNotifier {
     });
 
     notifyListeners();
+  }
+
+  Future<bool> actionToggleUpgrade(
+      int index, String upgradeName, bool toggleTo) async {
+    pauseLoop = true;
+    // upgradeName = 'swimmingPool'
+    var newPlots = _save?.plotList!.plots!.toList();
+    final upgradeConfig = configUpgrades[upgradeName];
+
+    if (_save!.money < (configUpgrades[upgradeName]!['cost'] as num) ||
+        upgradeConfig == null ||
+        newPlots?[index].plotUpgrades == null) {
+      return false;
+    }
+
+    switch (upgradeName) {
+      case 'swimmingPool':
+        newPlots?[index].plotUpgrades?.swimmingPool = toggleTo;
+        break;
+    }
+    if (toggleTo == true) {
+      _save?.money -= (upgradeConfig['cost'] as num).toInt();
+      newPlots?[index].happiness += (upgradeConfig['happiness'] as num).toInt();
+    } else {
+      newPlots?[index].happiness -= (upgradeConfig['happiness'] as num).toInt();
+    }
+    await isar.writeTxn(() async {
+      _save?.plotList?.plots = newPlots;
+      await isar.gameSaves.put(_save!);
+      return true;
+    });
+    pauseLoop = false;
+    return true;
   }
 
   Future<int> actionSearchForResidents(int index) async {
@@ -263,7 +313,7 @@ List<Plot> calculateHappiness(List<Plot> plots) {
     final roll = random.nextInt(100);
     final plot = plots[i];
     if (plot.residents == 0) {
-      plot.happiness = 50;
+      // plot.happiness = 50;
     } else if (roll < plot.happiness && roll.isEven) {
       plot.happiness += 1;
       continue;
@@ -277,11 +327,3 @@ List<Plot> calculateHappiness(List<Plot> plots) {
 
   return plots;
 }
-
-
-
-
-
-
-
-
