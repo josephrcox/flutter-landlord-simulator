@@ -112,8 +112,20 @@ class _GameScreenState extends ConsumerState<GameScreen>
     }
 
     void openUpgradesMenu(plotIndex) {
-      Upgrades? upgrades = propertyList?.plots?[plotIndex].plotUpgrades;
-      Map<String, bool> upgradesMap = Map.from(upgrades!.toJson());
+      // create a map based on the upgrade options and values
+      Map<String, bool> upgradesMap = {};
+
+      for (int i = 0;
+          i <
+              propertyList!
+                  .plots![plotIndex].plotUpgrades!.upgradeOptions.length;
+          i++) {
+        upgradesMap[propertyList
+                .plots![plotIndex].plotUpgrades!.upgradeOptions[i]] =
+            propertyList.plots![plotIndex].plotUpgrades!.upgradeValues[i];
+      }
+
+      print(upgradesMap);
 
       showModalBottomSheet(
         context: context,
@@ -154,7 +166,12 @@ class _GameScreenState extends ConsumerState<GameScreen>
                               onTap: () async {
                                 final success =
                                     await saveProvider.actionToggleUpgrade(
-                                        plotIndex, propertyName, !propertyValue);
+                                  propertyIndex: plotIndex,
+                                  upgradeIndex: index,
+                                  upgradeName:
+                                      upgradesMap.keys.elementAt(index),
+                                  toggleTo: !propertyValue,
+                                );
                                 if (success) {
                                   setState(
                                     () {

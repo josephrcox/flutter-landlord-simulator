@@ -53,17 +53,14 @@ class Plot {
 
 @embedded
 class Upgrades {
-  bool swimmingPool;
+  List<String> upgradeOptions = [
+    'swimmingPool',
+  ];
+  List<bool> upgradeValues = [
+    false,
+  ];
 
-  Upgrades({
-    this.swimmingPool = false,
-  });
-
-  Map<String, dynamic> toJson() {
-    return {
-      'swimmingPool': swimmingPool,
-    };
-  }
+  Upgrades();
 }
 
 

@@ -143,28 +143,32 @@ class SaveProvider with ChangeNotifier {
   }
 
   Future<bool> actionToggleUpgrade(
-      int index, String upgradeName, bool toggleTo) async {
+      {required propertyIndex,
+      required upgradeIndex,
+      required upgradeName,
+      required toggleTo}) async {
+        print(toggleTo);
     pauseLoop = true;
-    // upgradeName = 'swimmingPool'
     var newPlots = _save?.plotList!.plots!.toList();
     final upgradeConfig = configUpgrades[upgradeName];
 
-    if (_save!.money < (configUpgrades[upgradeName]!['cost'] as num) ||
+    if (toggleTo == true && _save!.money < (configUpgrades[upgradeName]!['cost'] as num) ||
         upgradeConfig == null ||
-        newPlots?[index].plotUpgrades == null) {
+        newPlots?[propertyIndex].plotUpgrades == null) {
       return false;
     }
 
-    switch (upgradeName) {
-      case 'swimmingPool':
-        newPlots?[index].plotUpgrades?.swimmingPool = toggleTo;
-        break;
-    }
+    // update the upgradeValue based on the upgradeIndex
+    newPlots?[propertyIndex].plotUpgrades!.upgradeValues[upgradeIndex] =
+        toggleTo;
+
     if (toggleTo == true) {
       _save?.money -= (upgradeConfig['cost'] as num).toInt();
-      newPlots?[index].happiness += (upgradeConfig['happiness'] as num).toInt();
+      newPlots?[propertyIndex].happiness +=
+          (upgradeConfig['happiness'] as num).toInt();
     } else {
-      newPlots?[index].happiness -= (upgradeConfig['happiness'] as num).toInt();
+      newPlots?[propertyIndex].happiness -=
+          (upgradeConfig['happiness'] as num).toInt();
     }
     await isar.writeTxn(() async {
       _save?.plotList?.plots = newPlots;
@@ -182,16 +186,12 @@ class SaveProvider with ChangeNotifier {
       final newPlots = _save?.plotList?.plots?.toList();
       final plot = newPlots?[index];
       if (plot!.residents >= plot.maxResidents) {
-        print('this plot is full');
         return;
       }
       if ((plot.rent / 10) > _save!.money) {
-        print('cant afford to search for residents');
         return;
       }
-      // take money, 1/10th of the rent, rounded down to int
       _save!.money -= (plot.rent / 10).floor();
-      // check if they get a resident by looking at the happiness and halving the % chance
       final random = Random();
       final happiness = plot.happiness;
       final chance = happiness / 2;
@@ -224,6 +224,8 @@ class SaveProvider with ChangeNotifier {
       }
       final newPlots = _save?.plotList?.plots?.toList();
       newPlots?.add(Plot());
+      final plot = newPlots?.last;
+      newPlots?.last.plotUpgrades = Upgrades();
       _save?.plotList?.plots = newPlots;
       await isar.gameSaves.put(_save!);
     });

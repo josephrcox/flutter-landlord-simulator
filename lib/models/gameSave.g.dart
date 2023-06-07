@@ -1565,10 +1565,15 @@ const UpgradesSchema = Schema(
   name: r'Upgrades',
   id: 3176977477447023689,
   properties: {
-    r'swimmingPool': PropertySchema(
+    r'upgradeOptions': PropertySchema(
       id: 0,
-      name: r'swimmingPool',
-      type: IsarType.bool,
+      name: r'upgradeOptions',
+      type: IsarType.stringList,
+    ),
+    r'upgradeValues': PropertySchema(
+      id: 1,
+      name: r'upgradeValues',
+      type: IsarType.boolList,
     )
   },
   estimateSize: _upgradesEstimateSize,
@@ -1583,6 +1588,14 @@ int _upgradesEstimateSize(
   Map<Type, List<int>> allOffsets,
 ) {
   var bytesCount = offsets.last;
+  bytesCount += 3 + object.upgradeOptions.length * 3;
+  {
+    for (var i = 0; i < object.upgradeOptions.length; i++) {
+      final value = object.upgradeOptions[i];
+      bytesCount += value.length * 3;
+    }
+  }
+  bytesCount += 3 + object.upgradeValues.length;
   return bytesCount;
 }
 
@@ -1592,7 +1605,8 @@ void _upgradesSerialize(
   List<int> offsets,
   Map<Type, List<int>> allOffsets,
 ) {
-  writer.writeBool(offsets[0], object.swimmingPool);
+  writer.writeStringList(offsets[0], object.upgradeOptions);
+  writer.writeBoolList(offsets[1], object.upgradeValues);
 }
 
 Upgrades _upgradesDeserialize(
@@ -1601,9 +1615,9 @@ Upgrades _upgradesDeserialize(
   List<int> offsets,
   Map<Type, List<int>> allOffsets,
 ) {
-  final object = Upgrades(
-    swimmingPool: reader.readBoolOrNull(offsets[0]) ?? false,
-  );
+  final object = Upgrades();
+  object.upgradeOptions = reader.readStringList(offsets[0]) ?? [];
+  object.upgradeValues = reader.readBoolList(offsets[1]) ?? [];
   return object;
 }
 
@@ -1615,7 +1629,9 @@ P _upgradesDeserializeProp<P>(
 ) {
   switch (propertyId) {
     case 0:
-      return (reader.readBoolOrNull(offset) ?? false) as P;
+      return (reader.readStringList(offset) ?? []) as P;
+    case 1:
+      return (reader.readBoolList(offset) ?? []) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
   }
@@ -1623,13 +1639,328 @@ P _upgradesDeserializeProp<P>(
 
 extension UpgradesQueryFilter
     on QueryBuilder<Upgrades, Upgrades, QFilterCondition> {
-  QueryBuilder<Upgrades, Upgrades, QAfterFilterCondition> swimmingPoolEqualTo(
-      bool value) {
+  QueryBuilder<Upgrades, Upgrades, QAfterFilterCondition>
+      upgradeOptionsElementEqualTo(
+    String value, {
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'swimmingPool',
+        property: r'upgradeOptions',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Upgrades, Upgrades, QAfterFilterCondition>
+      upgradeOptionsElementGreaterThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'upgradeOptions',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Upgrades, Upgrades, QAfterFilterCondition>
+      upgradeOptionsElementLessThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'upgradeOptions',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Upgrades, Upgrades, QAfterFilterCondition>
+      upgradeOptionsElementBetween(
+    String lower,
+    String upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'upgradeOptions',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Upgrades, Upgrades, QAfterFilterCondition>
+      upgradeOptionsElementStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'upgradeOptions',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Upgrades, Upgrades, QAfterFilterCondition>
+      upgradeOptionsElementEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'upgradeOptions',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Upgrades, Upgrades, QAfterFilterCondition>
+      upgradeOptionsElementContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'upgradeOptions',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Upgrades, Upgrades, QAfterFilterCondition>
+      upgradeOptionsElementMatches(String pattern,
+          {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'upgradeOptions',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Upgrades, Upgrades, QAfterFilterCondition>
+      upgradeOptionsElementIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'upgradeOptions',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<Upgrades, Upgrades, QAfterFilterCondition>
+      upgradeOptionsElementIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'upgradeOptions',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<Upgrades, Upgrades, QAfterFilterCondition>
+      upgradeOptionsLengthEqualTo(int length) {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'upgradeOptions',
+        length,
+        true,
+        length,
+        true,
+      );
+    });
+  }
+
+  QueryBuilder<Upgrades, Upgrades, QAfterFilterCondition>
+      upgradeOptionsIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'upgradeOptions',
+        0,
+        true,
+        0,
+        true,
+      );
+    });
+  }
+
+  QueryBuilder<Upgrades, Upgrades, QAfterFilterCondition>
+      upgradeOptionsIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'upgradeOptions',
+        0,
+        false,
+        999999,
+        true,
+      );
+    });
+  }
+
+  QueryBuilder<Upgrades, Upgrades, QAfterFilterCondition>
+      upgradeOptionsLengthLessThan(
+    int length, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'upgradeOptions',
+        0,
+        true,
+        length,
+        include,
+      );
+    });
+  }
+
+  QueryBuilder<Upgrades, Upgrades, QAfterFilterCondition>
+      upgradeOptionsLengthGreaterThan(
+    int length, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'upgradeOptions',
+        length,
+        include,
+        999999,
+        true,
+      );
+    });
+  }
+
+  QueryBuilder<Upgrades, Upgrades, QAfterFilterCondition>
+      upgradeOptionsLengthBetween(
+    int lower,
+    int upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'upgradeOptions',
+        lower,
+        includeLower,
+        upper,
+        includeUpper,
+      );
+    });
+  }
+
+  QueryBuilder<Upgrades, Upgrades, QAfterFilterCondition>
+      upgradeValuesElementEqualTo(bool value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'upgradeValues',
         value: value,
       ));
+    });
+  }
+
+  QueryBuilder<Upgrades, Upgrades, QAfterFilterCondition>
+      upgradeValuesLengthEqualTo(int length) {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'upgradeValues',
+        length,
+        true,
+        length,
+        true,
+      );
+    });
+  }
+
+  QueryBuilder<Upgrades, Upgrades, QAfterFilterCondition>
+      upgradeValuesIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'upgradeValues',
+        0,
+        true,
+        0,
+        true,
+      );
+    });
+  }
+
+  QueryBuilder<Upgrades, Upgrades, QAfterFilterCondition>
+      upgradeValuesIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'upgradeValues',
+        0,
+        false,
+        999999,
+        true,
+      );
+    });
+  }
+
+  QueryBuilder<Upgrades, Upgrades, QAfterFilterCondition>
+      upgradeValuesLengthLessThan(
+    int length, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'upgradeValues',
+        0,
+        true,
+        length,
+        include,
+      );
+    });
+  }
+
+  QueryBuilder<Upgrades, Upgrades, QAfterFilterCondition>
+      upgradeValuesLengthGreaterThan(
+    int length, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'upgradeValues',
+        length,
+        include,
+        999999,
+        true,
+      );
+    });
+  }
+
+  QueryBuilder<Upgrades, Upgrades, QAfterFilterCondition>
+      upgradeValuesLengthBetween(
+    int lower,
+    int upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'upgradeValues',
+        lower,
+        includeLower,
+        upper,
+        includeUpper,
+      );
     });
   }
 }
