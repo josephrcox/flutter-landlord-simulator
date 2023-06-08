@@ -113,11 +113,12 @@ class _MenuState extends ConsumerState<Menu> with WidgetsBindingObserver {
             ElevatedButton(
                 onPressed: () {
                   HapticFeedback.mediumImpact();
-                  // go to game screen widget
                   Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) => const GameScreen()));
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const GameScreen(),
+                    ),
+                  );
                 },
                 child: const Text('Start game')),
           ],

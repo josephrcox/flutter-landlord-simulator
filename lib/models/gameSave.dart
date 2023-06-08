@@ -55,13 +55,20 @@ class Plot {
 class Upgrades {
   List<String> upgradeOptions = [
     'swimmingPool',
+    'freeUitilities',
+    'dogsAllowed',
+    'catsAllowed',
+    'improvedSecurity',
+    'improvedParking',
   ];
   List<bool> upgradeValues = [
+    false,
+    false,
+    false,
+    false,
+    false,
     false,
   ];
 
   Upgrades();
 }
-
-
-

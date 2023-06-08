@@ -22,6 +22,7 @@ class SaveProvider with ChangeNotifier {
   bool initialized = false;
   bool resetting = false;
   bool pauseLoop = false;
+  int lastProfit = 0;
 
   GameSave? get save => _save;
 
@@ -100,6 +101,11 @@ class SaveProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  void pauseGame() {
+    pauseLoop = !pauseLoop;
+    notifyListeners();
+  }
+
   void triggerLoop() async {
     final firstSave = await isar.gameSaves.where().findFirst();
     if (firstSave == null) {
@@ -147,12 +153,12 @@ class SaveProvider with ChangeNotifier {
       required upgradeIndex,
       required upgradeName,
       required toggleTo}) async {
-        print(toggleTo);
     pauseLoop = true;
     var newPlots = _save?.plotList!.plots!.toList();
     final upgradeConfig = configUpgrades[upgradeName];
 
-    if (toggleTo == true && _save!.money < (configUpgrades[upgradeName]!['cost'] as num) ||
+    if (toggleTo == true &&
+            _save!.money < (configUpgrades[upgradeName]!['cost'] as num) ||
         upgradeConfig == null ||
         newPlots?[propertyIndex].plotUpgrades == null) {
       return false;
@@ -165,10 +171,10 @@ class SaveProvider with ChangeNotifier {
     if (toggleTo == true) {
       _save?.money -= (upgradeConfig['cost'] as num).toInt();
       newPlots?[propertyIndex].happiness +=
-          (upgradeConfig['happiness'] as num).toInt();
+          (upgradeConfig['instantHappiness'] as num).toInt();
     } else {
       newPlots?[propertyIndex].happiness -=
-          (upgradeConfig['happiness'] as num).toInt();
+          (upgradeConfig['instantHappiness'] as num).toInt();
     }
     await isar.writeTxn(() async {
       _save?.plotList?.plots = newPlots;
@@ -262,8 +268,12 @@ void loop(Isar isar, save, resetting) async {
   //// Calculate happiness (random changes based on things)
   save?.plotList.plots = calculateHappiness(save?.plotList?.plots);
 
+  //// Calculate profits and losses from upgrades
+  profit = calculateUpgradesProfitAndLoss(profit, save?.plotList?.plots);
+
   // Add profit to money
   save?.money += profit;
+
   final firstSave = await isar.gameSaves.where().findFirst();
   if (firstSave == null) {
     return;
@@ -309,23 +319,55 @@ GameSave calculateResidentsLeaving(GameSave save) {
 }
 
 List<Plot> calculateHappiness(List<Plot> plots) {
-  final random = Random();
-
   for (var i = 0; i < plots.length; i++) {
-    final roll = random.nextInt(100);
     final plot = plots[i];
     if (plot.residents == 0) {
-      // plot.happiness = 50;
-    } else if (roll < plot.happiness && roll.isEven) {
-      plot.happiness += 1;
-      continue;
-    } else if (roll < plot.happiness && roll.isOdd) {
-      plot.happiness -= 1;
-      continue;
-    } else {
-      continue;
+      plot.happiness = 50;
+    } 
+
+    double happinessModifier = 1.00;
+    if (plot.plotUpgrades != null) {
+      for (var j = 0; j < plot.plotUpgrades!.upgradeValues.length; j++) {
+        if (plot.plotUpgrades!.upgradeValues[j] == true) {
+          final upgradeName = plot.plotUpgrades!.upgradeOptions[j];
+          final upgradeConfig = configUpgrades[upgradeName];
+          happinessModifier *=
+              (upgradeConfig?['happinessModifier'] as num).toDouble();
+        }
+      }
+    }
+    plot.happiness = (plot.happiness * happinessModifier).floor();
+    if (plot.happiness > 100) {
+      plot.happiness = 100;
+    } else if (plot.happiness < 1) {
+      plot.happiness = 1;
     }
   }
 
   return plots;
+}
+
+int calculateUpgradesProfitAndLoss(int profit, List<Plot>? plots) {
+  if (plots == null) {
+    return profit;
+  }
+  for (var plot in plots) {
+    if (plot.plotUpgrades == null) {
+      continue;
+    }
+    for (var i = 0; i < plot.plotUpgrades!.upgradeValues.length; i++) {
+      if (plot.plotUpgrades!.upgradeValues[i] == true) {
+        final upgradeName = plot.plotUpgrades!.upgradeOptions[i];
+        final upgradeConfig = configUpgrades[upgradeName];
+        profit -= ((upgradeConfig?['monthlyCostPerResident'] as num).toInt() *
+                plot.residents) ~/
+            30;
+        profit += ((upgradeConfig?['monthlyProfitPerResident'] as num).toInt() *
+                plot.residents) ~/
+            30;
+      }
+    }
+  }
+
+  return profit;
 }

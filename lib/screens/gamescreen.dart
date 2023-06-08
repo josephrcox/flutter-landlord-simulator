@@ -5,11 +5,10 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:real/provider/provider.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
-import 'dart:convert';
 
-import '../models/gameSave.dart';
 
 import '../configSettings.dart';
+import 'helpScreen.dart';
 
 class GameScreen extends ConsumerStatefulWidget {
   const GameScreen({Key? key}) : super(key: key);
@@ -125,8 +124,6 @@ class _GameScreenState extends ConsumerState<GameScreen>
             propertyList.plots![plotIndex].plotUpgrades!.upgradeValues[i];
       }
 
-      print(upgradesMap);
-
       showModalBottomSheet(
         context: context,
         builder: (context) {
@@ -153,89 +150,132 @@ class _GameScreenState extends ConsumerState<GameScreen>
                           ),
                         ),
                         const SizedBox(height: 20),
-                        ListView.builder(
-                          shrinkWrap: true,
-                          itemCount: upgradesMap.length,
-                          itemBuilder: (context, index) {
-                            String propertyName =
-                                upgradesMap.keys.elementAt(index);
-                            bool propertyValue =
-                                upgradesMap.values.elementAt(index);
+                        Expanded(
+                          child: Padding(
+                            padding: const EdgeInsets.fromLTRB(0, 0, 0, 40),
+                            child: ListView.builder(
+                              // scrollable list of upgrades
+                              shrinkWrap: true,
+                              itemCount: upgradesMap.length,
+                              itemBuilder: (context, index) {
+                                String propertyName =
+                                    upgradesMap.keys.elementAt(index);
+                                bool propertyValue =
+                                    upgradesMap.values.elementAt(index);
 
-                            return InkWell(
-                              onTap: () async {
-                                final success =
-                                    await saveProvider.actionToggleUpgrade(
-                                  propertyIndex: plotIndex,
-                                  upgradeIndex: index,
-                                  upgradeName:
-                                      upgradesMap.keys.elementAt(index),
-                                  toggleTo: !propertyValue,
-                                );
-                                if (success) {
-                                  setState(
-                                    () {
-                                      upgradesMap[propertyName] =
-                                          !propertyValue; // Toggle the boolean value
-                                      save = saveProvider.save;
-                                    },
-                                  );
-                                }
-                              },
-                              child: Container(
-                                color:
-                                    propertyValue ? Colors.green : Colors.red,
-                                child: Row(
-                                  children: [
-                                    Expanded(
-                                      child: Padding(
-                                        padding: const EdgeInsets.all(16.0),
-                                        child: Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
+                                return InkWell(
+                                  onTap: () async {
+                                    final success =
+                                        await saveProvider.actionToggleUpgrade(
+                                      propertyIndex: plotIndex,
+                                      upgradeIndex: index,
+                                      upgradeName:
+                                          upgradesMap.keys.elementAt(index),
+                                      toggleTo: !propertyValue,
+                                    );
+                                    if (success) {
+                                      setState(
+                                        () {
+                                          upgradesMap[propertyName] =
+                                              !propertyValue; // Toggle the boolean value
+                                          save = saveProvider.save;
+                                        },
+                                      );
+                                    }
+                                  },
+                                  child: Column(
+                                    children: [
+                                      const SizedBox(height: 10),
+                                      Container(
+                                        color: propertyValue
+                                            ? Colors.green
+                                            : Colors.red,
+                                        child: Row(
                                           children: [
-                                            Row(
-                                              children: [
-                                                Text(
-                                                  configUpgrades[propertyName]![
-                                                          'name']
-                                                      .toString(),
-                                                  style: const TextStyle(
-                                                    color: Colors.white,
-                                                    fontWeight: FontWeight.bold,
-                                                    fontSize: 16,
-                                                  ),
+                                            Expanded(
+                                              child: Padding(
+                                                padding:
+                                                    const EdgeInsets.all(16.0),
+                                                child: Column(
+                                                  crossAxisAlignment:
+                                                      CrossAxisAlignment.start,
+                                                  children: [
+                                                    Row(
+                                                      children: [
+                                                        Text(
+                                                          configUpgrades[
+                                                                      propertyName]![
+                                                                  'name']
+                                                              .toString(),
+                                                          style:
+                                                              const TextStyle(
+                                                            color: Colors.white,
+                                                            fontWeight:
+                                                                FontWeight.bold,
+                                                            fontSize: 18,
+                                                          ),
+                                                        ),
+                                                        const Spacer(),
+                                                        Text(
+                                                          propertyValue
+                                                              ? 'Enabled'
+                                                              : 'Not enabled',
+                                                          style:
+                                                              const TextStyle(
+                                                            color: Colors.white,
+                                                            fontSize: 10,
+                                                          ),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                    const SizedBox(height: 5),
+                                                    Text(
+                                                      configUpgrades[
+                                                                  propertyName]![
+                                                              'desc']
+                                                          .toString(),
+                                                    ),
+                                                    const SizedBox(height: 8),
+                                                    const Text(
+                                                      'Costs',
+                                                      style: TextStyle(
+                                                        fontWeight:
+                                                            FontWeight.bold,
+                                                      ),
+                                                    ),
+                                                    const SizedBox(height: 3),
+                                                    Text(
+                                                      'Upfront: \$${configUpgrades[propertyName]!["cost"].toString()}',
+                                                    ),
+                                                    const SizedBox(height: 3),
+                                                    Text(
+                                                      'Monthly/resident: \$${configUpgrades[propertyName]!["monthlyCostPerResident"].toString()}',
+                                                    ),
+                                                    const SizedBox(height: 8),
+                                                    const Text(
+                                                      'Profits',
+                                                      style: TextStyle(
+                                                        fontWeight:
+                                                            FontWeight.bold,
+                                                      ),
+                                                    ),
+                                                    const SizedBox(height: 3),
+                                                    Text(
+                                                      'Monthly/resident: \$${configUpgrades[propertyName]!["monthlyProfitPerResident"].toString()}',
+                                                    ),
+                                                  ],
                                                 ),
-                                                const Spacer(),
-                                                Text(
-                                                  propertyValue
-                                                      ? 'Enabled'
-                                                      : 'Not enabled',
-                                                  style: const TextStyle(
-                                                    color: Colors.white,
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                            const SizedBox(height: 5),
-                                            Text(
-                                              configUpgrades[propertyName]![
-                                                      'desc']
-                                                  .toString(),
-                                            ),
-                                            const SizedBox(height: 5),
-                                            Text(
-                                              '\$${configUpgrades[propertyName]!["cost"].toString()}',
+                                              ),
                                             ),
                                           ],
                                         ),
                                       ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            );
-                          },
+                                    ],
+                                  ),
+                                );
+                              },
+                            ),
+                          ),
                         ),
                       ],
                     ),
@@ -283,7 +323,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
                           onPressed: (BuildContext context) {
                             openSetRentMenu(index);
                           },
-                          backgroundColor: Color(0xFFFE4A49),
+                          backgroundColor: const Color(0xFFFE4A49),
                           foregroundColor: Colors.white,
                           icon: Icons.paid,
                           label: 'Set rent',
@@ -292,7 +332,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
                           onPressed: (BuildContext context) {
                             openUpgradesMenu(index);
                           },
-                          backgroundColor: Color.fromARGB(255, 43, 141, 95),
+                          backgroundColor: const Color.fromARGB(255, 43, 141, 95),
                           foregroundColor: Colors.white,
                           icon: Icons.rocket_launch,
                           label: 'Upgrade',
@@ -488,10 +528,20 @@ class _GameScreenState extends ConsumerState<GameScreen>
         actions: [
           IconButton(
             onPressed: () {
-              saveProvider.resetGame();
-              save = saveProvider.save;
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const HelpScreen(),
+                ),
+              );
             },
-            icon: const Icon(Icons.refresh),
+            icon: const Icon(Icons.question_mark),
+          ),
+          IconButton(
+            onPressed: () {
+              saveProvider.pauseGame();
+            },
+            icon: const Icon(Icons.pause_circle),
           ),
         ],
       ),
