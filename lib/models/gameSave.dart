@@ -7,6 +7,7 @@ class GameSave {
   Id id = Isar.autoIncrement;
 
   int money;
+  int lastProfit;
 
   String infoName;
 
@@ -20,6 +21,7 @@ class GameSave {
 
   GameSave({
     this.money = 55000,
+    this.lastProfit = 0,
     this.infoName = 'Save 1',
     this.infoDay = 1,
     this.infoYear = 1,
@@ -39,7 +41,7 @@ class Plot {
   int rent;
   int residents;
   int maxResidents;
-  int happiness; // out of 100
+  int happiness; 
   Upgrades? plotUpgrades;
 
   Plot({
@@ -59,7 +61,7 @@ class Upgrades {
     'dogsAllowed',
     'catsAllowed',
     'improvedSecurity',
-    'improvedParking',
+    // 'improvedParking',
   ];
   List<bool> upgradeValues = [
     false,
@@ -67,7 +69,7 @@ class Upgrades {
     false,
     false,
     false,
-    false,
+    // false,
   ];
 
   Upgrades();

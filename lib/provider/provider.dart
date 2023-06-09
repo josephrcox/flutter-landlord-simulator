@@ -61,6 +61,7 @@ class SaveProvider with ChangeNotifier {
   }
 
   Future<GameSave?> getFirstSave() async {
+    print(await isar.gameSaves);
     _save = await isar.gameSaves.where().findFirst();
     if (_save == null) {
       final newSave = GameSave();
@@ -204,7 +205,7 @@ class SaveProvider with ChangeNotifier {
       final multiplierBasedOnRentCost = plot.rent / 1000;
       final roll = random.nextInt(100) * multiplierBasedOnRentCost;
 
-      if ((roll) < chance) {
+      if ((roll) < chance || plot.happiness > 99) {
         plot.residents += 1;
         increase = 1;
       }
@@ -258,7 +259,6 @@ void loop(Isar isar, save, resetting) async {
 
   //// Calculate rent
   profit = calculateRent(profit, save?.plotList?.plots);
-  profit -= (profit * save?.rulesTaxRate).floor();
 
   //// Calculate residents leaving
   if (save?.plotList?.plots != null) {
@@ -271,8 +271,11 @@ void loop(Isar isar, save, resetting) async {
   //// Calculate profits and losses from upgrades
   profit = calculateUpgradesProfitAndLoss(profit, save?.plotList?.plots);
 
+  save?.lastProfit = profit - (profit * save?.rulesTaxRate).floor();
   // Add profit to money
-  save?.money += profit;
+  save?.money += save?.lastProfit;
+
+  save?.rulesTaxRate = calculateTaxRateChanges(save?.rulesTaxRate, save?.money);
 
   final firstSave = await isar.gameSaves.where().findFirst();
   if (firstSave == null) {
@@ -321,24 +324,9 @@ GameSave calculateResidentsLeaving(GameSave save) {
 List<Plot> calculateHappiness(List<Plot> plots) {
   for (var i = 0; i < plots.length; i++) {
     final plot = plots[i];
-    if (plot.residents == 0) {
-      plot.happiness = 50;
-    } 
 
-    double happinessModifier = 1.00;
-    if (plot.plotUpgrades != null) {
-      for (var j = 0; j < plot.plotUpgrades!.upgradeValues.length; j++) {
-        if (plot.plotUpgrades!.upgradeValues[j] == true) {
-          final upgradeName = plot.plotUpgrades!.upgradeOptions[j];
-          final upgradeConfig = configUpgrades[upgradeName];
-          happinessModifier *=
-              (upgradeConfig?['happinessModifier'] as num).toDouble();
-        }
-      }
-    }
-    plot.happiness = (plot.happiness * happinessModifier).floor();
-    if (plot.happiness > 100) {
-      plot.happiness = 100;
+    if (plot.happiness > 300) {
+      plot.happiness = 300;
     } else if (plot.happiness < 1) {
       plot.happiness = 1;
     }
@@ -370,4 +358,20 @@ int calculateUpgradesProfitAndLoss(int profit, List<Plot>? plots) {
   }
 
   return profit;
+}
+
+double calculateTaxRateChanges(double taxRate, int money) {
+  if (money < 100000) {
+    taxRate = 0.1;
+  } else if (money < 250000) {
+    taxRate = 0.15;
+  } else if (money < 1000000) {
+    taxRate = 0.25;
+  } else if (money < 2500000) {
+    taxRate = 0.40;
+  } else {
+    taxRate = 0.5;
+  }
+
+  return taxRate;
 }

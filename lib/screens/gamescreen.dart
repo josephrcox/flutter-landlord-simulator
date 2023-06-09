@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:real/provider/provider.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 
+import 'package:fl_chart/fl_chart.dart';
 
 import '../configSettings.dart';
 import 'helpScreen.dart';
@@ -310,7 +311,9 @@ class _GameScreenState extends ConsumerState<GameScreen>
                           // when tapped, use a slightly darker color
                           ? propertyList.plots![index].happiness < 40
                               ? sadColor.withOpacity(0.4)
-                              : happyColor.withOpacity(0.4)
+                              : propertyList.plots![index].happiness > 99
+                                  ? Colors.white.withOpacity(0.4)
+                                  : happyColor.withOpacity(0.4)
                           : propertyList.plots![index].happiness < 40
                               ? sadColor
                               : happyColor),
@@ -332,7 +335,8 @@ class _GameScreenState extends ConsumerState<GameScreen>
                           onPressed: (BuildContext context) {
                             openUpgradesMenu(index);
                           },
-                          backgroundColor: const Color.fromARGB(255, 43, 141, 95),
+                          backgroundColor:
+                              const Color.fromARGB(255, 43, 141, 95),
                           foregroundColor: Colors.white,
                           icon: Icons.rocket_launch,
                           label: 'Upgrade',
@@ -554,10 +558,13 @@ class _GameScreenState extends ConsumerState<GameScreen>
                   mainAxisAlignment: MainAxisAlignment.start,
                   children: <Widget>[
                     headerWidget(
-                        money: save!.money,
-                        day: save!.infoDay,
-                        year: save!.infoYear,
-                        background: headerBackgroundColorARGB),
+                      money: save!.money,
+                      day: save!.infoDay,
+                      year: save!.infoYear,
+                      background: headerBackgroundColorARGB,
+                      taxRate: save!.rulesTaxRate,
+                      lastProfit: save!.lastProfit,
+                    ),
                     displayProperties(),
                     ElevatedButton(
                       onPressed: saveProvider.actionPurchaseProperty,
@@ -573,11 +580,14 @@ class _GameScreenState extends ConsumerState<GameScreen>
 }
 
 // header widget that takes money
-Widget headerWidget(
-    {required int money,
-    required int day,
-    required int year,
-    required Color background}) {
+Widget headerWidget({
+  required int money,
+  required int lastProfit,
+  required int day,
+  required int year,
+  required Color background,
+  required double taxRate,
+}) {
   // converts money to string with commas
   String moneyString = money.toString();
   if (moneyString.length > 3) {
@@ -592,16 +602,28 @@ Widget headerWidget(
     child: Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(
-          'Money: $moneyString',
-          style: const TextStyle(
-            fontSize: 16,
-          ),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Money: $moneyString (daily profit \$$lastProfit)',
+            ),
+            const SizedBox(
+              height: 4,
+            ),
+            Text(
+              'Tax rate: ${taxRate * 100}%',
+            ),
+          ],
         ),
         Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
               'Day $day',
+            ),
+            const SizedBox(
+              height: 4,
             ),
             Text(
               'Year $year',
