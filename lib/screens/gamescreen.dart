@@ -6,10 +6,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:real/provider/provider.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 
-import 'package:fl_chart/fl_chart.dart';
-
 import '../configSettings.dart';
 import 'helpScreen.dart';
+import '../upgradeMenu.dart';
 
 class GameScreen extends ConsumerStatefulWidget {
   const GameScreen({Key? key}) : super(key: key);
@@ -35,8 +34,6 @@ class _GameScreenState extends ConsumerState<GameScreen>
     super.dispose();
   }
 
-  // return state
-
   @override
   Widget build(BuildContext context) {
     final saveProvider = ref.watch(saveProviderNotifier);
@@ -48,6 +45,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
     Color headerBackgroundColorARGB = const Color.fromARGB(255, 37, 68, 97);
     Color happyColor = const Color.fromARGB(255, 17, 95, 51);
     Color sadColor = const Color.fromARGB(255, 121, 50, 41);
+    Color amenitiesColor = const Color.fromARGB(255, 73, 17, 89);
 
     void openSetRentMenu(index) {
       showModalBottomSheet(
@@ -111,184 +109,6 @@ class _GameScreenState extends ConsumerState<GameScreen>
       );
     }
 
-    void openUpgradesMenu(plotIndex) {
-      // create a map based on the upgrade options and values
-      Map<String, bool> upgradesMap = {};
-
-      for (int i = 0;
-          i <
-              propertyList!
-                  .plots![plotIndex].plotUpgrades!.upgradeOptions.length;
-          i++) {
-        upgradesMap[propertyList
-                .plots![plotIndex].plotUpgrades!.upgradeOptions[i]] =
-            propertyList.plots![plotIndex].plotUpgrades!.upgradeValues[i];
-      }
-
-      showModalBottomSheet(
-        context: context,
-        builder: (context) {
-          return StatefulBuilder(
-            // Wrap the content with StatefulBuilder
-            builder: (BuildContext context, StateSetter setState) {
-              return Padding(
-                padding: EdgeInsets.only(
-                  bottom: MediaQuery.of(context).viewInsets.bottom,
-                  left: 25,
-                  right: 25,
-                ),
-                child: SizedBox(
-                  child: Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Column(
-                      children: [
-                        const SizedBox(height: 10),
-                        const Text(
-                          'Upgrades',
-                          style: TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        const SizedBox(height: 20),
-                        Expanded(
-                          child: Padding(
-                            padding: const EdgeInsets.fromLTRB(0, 0, 0, 40),
-                            child: ListView.builder(
-                              // scrollable list of upgrades
-                              shrinkWrap: true,
-                              itemCount: upgradesMap.length,
-                              itemBuilder: (context, index) {
-                                String propertyName =
-                                    upgradesMap.keys.elementAt(index);
-                                bool propertyValue =
-                                    upgradesMap.values.elementAt(index);
-
-                                return InkWell(
-                                  onTap: () async {
-                                    final success =
-                                        await saveProvider.actionToggleUpgrade(
-                                      propertyIndex: plotIndex,
-                                      upgradeIndex: index,
-                                      upgradeName:
-                                          upgradesMap.keys.elementAt(index),
-                                      toggleTo: !propertyValue,
-                                    );
-                                    if (success) {
-                                      setState(
-                                        () {
-                                          upgradesMap[propertyName] =
-                                              !propertyValue; // Toggle the boolean value
-                                          save = saveProvider.save;
-                                        },
-                                      );
-                                    }
-                                  },
-                                  child: Column(
-                                    children: [
-                                      const SizedBox(height: 10),
-                                      Container(
-                                        color: propertyValue
-                                            ? Colors.green
-                                            : Colors.red,
-                                        child: Row(
-                                          children: [
-                                            Expanded(
-                                              child: Padding(
-                                                padding:
-                                                    const EdgeInsets.all(16.0),
-                                                child: Column(
-                                                  crossAxisAlignment:
-                                                      CrossAxisAlignment.start,
-                                                  children: [
-                                                    Row(
-                                                      children: [
-                                                        Text(
-                                                          configUpgrades[
-                                                                      propertyName]![
-                                                                  'name']
-                                                              .toString(),
-                                                          style:
-                                                              const TextStyle(
-                                                            color: Colors.white,
-                                                            fontWeight:
-                                                                FontWeight.bold,
-                                                            fontSize: 18,
-                                                          ),
-                                                        ),
-                                                        const Spacer(),
-                                                        Text(
-                                                          propertyValue
-                                                              ? 'Enabled'
-                                                              : 'Not enabled',
-                                                          style:
-                                                              const TextStyle(
-                                                            color: Colors.white,
-                                                            fontSize: 10,
-                                                          ),
-                                                        ),
-                                                      ],
-                                                    ),
-                                                    const SizedBox(height: 5),
-                                                    Text(
-                                                      configUpgrades[
-                                                                  propertyName]![
-                                                              'desc']
-                                                          .toString(),
-                                                    ),
-                                                    const SizedBox(height: 8),
-                                                    const Text(
-                                                      'Costs',
-                                                      style: TextStyle(
-                                                        fontWeight:
-                                                            FontWeight.bold,
-                                                      ),
-                                                    ),
-                                                    const SizedBox(height: 3),
-                                                    Text(
-                                                      'Upfront: \$${configUpgrades[propertyName]!["cost"].toString()}',
-                                                    ),
-                                                    const SizedBox(height: 3),
-                                                    Text(
-                                                      'Monthly/resident: \$${configUpgrades[propertyName]!["monthlyCostPerResident"].toString()}',
-                                                    ),
-                                                    const SizedBox(height: 8),
-                                                    const Text(
-                                                      'Profits',
-                                                      style: TextStyle(
-                                                        fontWeight:
-                                                            FontWeight.bold,
-                                                      ),
-                                                    ),
-                                                    const SizedBox(height: 3),
-                                                    Text(
-                                                      'Monthly/resident: \$${configUpgrades[propertyName]!["monthlyProfitPerResident"].toString()}',
-                                                    ),
-                                                  ],
-                                                ),
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                );
-                              },
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              );
-            },
-          );
-        },
-      );
-    }
-
     Widget displayProperties() {
       if (propertyList != null) {
         if (isTappedList.length != propertyList.plots!.length) {
@@ -299,7 +119,6 @@ class _GameScreenState extends ConsumerState<GameScreen>
           height: MediaQuery.of(context).size.height * 0.7,
           child: ListView.builder(
             shrinkWrap: true,
-            // physics: const NeverScrollableScrollPhysics(),
             itemCount: propertyList.plots!.length,
             itemBuilder: (context, index) {
               return GestureDetector(
@@ -308,11 +127,10 @@ class _GameScreenState extends ConsumerState<GameScreen>
                       const Duration(milliseconds: tapAnimationDurationMS),
                   decoration: BoxDecoration(
                       color: isTappedList[index]
-                          // when tapped, use a slightly darker color
                           ? propertyList.plots![index].happiness < 40
                               ? sadColor.withOpacity(0.4)
                               : propertyList.plots![index].happiness > 99
-                                  ? Colors.white.withOpacity(0.4)
+                                  ? happyColor.withOpacity(0.8)
                                   : happyColor.withOpacity(0.4)
                           : propertyList.plots![index].happiness < 40
                               ? sadColor
@@ -324,22 +142,19 @@ class _GameScreenState extends ConsumerState<GameScreen>
                       children: [
                         SlidableAction(
                           onPressed: (BuildContext context) {
-                            openSetRentMenu(index);
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => UpgradeMenu(
+                                  plotIndex: index,
+                                ),
+                              ),
+                            );
                           },
-                          backgroundColor: const Color(0xFFFE4A49),
+                          backgroundColor: amenitiesColor,
                           foregroundColor: Colors.white,
-                          icon: Icons.paid,
-                          label: 'Set rent',
-                        ),
-                        SlidableAction(
-                          onPressed: (BuildContext context) {
-                            openUpgradesMenu(index);
-                          },
-                          backgroundColor:
-                              const Color.fromARGB(255, 43, 141, 95),
-                          foregroundColor: Colors.white,
-                          icon: Icons.rocket_launch,
-                          label: 'Upgrade',
+                          icon: Icons.home_repair_service,
+                          label: 'Amenities',
                         ),
                       ],
                     ),
@@ -415,7 +230,6 @@ class _GameScreenState extends ConsumerState<GameScreen>
                                   children: [
                                     InkWell(
                                       onTap: () {
-                                        // decrease rent by 100
                                         saveProvider.actionSetRent(
                                           propertyList.plots![index].rent - 100,
                                           index,
@@ -438,7 +252,6 @@ class _GameScreenState extends ConsumerState<GameScreen>
                                     const SizedBox(width: 32),
                                     InkWell(
                                       onTap: () {
-                                        // increase rent by 100
                                         saveProvider.actionSetRent(
                                           propertyList.plots![index].rent + 100,
                                           index,
@@ -483,8 +296,6 @@ class _GameScreenState extends ConsumerState<GameScreen>
                   if (increase > 0) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
-                        // margin: const EdgeInsets.symmetric(horizontal: 20),
-                        // make higher in screen
                         backgroundColor: const Color.fromARGB(255, 30, 167, 35),
                         behavior: SnackBarBehavior.floating,
                         width: 200,
@@ -547,6 +358,37 @@ class _GameScreenState extends ConsumerState<GameScreen>
             },
             icon: const Icon(Icons.pause_circle),
           ),
+          IconButton(
+            onPressed: () {
+              // confirm to reset
+              showDialog(
+                context: context,
+                builder: (context) {
+                  return AlertDialog(
+                    title: const Text('Reset game?'),
+                    content: const Text(
+                        'This will reset your game and you will lose all progress.'),
+                    actions: [
+                      TextButton(
+                        onPressed: () {
+                          Navigator.pop(context);
+                        },
+                        child: const Text('Cancel'),
+                      ),
+                      TextButton(
+                        onPressed: () {
+                          saveProvider.resetGame();
+                          Navigator.pop(context);
+                        },
+                        child: const Text('Reset'),
+                      ),
+                    ],
+                  );
+                },
+              );
+            },
+            icon: const Icon(Icons.refresh),
+          ),
         ],
       ),
       backgroundColor: backgroundColorARGB,
@@ -568,7 +410,6 @@ class _GameScreenState extends ConsumerState<GameScreen>
                     displayProperties(),
                     ElevatedButton(
                       onPressed: saveProvider.actionPurchaseProperty,
-                      // set rulesNewPropCost to money string with commas
                       child: Text('Buy property (${save!.rulesNewPropCost})'),
                     ),
                   ],
@@ -579,7 +420,6 @@ class _GameScreenState extends ConsumerState<GameScreen>
   }
 }
 
-// header widget that takes money
 Widget headerWidget({
   required int money,
   required int lastProfit,
@@ -588,7 +428,6 @@ Widget headerWidget({
   required Color background,
   required double taxRate,
 }) {
-  // converts money to string with commas
   String moneyString = money.toString();
   if (moneyString.length > 3) {
     moneyString =
@@ -596,7 +435,6 @@ Widget headerWidget({
   }
 
   return Container(
-    // bg color
     color: background,
     padding: const EdgeInsets.all(20),
     child: Row(

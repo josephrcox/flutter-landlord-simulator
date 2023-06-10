@@ -29,7 +29,6 @@ class HelpScreen extends StatelessWidget {
   }
 }
 
-// HelpScreenContent() widget
 class HelpScreenContent extends StatelessWidget {
   const HelpScreenContent({Key? key}) : super(key: key);
 

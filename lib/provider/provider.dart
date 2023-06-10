@@ -91,13 +91,13 @@ class SaveProvider with ChangeNotifier {
   }
 
   void resetGame() async {
-    resetting = true;
-    final newSave = GameSave();
+    pauseLoop = true;
+    final id = _save!.id;
     await isar.writeTxn(() async {
-      await isar.gameSaves.put(newSave);
+      await isar.gameSaves.deleteAll([id]);
     });
-    _save = await isar.gameSaves.where().findFirst();
-    resetting = false;
+    _save = GameSave();
+    pauseLoop = false;
 
     notifyListeners();
   }
