@@ -21,7 +21,7 @@ class SaveProvider with ChangeNotifier {
   Timer? _timer;
   bool initialized = false;
   bool resetting = false;
-  bool pauseLoop = false;
+  bool pauseLoop = true;
   int lastProfit = 0;
 
   GameSave? get save => _save;
@@ -62,28 +62,25 @@ class SaveProvider with ChangeNotifier {
 
   Future<GameSave?> getFirstSave() async {
     _save = await isar.gameSaves.where().findFirst();
-    if (_save == null) {
-      final newSave = GameSave();
+
+    _save ??= GameSave();
+
+    if (save!.staff == null) {
+      save!.staff = Staff();
       await isar.writeTxn(() async {
-        await isar.gameSaves.put(newSave);
+        await isar.gameSaves.put(save!);
       });
-      _save = await isar.gameSaves.where().findFirst();
-      if (save!.staff == null) {
-        save!.staff = Staff();
-        await isar.writeTxn(() async {
-          await isar.gameSaves.put(save!);
-        });
-      }
-      _loading = false;
-      notifyListeners();
-      return _save;
-    } else {
-      if (save!.staff == null) {
-        save!.staff = Staff();
-        await isar.writeTxn(() async {
-          await isar.gameSaves.put(save!);
-        });
-      }
+    }
+
+    if (_save!.plotList == null) {
+      _save!.plotList = PlotList();
+      _save!.plotList!.plots = [];
+      await isar.writeTxn(() async {
+        await isar.gameSaves.put(save!);
+      });
+    }
+
+    if (_save!.plotList!.plots != null) {
       for (var i = 0; i < _save!.plotList!.plots!.length; i++) {
         final plot = _save!.plotList!.plots![i];
         if (plot.plotUpgrades == null) {
@@ -93,12 +90,14 @@ class SaveProvider with ChangeNotifier {
           });
         }
       }
-
-      _loading = false;
-      notifyListeners();
-      resetting = false;
-      return _save;
     }
+
+    _loading = false;
+
+    notifyListeners();
+    resetting = false;
+    pauseLoop = false;
+    return _save;
   }
 
   void resetGame() async {
@@ -223,26 +222,29 @@ class SaveProvider with ChangeNotifier {
     return true;
   }
 
-  Future<int> actionSearchForResidents(int index) async {
+  FutureOr<dynamic> actionSearchForResidents(int index) async {
     int increase = 0;
 
-    await isar.writeTxn(() async {
+    return await isar.writeTxn(() async {
       final newPlots = _save?.plotList?.plots?.toList();
       final plot = newPlots?[index];
-      if (plot!.residents >= plot.maxResidents) {
-        return;
-      }
-      if ((plot.rent / 10) > _save!.money) {
-        return;
+      final hasManager = _save?.staff?.staffValues[0] ?? false;
+      final hasManagerDivider = hasManager ? 2 : 1;
+
+      final costToSearch =
+          ((gameSettings['baseSearchForResidentCost'] / hasManagerDivider) *
+                  plot!.rent)
+              .floor();
+
+      if (plot.residents >= plot.maxResidents) {
+        return 0;
       }
 
-      final hasManager = _save?.staff?.staffValues[0] ?? false;
-      if (hasManager) {
-        // Having a manager reduces the cost of searching for residents by 50%
-        _save!.money -= (plot.rent / 20).floor();
-      } else {
-        _save!.money -= (plot.rent / 10).floor();
+      if (_save!.money < costToSearch) {
+        return -1 * costToSearch;
       }
+
+      _save!.money -= costToSearch as int;
 
       final random = Random();
       final happiness = plot.happiness;
@@ -257,10 +259,8 @@ class SaveProvider with ChangeNotifier {
 
       _save?.plotList?.plots = newPlots;
       await isar.gameSaves.put(_save!);
+      return increase;
     });
-
-    notifyListeners();
-    return increase;
   }
 
   void actionPurchaseProperty() async {
@@ -318,14 +318,15 @@ void loop(Isar isar, save, resetting) async {
   }
 
   //// Calculate happiness (random changes based on things)
-  save?.plotList.plots = calculateHappiness(save?.plotList?.plots);
+  if (save?.plotList?.plots != null) {
+    save?.plotList.plots = calculateHappiness(save?.plotList?.plots);
+    //// Calculate profits and losses from upgrades
+    profit = calculateUpgradesProfitAndLoss(profit, save?.plotList?.plots);
 
-  //// Calculate profits and losses from upgrades
-  profit = calculateUpgradesProfitAndLoss(profit, save?.plotList?.plots);
-
-  //// Calculate costs of staff and takes it from profit
-  profit =
-      calculateStaffCosts(profit, save?.staff, save?.plotList?.plots.length);
+    //// Calculate costs of staff and takes it from profit
+    profit =
+        calculateStaffCosts(profit, save?.staff, save?.plotList?.plots.length);
+  }
 
   //// Set last profit
   save?.lastProfit = profit - (profit * save?.rulesTaxRate).floor();

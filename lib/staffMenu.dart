@@ -135,7 +135,7 @@ Widget _staffOptionButton(GameSave? save, String name, String description,
               enabled ? '✅' : '⃝',
               style: const TextStyle(
                 color: Colors.white,
-                fontSize: 24,
+                fontSize: 18,
               ),
             ),
           ),

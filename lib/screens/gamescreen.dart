@@ -10,6 +10,7 @@ import '../staffMenu.dart';
 import 'helpScreen.dart';
 import '../upgradeMenu.dart';
 import '../configSettings.dart';
+import 'package:intl/intl.dart';
 
 class GameScreen extends ConsumerStatefulWidget {
   const GameScreen({Key? key}) : super(key: key);
@@ -49,7 +50,9 @@ class _GameScreenState extends ConsumerState<GameScreen>
     Color amenitiesColor = const Color.fromARGB(255, 73, 17, 89);
 
     Widget displayProperties() {
-      if (propertyList != null) {
+      if (propertyList != null &&
+          propertyList.plots != null &&
+          propertyList.plots!.isNotEmpty) {
         if (isTappedList.length != propertyList.plots!.length) {
           isTappedList = List<bool>.filled(propertyList.plots!.length, false);
         }
@@ -59,6 +62,11 @@ class _GameScreenState extends ConsumerState<GameScreen>
             shrinkWrap: true,
             itemCount: propertyList.plots!.length,
             itemBuilder: (context, index) {
+              final costToSearchManagerModifier =
+                  save!.staff!.staffValues[0] == true ? 2 : 1;
+              final costToSearch = '\$' +
+                  '${propertyList.plots![index].rent * (gameSettings['baseSearchForResidentCost'] / costToSearchManagerModifier)}';
+
               final plotIndex = index;
               Map<String, bool> upgradesMap = {};
               for (int i = 0;
@@ -143,28 +151,46 @@ class _GameScreenState extends ConsumerState<GameScreen>
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    crossAxisAlignment: CrossAxisAlignment.end,
+                                  Column(
+                                    mainAxisAlignment: MainAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
-                                      Text(
-                                        '\$${propertyList.plots![index].rent.toString()}',
-                                        style: const TextStyle(
-                                          fontSize: 24,
-                                        ),
-                                      ),
-                                      const SizedBox(
-                                        width: 5,
-                                        height: 0,
-                                      ),
-                                      const Padding(
-                                        padding: EdgeInsets.only(bottom: 4.0),
-                                        child: Text(
-                                          '/ month',
-                                          style: TextStyle(
-                                            fontSize: 12,
-                                            color: Colors.grey,
+                                      Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.end,
+                                        children: [
+                                          Text(
+                                            '\$${propertyList.plots![index].rent.toString()}',
+                                            style: const TextStyle(
+                                              fontSize: 24,
+                                            ),
                                           ),
+                                          const SizedBox(
+                                            width: 5,
+                                            height: 0,
+                                          ),
+                                          const Padding(
+                                            padding:
+                                                EdgeInsets.only(bottom: 4.0),
+                                            child: Text(
+                                              '/ month',
+                                              style: TextStyle(
+                                                fontSize: 12,
+                                                color: Colors.grey,
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        'Costs $costToSearch to headhunt',
+                                        style: const TextStyle(
+                                          fontSize: 14,
+                                          color: Color.fromARGB(
+                                              255, 255, 255, 255),
                                         ),
                                       ),
                                     ],
@@ -285,6 +311,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
                     });
                     final increase =
                         await saveProvider.actionSearchForResidents(index);
+                    print('increase: $increase');
                     if (increase > 0) {
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
@@ -300,6 +327,28 @@ class _GameScreenState extends ConsumerState<GameScreen>
                           duration: const Duration(milliseconds: 600),
                           content: Text(
                             '$increase resident found! 🎉',
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                      );
+                    } else if (increase < 0) {
+                      // not enough money
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          backgroundColor: Color.fromARGB(255, 167, 46, 30),
+                          behavior: SnackBarBehavior.floating,
+                          width: 200,
+                          shape: const RoundedRectangleBorder(
+                            borderRadius: BorderRadius.all(
+                              Radius.circular(5),
+                            ),
+                          ),
+                          duration: const Duration(milliseconds: 600),
+                          content: Text(
+                            'You require ${-1 * increase} more money to search for residents.',
                             textAlign: TextAlign.center,
                             style: const TextStyle(
                               color: Colors.white,
@@ -440,10 +489,12 @@ Widget headerWidget({
   required Color background,
   required double taxRate,
 }) {
-  String moneyString = money.toString();
+  // convert money int to string with commas for money
+  var f = NumberFormat("###,###,###,###,###", "en_US");
+  String moneyString = f.format(money);
+
   if (moneyString.length > 3) {
-    moneyString =
-        '\$${moneyString.substring(0, moneyString.length - 3)},${moneyString.substring(moneyString.length - 3)}';
+    moneyString = '\$$moneyString';
   }
 
   return Container(

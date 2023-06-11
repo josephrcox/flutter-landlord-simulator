@@ -1441,16 +1441,16 @@ Plot _plotDeserialize(
   Map<Type, List<int>> allOffsets,
 ) {
   final object = Plot(
-    happiness: reader.readLongOrNull(offsets[0]) ?? 100,
-    maxResidents: reader.readLongOrNull(offsets[1]) ?? 10,
     plotUpgrades: reader.readObjectOrNull<Upgrades>(
       offsets[2],
       UpgradesSchema.deserialize,
       allOffsets,
     ),
-    rent: reader.readLongOrNull(offsets[3]) ?? 500,
     residents: reader.readLongOrNull(offsets[4]) ?? 0,
   );
+  object.happiness = reader.readLong(offsets[0]);
+  object.maxResidents = reader.readLong(offsets[1]);
+  object.rent = reader.readLong(offsets[3]);
   return object;
 }
 
@@ -1462,9 +1462,9 @@ P _plotDeserializeProp<P>(
 ) {
   switch (propertyId) {
     case 0:
-      return (reader.readLongOrNull(offset) ?? 100) as P;
+      return (reader.readLong(offset)) as P;
     case 1:
-      return (reader.readLongOrNull(offset) ?? 10) as P;
+      return (reader.readLong(offset)) as P;
     case 2:
       return (reader.readObjectOrNull<Upgrades>(
         offset,
@@ -1472,7 +1472,7 @@ P _plotDeserializeProp<P>(
         allOffsets,
       )) as P;
     case 3:
-      return (reader.readLongOrNull(offset) ?? 500) as P;
+      return (reader.readLong(offset)) as P;
     case 4:
       return (reader.readLongOrNull(offset) ?? 0) as P;
     default:
