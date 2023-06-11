@@ -1,3 +1,10 @@
+const Map<String, dynamic> gameSettings = {
+  "baseSearchForResidentCost": 0.3,
+  "defaultRent": 800,
+  "defaultMaxResidents": 10,
+  "defaultHappiness": 75,
+};
+
 const upgradeInfo = {
   "swimmingPool": {
     "name": "Swimming pool",
@@ -66,3 +73,15 @@ const staffInfo = {
     "monthlyCostPerProperty": 5000
   },
 };
+
+const situationsList = [
+  {
+    "name": "One of your properties burned down",
+    "req_propertyCount": 1,
+    "req_propertyManagerHired": false,
+    "req_money": 0,
+    "options": [],
+    "optionsActions": [],
+    "globalHappinessImpact": -25,
+  },
+];
