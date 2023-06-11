@@ -1,4 +1,5 @@
 import 'package:isar/isar.dart';
+import '../configSettings.dart';
 
 part 'gameSave.g.dart';
 
@@ -41,17 +42,14 @@ class PlotList {
 
 @embedded
 class Plot {
-  int rent;
-  int residents;
-  int maxResidents;
-  int happiness;
+  int rent = gameSettings['defaultRent'];
+  int residents = 0;
+  int maxResidents = gameSettings['defaultMaxResidents'];
+  int happiness = gameSettings['defaultHappiness'];
   Upgrades? plotUpgrades;
 
   Plot({
-    this.rent = 500,
     this.residents = 0,
-    this.maxResidents = 10,
-    this.happiness = 75,
     this.plotUpgrades,
   });
 }
