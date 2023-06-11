@@ -6,6 +6,7 @@ const upgradeInfo = {
     "monthlyCostPerResident": 80,
     "instantHappiness": 25,
     "monthlyProfitPerResident": 0,
+    "icon": "🩳",
   },
   "freeUitilities": {
     "name": "Free Utilities",
@@ -14,6 +15,7 @@ const upgradeInfo = {
     "monthlyCostPerResident": 100,
     "instantHappiness": 25,
     "monthlyProfitPerResident": 0,
+    "icon": "💡",
   },
   "dogsAllowed": {
     "name": "Dogs are allowed",
@@ -22,6 +24,7 @@ const upgradeInfo = {
     "monthlyCostPerResident": 0,
     "instantHappiness": 10,
     "monthlyProfitPerResident": 10,
+    "icon": "🐶",
   },
   "catsAllowed": {
     "name": "Cats are allowed",
@@ -30,6 +33,7 @@ const upgradeInfo = {
     "monthlyCostPerResident": 0,
     "instantHappiness": 10,
     "monthlyProfitPerResident": 6,
+    "icon": "🐱",
   },
   "improvedSecurity": {
     "name": "Improved security",
@@ -38,6 +42,7 @@ const upgradeInfo = {
     "monthlyCostPerResident": 30,
     "instantHappiness": 10,
     "monthlyProfitPerResident": 0,
+    "icon": "🔒",
   },
   "easyTurnover": {
     "name": "Easy turnover",
@@ -47,6 +52,7 @@ const upgradeInfo = {
     "monthlyCostPerResident": 0,
     "instantHappiness": 20,
     "monthlyProfitPerResident": 0,
+    "icon": "🧹",
   },
 };
 
