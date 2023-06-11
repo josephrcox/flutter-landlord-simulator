@@ -16,6 +16,8 @@ class GameSave {
 
   PlotList? plotList;
 
+  Staff? staff;
+
   int rulesNewPropCost;
   double rulesTaxRate;
 
@@ -28,6 +30,7 @@ class GameSave {
     this.plotList,
     this.rulesNewPropCost = 50000,
     this.rulesTaxRate = 0.1,
+    this.staff,
   });
 }
 
@@ -41,14 +44,14 @@ class Plot {
   int rent;
   int residents;
   int maxResidents;
-  int happiness; 
+  int happiness;
   Upgrades? plotUpgrades;
 
   Plot({
-    this.rent = 400,
+    this.rent = 500,
     this.residents = 0,
     this.maxResidents = 10,
-    this.happiness = 50,
+    this.happiness = 75,
     this.plotUpgrades,
   });
 }
@@ -61,7 +64,7 @@ class Upgrades {
     'dogsAllowed',
     'catsAllowed',
     'improvedSecurity',
-    // 'improvedParking',
+    'easyTurnover',
   ];
   List<bool> upgradeValues = [
     false,
@@ -69,8 +72,27 @@ class Upgrades {
     false,
     false,
     false,
-    // false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
   ];
 
   Upgrades();
+}
+
+@embedded
+class Staff {
+  int residentVacanciesFilledByPropertyManager = 0;
+
+  List<String> staffOptions = [
+    'manager'
+  ];
+
+  List<bool> staffValues = [
+    false
+  ];
 }

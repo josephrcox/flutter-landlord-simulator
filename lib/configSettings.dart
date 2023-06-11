@@ -1,10 +1,4 @@
-// 'freeUitilities',
-// 'dogsAllowed',
-// 'catsAllowed',
-// 'improvedSecurity',
-// 'improvedParking',
-
-const configUpgrades = {
+const upgradeInfo = {
   "swimmingPool": {
     "name": "Swimming pool",
     "desc": "This is a pool",
@@ -45,12 +39,24 @@ const configUpgrades = {
     "instantHappiness": 10,
     "monthlyProfitPerResident": 0,
   },
-  // "improvedParking": {
-  //   "name": "Swimming pool",
-  //   "desc": "This is a pool",
-  //   "cost": 10000,
-  //   "monthlyCostPerResident": 250,
-  //   "instantHappiness": 25,
-  //   "monthlyProfitPerResident": 0,
-  // },
+  "easyTurnover": {
+    "name": "Easy turnover",
+    "desc":
+        "You no longer lose money when residents leave, but residents aren't happy with how gross the apartments end up becoming.",
+    "cost": 0,
+    "monthlyCostPerResident": 0,
+    "instantHappiness": 20,
+    "monthlyProfitPerResident": 0,
+  },
+};
+
+const staffInfo = {
+  "manager": {
+    "name": "Property Manager",
+    "desc":
+        "Property Managers ensure that when residents leave, the vacancy is quickly filled without your intervention. The manager also reduces the cost to get new residents by half.",
+    "cost": 0,
+    "baseMonthlyCost": 5000,
+    "monthlyCostPerProperty": 5000
+  },
 };

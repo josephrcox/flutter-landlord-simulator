@@ -6,7 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:real/provider/provider.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 
-import '../configSettings.dart';
+import '../staffMenu.dart';
 import 'helpScreen.dart';
 import '../upgradeMenu.dart';
 
@@ -401,16 +401,35 @@ class _GameScreenState extends ConsumerState<GameScreen>
                   children: <Widget>[
                     headerWidget(
                       money: save!.money,
-                      day: save!.infoDay,
-                      year: save!.infoYear,
+                      day: save.infoDay,
+                      year: save.infoYear,
                       background: headerBackgroundColorARGB,
-                      taxRate: save!.rulesTaxRate,
-                      lastProfit: save!.lastProfit,
+                      taxRate: save.rulesTaxRate,
+                      lastProfit: save.lastProfit,
                     ),
                     displayProperties(),
-                    ElevatedButton(
-                      onPressed: saveProvider.actionPurchaseProperty,
-                      child: Text('Buy property (${save!.rulesNewPropCost})'),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        ElevatedButton(
+                          onPressed: saveProvider.actionPurchaseProperty,
+                          child:
+                              Text('Buy property (${save.rulesNewPropCost})'),
+                        ),
+                        ElevatedButton(
+                          // navigate to staffMenu
+
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const StaffMenu(),
+                              ),
+                            );
+                          },
+                          child: const Text('Manage Staff'),
+                        ),
+                      ],
                     ),
                   ],
                 ),

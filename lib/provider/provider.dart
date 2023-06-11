@@ -61,7 +61,6 @@ class SaveProvider with ChangeNotifier {
   }
 
   Future<GameSave?> getFirstSave() async {
-    print(await isar.gameSaves);
     _save = await isar.gameSaves.where().findFirst();
     if (_save == null) {
       final newSave = GameSave();
@@ -69,25 +68,37 @@ class SaveProvider with ChangeNotifier {
         await isar.gameSaves.put(newSave);
       });
       _save = await isar.gameSaves.where().findFirst();
-      _loading = false;
-      notifyListeners();
-      return _save;
-    }
-
-    for (var i = 0; i < _save!.plotList!.plots!.length; i++) {
-      final plot = _save!.plotList!.plots![i];
-      if (plot.plotUpgrades == null) {
-        plot.plotUpgrades = Upgrades();
+      if (save!.staff == null) {
+        save!.staff = Staff();
         await isar.writeTxn(() async {
           await isar.gameSaves.put(save!);
         });
       }
-    }
+      _loading = false;
+      notifyListeners();
+      return _save;
+    } else {
+      if (save!.staff == null) {
+        save!.staff = Staff();
+        await isar.writeTxn(() async {
+          await isar.gameSaves.put(save!);
+        });
+      }
+      for (var i = 0; i < _save!.plotList!.plots!.length; i++) {
+        final plot = _save!.plotList!.plots![i];
+        if (plot.plotUpgrades == null) {
+          plot.plotUpgrades = Upgrades();
+          await isar.writeTxn(() async {
+            await isar.gameSaves.put(save!);
+          });
+        }
+      }
 
-    _loading = false;
-    notifyListeners();
-    resetting = false;
-    return _save;
+      _loading = false;
+      notifyListeners();
+      resetting = false;
+      return _save;
+    }
   }
 
   void resetGame() async {
@@ -131,14 +142,9 @@ class SaveProvider with ChangeNotifier {
       newPlots?[index].rent = rent;
 
       if (percentageRentIncrease > 1) {
-        final decrease =
-            percentageRentIncrease.toInt() * newPlots![index].residents;
-        newPlots[index].happiness -= decrease;
+        newPlots?[index].happiness -= 5;
       } else if (percentageRentIncrease < 1) {
-        final increase =
-            (percentageRentIncrease.round() * newPlots![index].residents)
-                .round();
-        newPlots[index].happiness += increase;
+        newPlots?[index].happiness += 5;
       }
 
       _save?.plotList?.plots = newPlots;
@@ -156,10 +162,10 @@ class SaveProvider with ChangeNotifier {
       required toggleTo}) async {
     pauseLoop = true;
     var newPlots = _save?.plotList!.plots!.toList();
-    final upgradeConfig = configUpgrades[upgradeName];
+    final upgradeConfig = upgradeInfo[upgradeName];
 
     if (toggleTo == true &&
-            _save!.money < (configUpgrades[upgradeName]!['cost'] as num) ||
+            _save!.money < (upgradeInfo[upgradeName]!['cost'] as num) ||
         upgradeConfig == null ||
         newPlots?[propertyIndex].plotUpgrades == null) {
       return false;
@@ -186,6 +192,37 @@ class SaveProvider with ChangeNotifier {
     return true;
   }
 
+  Future<bool> actionToggleStaff(
+      {required staffName, required staffIndex, required toggleTo}) async {
+    pauseLoop = true;
+    final newStaff = _save?.staff;
+    final staffConfig = staffInfo[staffName];
+
+    if (toggleTo == true &&
+            _save!.money < (staffInfo[staffName]!['cost'] as num) ||
+        staffConfig == null) {
+      return false;
+    }
+
+    newStaff?.staffValues[staffIndex] = toggleTo;
+
+    if (staffName == "manager" && toggleTo == false) {
+      newStaff?.residentVacanciesFilledByPropertyManager = 0;
+    }
+
+    if (toggleTo == true) {
+      _save?.money -= (staffConfig['cost'] as num).toInt();
+    }
+
+    await isar.writeTxn(() async {
+      _save?.staff = newStaff;
+      await isar.gameSaves.put(_save!);
+      return true;
+    });
+    pauseLoop = false;
+    return true;
+  }
+
   Future<int> actionSearchForResidents(int index) async {
     int increase = 0;
 
@@ -198,7 +235,15 @@ class SaveProvider with ChangeNotifier {
       if ((plot.rent / 10) > _save!.money) {
         return;
       }
-      _save!.money -= (plot.rent / 10).floor();
+
+      final hasManager = _save?.staff?.staffValues[0] ?? false;
+      if (hasManager) {
+        // Having a manager reduces the cost of searching for residents by 50%
+        _save!.money -= (plot.rent / 20).floor();
+      } else {
+        _save!.money -= (plot.rent / 10).floor();
+      }
+
       final random = Random();
       final happiness = plot.happiness;
       final chance = happiness / 2;
@@ -262,7 +307,14 @@ void loop(Isar isar, save, resetting) async {
 
   //// Calculate residents leaving
   if (save?.plotList?.plots != null) {
+    int moneyBefore = save?.money ?? 0;
     save = calculateResidentsLeaving(save);
+    int moneyAfter = save?.money ?? 0;
+    // check if money has changed, and add the change to profit
+    if (moneyBefore != moneyAfter) {
+      print('change from residents leaving: ${moneyAfter - moneyBefore}');
+      profit += moneyAfter - moneyBefore;
+    }
   }
 
   //// Calculate happiness (random changes based on things)
@@ -271,10 +323,17 @@ void loop(Isar isar, save, resetting) async {
   //// Calculate profits and losses from upgrades
   profit = calculateUpgradesProfitAndLoss(profit, save?.plotList?.plots);
 
+  //// Calculate costs of staff and takes it from profit
+  profit =
+      calculateStaffCosts(profit, save?.staff, save?.plotList?.plots.length);
+
+  //// Set last profit
   save?.lastProfit = profit - (profit * save?.rulesTaxRate).floor();
+
   // Add profit to money
   save?.money += save?.lastProfit;
 
+  //// Adjust tax rate based on money in bank
   save?.rulesTaxRate = calculateTaxRateChanges(save?.rulesTaxRate, save?.money);
 
   final firstSave = await isar.gameSaves.where().findFirst();
@@ -302,18 +361,29 @@ GameSave calculateResidentsLeaving(GameSave save) {
 
   for (var i = 0; i < plots!.length; i++) {
     final plot = plots[i];
-    // if happiness is 0, remove all residents
     if (plot.happiness <= 0) {
       plot.residents = 0;
+      plot.happiness = 50;
       save.plotList!.plots = plots;
       return save;
     }
     final random = Random();
-    final roll = random.nextInt((plot.happiness / 1.5).floor() + 1);
-    // roll based on happiness, if the roll matches happiness then remove a resident
-    if (roll == (plot.happiness / 1.5).floor() && plot.residents > 0) {
-      plot.residents -= 1;
-      save.money -= (plot.rent / 10).floor();
+    final roll = random.nextInt((plot.happiness / 2).floor() + 1);
+    if ((roll == (plot.happiness / 2).floor()) && plot.residents > 0) {
+      // check if the user has a property manager hired
+      final index = save.staff?.staffOptions.indexOf("manager") ?? -1;
+      if (index == -1 || save.staff?.staffValues[index] == false) {
+        plot.residents -= 1;
+        final index =
+            plot.plotUpgrades?.upgradeOptions.indexOf("easyTurnover") ?? -1;
+        if (index == -1 || plot.plotUpgrades?.upgradeValues[index] == false) {
+          save.money -= (plot.rent / 5).floor();
+        }
+      } else {
+        save.money -= (plot.rent / 10).floor();
+        save.staff?.residentVacanciesFilledByPropertyManager += 1;
+      }
+
       continue;
     }
   }
@@ -346,7 +416,7 @@ int calculateUpgradesProfitAndLoss(int profit, List<Plot>? plots) {
     for (var i = 0; i < plot.plotUpgrades!.upgradeValues.length; i++) {
       if (plot.plotUpgrades!.upgradeValues[i] == true) {
         final upgradeName = plot.plotUpgrades!.upgradeOptions[i];
-        final upgradeConfig = configUpgrades[upgradeName];
+        final upgradeConfig = upgradeInfo[upgradeName];
         profit -= ((upgradeConfig?['monthlyCostPerResident'] as num).toInt() *
                 plot.residents) ~/
             30;
@@ -362,11 +432,11 @@ int calculateUpgradesProfitAndLoss(int profit, List<Plot>? plots) {
 
 double calculateTaxRateChanges(double taxRate, int money) {
   if (money < 100000) {
-    taxRate = 0.1;
+    taxRate = 0.185;
   } else if (money < 250000) {
-    taxRate = 0.15;
-  } else if (money < 1000000) {
     taxRate = 0.25;
+  } else if (money < 1000000) {
+    taxRate = 0.325;
   } else if (money < 2500000) {
     taxRate = 0.40;
   } else {
@@ -374,4 +444,22 @@ double calculateTaxRateChanges(double taxRate, int money) {
   }
 
   return taxRate;
+}
+
+int calculateStaffCosts(int profit, Staff? staff, int propertyCount) {
+  if (staff == null) {
+    return profit;
+  }
+  for (var i = 0; i < staff.staffValues.length; i++) {
+    if (staff.staffValues[i] == true) {
+      final staffName = staff.staffOptions[i];
+      final staffConfig = staffInfo[staffName];
+      profit -= (staffConfig?['baseMonthlyCost'] as num).toInt() ~/ 30;
+      profit -= ((staffConfig?['monthlyCostPerProperty'] as num).toInt() *
+              propertyCount) ~/
+          30;
+    }
+  }
+
+  return profit;
 }

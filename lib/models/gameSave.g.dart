@@ -57,6 +57,12 @@ const GameSaveSchema = CollectionSchema(
       id: 7,
       name: r'rulesTaxRate',
       type: IsarType.double,
+    ),
+    r'staff': PropertySchema(
+      id: 8,
+      name: r'staff',
+      type: IsarType.object,
+      target: r'Staff',
     )
   },
   estimateSize: _gameSaveEstimateSize,
@@ -69,7 +75,8 @@ const GameSaveSchema = CollectionSchema(
   embeddedSchemas: {
     r'PlotList': PlotListSchema,
     r'Plot': PlotSchema,
-    r'Upgrades': UpgradesSchema
+    r'Upgrades': UpgradesSchema,
+    r'Staff': StaffSchema
   },
   getId: _gameSaveGetId,
   getLinks: _gameSaveGetLinks,
@@ -89,6 +96,13 @@ int _gameSaveEstimateSize(
     if (value != null) {
       bytesCount += 3 +
           PlotListSchema.estimateSize(value, allOffsets[PlotList]!, allOffsets);
+    }
+  }
+  {
+    final value = object.staff;
+    if (value != null) {
+      bytesCount +=
+          3 + StaffSchema.estimateSize(value, allOffsets[Staff]!, allOffsets);
     }
   }
   return bytesCount;
@@ -113,6 +127,12 @@ void _gameSaveSerialize(
   );
   writer.writeLong(offsets[6], object.rulesNewPropCost);
   writer.writeDouble(offsets[7], object.rulesTaxRate);
+  writer.writeObject<Staff>(
+    offsets[8],
+    allOffsets,
+    StaffSchema.serialize,
+    object.staff,
+  );
 }
 
 GameSave _gameSaveDeserialize(
@@ -134,6 +154,11 @@ GameSave _gameSaveDeserialize(
     ),
     rulesNewPropCost: reader.readLongOrNull(offsets[6]) ?? 50000,
     rulesTaxRate: reader.readDoubleOrNull(offsets[7]) ?? 0.1,
+    staff: reader.readObjectOrNull<Staff>(
+      offsets[8],
+      StaffSchema.deserialize,
+      allOffsets,
+    ),
   );
   object.id = id;
   return object;
@@ -166,6 +191,12 @@ P _gameSaveDeserializeProp<P>(
       return (reader.readLongOrNull(offset) ?? 50000) as P;
     case 7:
       return (reader.readDoubleOrNull(offset) ?? 0.1) as P;
+    case 8:
+      return (reader.readObjectOrNull<Staff>(
+        offset,
+        StaffSchema.deserialize,
+        allOffsets,
+      )) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
   }
@@ -788,6 +819,22 @@ extension GameSaveQueryFilter
       ));
     });
   }
+
+  QueryBuilder<GameSave, GameSave, QAfterFilterCondition> staffIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'staff',
+      ));
+    });
+  }
+
+  QueryBuilder<GameSave, GameSave, QAfterFilterCondition> staffIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'staff',
+      ));
+    });
+  }
 }
 
 extension GameSaveQueryObject
@@ -796,6 +843,13 @@ extension GameSaveQueryObject
       FilterQuery<PlotList> q) {
     return QueryBuilder.apply(this, (query) {
       return query.object(q, r'plotList');
+    });
+  }
+
+  QueryBuilder<GameSave, GameSave, QAfterFilterCondition> staff(
+      FilterQuery<Staff> q) {
+    return QueryBuilder.apply(this, (query) {
+      return query.object(q, r'staff');
     });
   }
 }
@@ -1087,6 +1141,12 @@ extension GameSaveQueryProperty
   QueryBuilder<GameSave, double, QQueryOperations> rulesTaxRateProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'rulesTaxRate');
+    });
+  }
+
+  QueryBuilder<GameSave, Staff?, QQueryOperations> staffProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'staff');
     });
   }
 }
@@ -1381,14 +1441,14 @@ Plot _plotDeserialize(
   Map<Type, List<int>> allOffsets,
 ) {
   final object = Plot(
-    happiness: reader.readLongOrNull(offsets[0]) ?? 50,
+    happiness: reader.readLongOrNull(offsets[0]) ?? 100,
     maxResidents: reader.readLongOrNull(offsets[1]) ?? 10,
     plotUpgrades: reader.readObjectOrNull<Upgrades>(
       offsets[2],
       UpgradesSchema.deserialize,
       allOffsets,
     ),
-    rent: reader.readLongOrNull(offsets[3]) ?? 400,
+    rent: reader.readLongOrNull(offsets[3]) ?? 500,
     residents: reader.readLongOrNull(offsets[4]) ?? 0,
   );
   return object;
@@ -1402,7 +1462,7 @@ P _plotDeserializeProp<P>(
 ) {
   switch (propertyId) {
     case 0:
-      return (reader.readLongOrNull(offset) ?? 50) as P;
+      return (reader.readLongOrNull(offset) ?? 100) as P;
     case 1:
       return (reader.readLongOrNull(offset) ?? 10) as P;
     case 2:
@@ -1412,7 +1472,7 @@ P _plotDeserializeProp<P>(
         allOffsets,
       )) as P;
     case 3:
-      return (reader.readLongOrNull(offset) ?? 400) as P;
+      return (reader.readLongOrNull(offset) ?? 500) as P;
     case 4:
       return (reader.readLongOrNull(offset) ?? 0) as P;
     default:
@@ -2065,3 +2125,465 @@ extension UpgradesQueryFilter
 
 extension UpgradesQueryObject
     on QueryBuilder<Upgrades, Upgrades, QFilterCondition> {}
+
+// coverage:ignore-file
+// ignore_for_file: duplicate_ignore, non_constant_identifier_names, constant_identifier_names, invalid_use_of_protected_member, unnecessary_cast, prefer_const_constructors, lines_longer_than_80_chars, require_trailing_commas, inference_failure_on_function_invocation, unnecessary_parenthesis, unnecessary_raw_strings, unnecessary_null_checks, join_return_with_assignment, prefer_final_locals, avoid_js_rounded_ints, avoid_positional_boolean_parameters, always_specify_types
+
+const StaffSchema = Schema(
+  name: r'Staff',
+  id: -1348815836572273625,
+  properties: {
+    r'residentVacanciesFilledByPropertyManager': PropertySchema(
+      id: 0,
+      name: r'residentVacanciesFilledByPropertyManager',
+      type: IsarType.long,
+    ),
+    r'staffOptions': PropertySchema(
+      id: 1,
+      name: r'staffOptions',
+      type: IsarType.stringList,
+    ),
+    r'staffValues': PropertySchema(
+      id: 2,
+      name: r'staffValues',
+      type: IsarType.boolList,
+    )
+  },
+  estimateSize: _staffEstimateSize,
+  serialize: _staffSerialize,
+  deserialize: _staffDeserialize,
+  deserializeProp: _staffDeserializeProp,
+);
+
+int _staffEstimateSize(
+  Staff object,
+  List<int> offsets,
+  Map<Type, List<int>> allOffsets,
+) {
+  var bytesCount = offsets.last;
+  bytesCount += 3 + object.staffOptions.length * 3;
+  {
+    for (var i = 0; i < object.staffOptions.length; i++) {
+      final value = object.staffOptions[i];
+      bytesCount += value.length * 3;
+    }
+  }
+  bytesCount += 3 + object.staffValues.length;
+  return bytesCount;
+}
+
+void _staffSerialize(
+  Staff object,
+  IsarWriter writer,
+  List<int> offsets,
+  Map<Type, List<int>> allOffsets,
+) {
+  writer.writeLong(offsets[0], object.residentVacanciesFilledByPropertyManager);
+  writer.writeStringList(offsets[1], object.staffOptions);
+  writer.writeBoolList(offsets[2], object.staffValues);
+}
+
+Staff _staffDeserialize(
+  Id id,
+  IsarReader reader,
+  List<int> offsets,
+  Map<Type, List<int>> allOffsets,
+) {
+  final object = Staff();
+  object.residentVacanciesFilledByPropertyManager = reader.readLong(offsets[0]);
+  object.staffOptions = reader.readStringList(offsets[1]) ?? [];
+  object.staffValues = reader.readBoolList(offsets[2]) ?? [];
+  return object;
+}
+
+P _staffDeserializeProp<P>(
+  IsarReader reader,
+  int propertyId,
+  int offset,
+  Map<Type, List<int>> allOffsets,
+) {
+  switch (propertyId) {
+    case 0:
+      return (reader.readLong(offset)) as P;
+    case 1:
+      return (reader.readStringList(offset) ?? []) as P;
+    case 2:
+      return (reader.readBoolList(offset) ?? []) as P;
+    default:
+      throw IsarError('Unknown property with id $propertyId');
+  }
+}
+
+extension StaffQueryFilter on QueryBuilder<Staff, Staff, QFilterCondition> {
+  QueryBuilder<Staff, Staff, QAfterFilterCondition>
+      residentVacanciesFilledByPropertyManagerEqualTo(int value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'residentVacanciesFilledByPropertyManager',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<Staff, Staff, QAfterFilterCondition>
+      residentVacanciesFilledByPropertyManagerGreaterThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'residentVacanciesFilledByPropertyManager',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<Staff, Staff, QAfterFilterCondition>
+      residentVacanciesFilledByPropertyManagerLessThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'residentVacanciesFilledByPropertyManager',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<Staff, Staff, QAfterFilterCondition>
+      residentVacanciesFilledByPropertyManagerBetween(
+    int lower,
+    int upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'residentVacanciesFilledByPropertyManager',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<Staff, Staff, QAfterFilterCondition> staffOptionsElementEqualTo(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'staffOptions',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Staff, Staff, QAfterFilterCondition>
+      staffOptionsElementGreaterThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'staffOptions',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Staff, Staff, QAfterFilterCondition> staffOptionsElementLessThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'staffOptions',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Staff, Staff, QAfterFilterCondition> staffOptionsElementBetween(
+    String lower,
+    String upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'staffOptions',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Staff, Staff, QAfterFilterCondition>
+      staffOptionsElementStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'staffOptions',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Staff, Staff, QAfterFilterCondition> staffOptionsElementEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'staffOptions',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Staff, Staff, QAfterFilterCondition> staffOptionsElementContains(
+      String value,
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'staffOptions',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Staff, Staff, QAfterFilterCondition> staffOptionsElementMatches(
+      String pattern,
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'staffOptions',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Staff, Staff, QAfterFilterCondition>
+      staffOptionsElementIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'staffOptions',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<Staff, Staff, QAfterFilterCondition>
+      staffOptionsElementIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'staffOptions',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<Staff, Staff, QAfterFilterCondition> staffOptionsLengthEqualTo(
+      int length) {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'staffOptions',
+        length,
+        true,
+        length,
+        true,
+      );
+    });
+  }
+
+  QueryBuilder<Staff, Staff, QAfterFilterCondition> staffOptionsIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'staffOptions',
+        0,
+        true,
+        0,
+        true,
+      );
+    });
+  }
+
+  QueryBuilder<Staff, Staff, QAfterFilterCondition> staffOptionsIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'staffOptions',
+        0,
+        false,
+        999999,
+        true,
+      );
+    });
+  }
+
+  QueryBuilder<Staff, Staff, QAfterFilterCondition> staffOptionsLengthLessThan(
+    int length, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'staffOptions',
+        0,
+        true,
+        length,
+        include,
+      );
+    });
+  }
+
+  QueryBuilder<Staff, Staff, QAfterFilterCondition>
+      staffOptionsLengthGreaterThan(
+    int length, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'staffOptions',
+        length,
+        include,
+        999999,
+        true,
+      );
+    });
+  }
+
+  QueryBuilder<Staff, Staff, QAfterFilterCondition> staffOptionsLengthBetween(
+    int lower,
+    int upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'staffOptions',
+        lower,
+        includeLower,
+        upper,
+        includeUpper,
+      );
+    });
+  }
+
+  QueryBuilder<Staff, Staff, QAfterFilterCondition> staffValuesElementEqualTo(
+      bool value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'staffValues',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<Staff, Staff, QAfterFilterCondition> staffValuesLengthEqualTo(
+      int length) {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'staffValues',
+        length,
+        true,
+        length,
+        true,
+      );
+    });
+  }
+
+  QueryBuilder<Staff, Staff, QAfterFilterCondition> staffValuesIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'staffValues',
+        0,
+        true,
+        0,
+        true,
+      );
+    });
+  }
+
+  QueryBuilder<Staff, Staff, QAfterFilterCondition> staffValuesIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'staffValues',
+        0,
+        false,
+        999999,
+        true,
+      );
+    });
+  }
+
+  QueryBuilder<Staff, Staff, QAfterFilterCondition> staffValuesLengthLessThan(
+    int length, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'staffValues',
+        0,
+        true,
+        length,
+        include,
+      );
+    });
+  }
+
+  QueryBuilder<Staff, Staff, QAfterFilterCondition>
+      staffValuesLengthGreaterThan(
+    int length, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'staffValues',
+        length,
+        include,
+        999999,
+        true,
+      );
+    });
+  }
+
+  QueryBuilder<Staff, Staff, QAfterFilterCondition> staffValuesLengthBetween(
+    int lower,
+    int upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'staffValues',
+        lower,
+        includeLower,
+        upper,
+        includeUpper,
+      );
+    });
+  }
+}
+
+extension StaffQueryObject on QueryBuilder<Staff, Staff, QFilterCondition> {}

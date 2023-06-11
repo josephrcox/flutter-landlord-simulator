@@ -5,34 +5,26 @@ import 'package:real/provider/provider.dart';
 import '../configSettings.dart';
 import 'models/gameSave.dart';
 
-class UpgradeMenu extends ConsumerStatefulWidget {
+class StaffMenu extends ConsumerStatefulWidget {
   // require saveProvider to be passed in
-  const UpgradeMenu({Key? key, required this.plotIndex}) : super(key: key);
-
-  final int plotIndex;
+  const StaffMenu({Key? key}) : super(key: key);
 
   @override
-  _UpgradeMenuState createState() => _UpgradeMenuState();
+  _StaffMenuState createState() => _StaffMenuState();
 }
 
-class _UpgradeMenuState extends ConsumerState<UpgradeMenu> {
+class _StaffMenuState extends ConsumerState<StaffMenu> {
   @override
   Widget build(BuildContext context) {
     final saveProvider = ref.watch(saveProviderNotifier);
     var save = saveProvider.save;
-    final propertyList = save?.plotList;
-    final plotIndex = widget.plotIndex;
+    final staffOptions = save!.staff?.staffOptions;
+    final staffValues = save.staff?.staffValues;
 
-    Map<String, bool> upgradesMap = {};
-
-    for (int i = 0;
-        i <
-            propertyList!
-                .plots![widget.plotIndex].plotUpgrades!.upgradeOptions.length;
-        i++) {
-      upgradesMap[
-              propertyList.plots![plotIndex].plotUpgrades!.upgradeOptions[i]] =
-          propertyList.plots![plotIndex].plotUpgrades!.upgradeValues[i];
+    // create map of options and values
+    Map<String, bool> staffMap = {};
+    for (int i = 0; i < staffOptions!.length; i++) {
+      staffMap[staffOptions[i]] = staffValues![i];
     }
 
     Color backgroundColorARGB = const Color.fromARGB(255, 36, 59, 80);
@@ -40,38 +32,38 @@ class _UpgradeMenuState extends ConsumerState<UpgradeMenu> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('Amenities for #${plotIndex + 1}'),
+        title: const Text('Manage Staff'),
         backgroundColor: headerBackgroundColorARGB,
         shadowColor: Colors.transparent,
       ),
       backgroundColor: backgroundColorARGB,
       body: Column(
         children: [
-          _header(propertyList, plotIndex, save!.money, context),
+          _header(save.money, save.plotList!.plots!.length, context),
           Expanded(
             child: ListView.builder(
               // scrollable list of upgrades
               shrinkWrap: true,
-              itemCount: upgradesMap.length,
+              itemCount: staffMap.length,
               itemBuilder: (context, index) {
-                String propertyName = upgradesMap.keys.elementAt(index);
-                bool propertyValue = upgradesMap.values.elementAt(index);
+                String option = staffMap.keys.elementAt(index);
+                bool value = staffMap.values.elementAt(index);
 
                 return Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 8.0),
                   child: InkWell(
                     onTap: () async {
-                      final success = await saveProvider.actionToggleUpgrade(
-                        propertyIndex: plotIndex,
-                        upgradeIndex: index,
-                        upgradeName: upgradesMap.keys.elementAt(index),
-                        toggleTo: !propertyValue,
+                      // use actionToggleStaff
+                      bool success = await saveProvider.actionToggleStaff(
+                        staffName: option,
+                        staffIndex: index,
+                        toggleTo: !value,
                       );
                       if (success) {
                         setState(
                           () {
-                            upgradesMap[propertyName] =
-                                !propertyValue; // Toggle the boolean value
+                            staffMap[option] =
+                                !value; // Toggle the boolean value
                             save = saveProvider.save;
                           },
                         );
@@ -81,7 +73,7 @@ class _UpgradeMenuState extends ConsumerState<UpgradeMenu> {
                       children: [
                         const SizedBox(height: 10),
                         Container(
-                          color: propertyValue ? Colors.green : Colors.red,
+                          color: value ? Colors.green : Colors.red,
                           child: Row(
                             children: [
                               Expanded(
@@ -91,35 +83,16 @@ class _UpgradeMenuState extends ConsumerState<UpgradeMenu> {
                                     crossAxisAlignment:
                                         CrossAxisAlignment.start,
                                     children: [
-                                      _upgradeNameAndDescription(
-                                        upgradeInfo[propertyName]!['name']
-                                            .toString(),
-                                        upgradeInfo[propertyName]!['desc']
-                                            .toString(),
-                                        propertyValue,
+                                      _staffOptionButton(
+                                        save,
+                                        staffInfo[option]!['name'].toString(),
+                                        staffInfo[option]!['desc'].toString(),
+                                        value,
+                                        staffInfo[option]![
+                                            'monthlyCostPerProperty'] as int,
+                                        staffInfo[option]!['baseMonthlyCost'] as int,
                                       ),
                                       const SizedBox(height: 16),
-                                      Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.spaceBetween,
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          _costs(
-                                            upgradeInfo[propertyName]!["cost"]
-                                                .toString(),
-                                            upgradeInfo[propertyName]![
-                                                    "monthlyCostPerResident"]
-                                                .toString(),
-                                          ),
-                                          const SizedBox(width: 10),
-                                          _profits(
-                                            upgradeInfo[propertyName]![
-                                                    "monthlyProfitPerResident"]
-                                                .toString(),
-                                          ),
-                                        ],
-                                      ),
                                     ],
                                   ),
                                 ),
@@ -140,8 +113,8 @@ class _UpgradeMenuState extends ConsumerState<UpgradeMenu> {
   }
 }
 
-Widget _upgradeNameAndDescription(
-    String name, String description, bool enabled) {
+Widget _staffOptionButton(GameSave? save, String name, String description,
+    bool enabled, int monthlyCostPerProperty, int baseMonthlyCost) {
   return Column(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
@@ -169,9 +142,73 @@ Widget _upgradeNameAndDescription(
         ],
       ),
       const SizedBox(height: 5),
-      Text(
-        description,
+      Padding(
+        padding: const EdgeInsets.only(right: 32.0),
+        child: Text(
+          description,
+        ),
       ),
+      const SizedBox(height: 10),
+      Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Costs',
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 3),
+          Text('\$$baseMonthlyCost base cost per month'),
+          const SizedBox(height: 3),
+          Text('\$$monthlyCostPerProperty per property per month'),
+        ],
+      ),
+      name == "Property Manager" && enabled
+          ? Column(
+              children: [
+                const SizedBox(height: 20),
+                Center(
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: const Color.fromARGB(255, 110, 1, 101),
+                      borderRadius: BorderRadius.circular(5),
+                    ),
+                    padding: const EdgeInsets.all(8),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      mainAxisSize: MainAxisSize.max,
+                      children: [
+                        const Text(
+                          '💜 This manager has filled',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize: 14,
+                          ),
+                        ),
+                        Text(
+                          '${save!.staff?.residentVacanciesFilledByPropertyManager}',
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const Text(
+                          'vacancies for you!',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize: 14,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            )
+          : const SizedBox.shrink(),
     ],
   );
 }
@@ -242,7 +279,7 @@ Widget _profits(String monthlyProfitPerResident) {
   );
 }
 
-Widget _header(PlotList? propertyList, int plotIndex, int money, context) {
+Widget _header(int money, int propertyCount, context) {
   const double size = 16.0;
   return Container(
     color: const Color.fromARGB(255, 37, 68, 97),
@@ -253,27 +290,21 @@ Widget _header(PlotList? propertyList, int plotIndex, int money, context) {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
-          SizedBox(
-            width: MediaQuery.of(context).size.width * 0.25,
-            child: Text(
-              '\$$money',
-              style: const TextStyle(
-                fontSize: size,
-                overflow: TextOverflow.ellipsis,
-              ),
+          Text(
+            '\$$money',
+            style: const TextStyle(
+              fontSize: size,
+              overflow: TextOverflow.ellipsis,
             ),
           ),
-          SizedBox(
-            width: MediaQuery.of(context).size.width * 0.25,
-            child: Text(
-              '\$${propertyList?.plots![plotIndex].rent.toString()} rent',
-              style: const TextStyle(
-                fontSize: size,
-              ),
+          Text(
+            propertyCount == 1
+                ? 'You have $propertyCount property'
+                : 'You have $propertyCount properties',
+            style: const TextStyle(
+              fontSize: size,
             ),
           ),
-          Text('${propertyList?.plots![plotIndex].happiness}% 😊',
-              style: const TextStyle(fontSize: size)),
         ],
       ),
     ),
