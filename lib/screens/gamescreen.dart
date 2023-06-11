@@ -136,7 +136,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
                       child: Container(
                         padding: const EdgeInsets.symmetric(vertical: 15),
                         child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                          crossAxisAlignment: CrossAxisAlignment.center,
                           children: [
                             const SizedBox(width: 20),
                             Expanded(
@@ -197,9 +197,13 @@ class _GameScreenState extends ConsumerState<GameScreen>
                                 ],
                               ),
                             ),
-                            SizedBox(
-                              width: 125,
+                            Padding(
+                              padding: const EdgeInsets.only(
+                                  right: 16.0, bottom: 16),
                               child: Column(
+                                mainAxisSize: MainAxisSize.max,
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                mainAxisAlignment: MainAxisAlignment.start,
                                 children: [
                                   const Text(
                                     'Adjust rent',

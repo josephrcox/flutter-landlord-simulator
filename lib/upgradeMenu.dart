@@ -162,7 +162,7 @@ Widget _upgradeNameAndDescription(
               enabled ? '✅' : '⃝',
               style: const TextStyle(
                 color: Colors.white,
-                fontSize: 24,
+                fontSize: 18,
               ),
             ),
           ),
