@@ -22,7 +22,6 @@ class SaveProvider with ChangeNotifier {
   bool initialized = false;
   bool resetting = false;
   bool pauseLoop = true;
-  int lastProfit = 0;
 
   GameSave? get save => _save;
 
@@ -284,6 +283,23 @@ class SaveProvider with ChangeNotifier {
 
     notifyListeners();
   }
+
+  void actionSellProperty(index) async {
+    await isar.writeTxn(() async {
+      pauseLoop = true;
+      if (_save!.plotList!.plots!.isEmpty) {
+        return;
+      }
+      final value = _save!.plotList!.plots![index].propertyValue;
+      _save!.money += value;
+      final list = _save!.plotList!.plots!.toList();
+      list.removeAt(index);
+      _save!.plotList!.plots = list;
+      notifyListeners();
+      pauseLoop = false;
+      await isar.gameSaves.put(_save!);
+    });
+  }
 }
 
 final saveProvider = ChangeNotifierProvider((ref) => SaveProvider());
@@ -326,13 +342,27 @@ void loop(Isar isar, save, resetting) async {
     //// Calculate costs of staff and takes it from profit
     profit =
         calculateStaffCosts(profit, save?.staff, save?.plotList?.plots.length);
+
+    //// Calculate losses from property taxes
+    profit = calculatePropertyTaxes(profit, save?.plotList?.plots);
   }
 
+  //// Calculate economy helath
+  save?.economyHealth = calculateEconomyHealth(save);
+
+  save?.profitHistory ??= List<int>;
+
+  var profitHistory = save?.profitHistory.toList();
   //// Set last profit
-  save?.lastProfit = profit - (profit * save?.rulesTaxRate).floor();
+  profitHistory.add(profit);
+  if (profitHistory?.length > 7) {
+    // remove oldest entries until length is 7
+    profitHistory?.removeRange(0, profitHistory?.length - 7);
+  }
+  save?.profitHistory = profitHistory;
 
   // Add profit to money
-  save?.money += save?.lastProfit;
+  save?.money += profit;
 
   //// Adjust tax rate based on money in bank
   save?.rulesTaxRate = calculateTaxRateChanges(save?.rulesTaxRate, save?.money);
@@ -370,18 +400,23 @@ GameSave calculateResidentsLeaving(GameSave save) {
     }
     final random = Random();
     final roll = random.nextInt((plot.happiness / 2).floor() + 1);
-    if ((roll == (plot.happiness / 2).floor()) && plot.residents > 0) {
+    final adjustedRoll = (roll + (100 - save.economyHealth) / 10).round();
+
+    if ((adjustedRoll >= (plot.happiness).floor() || save.economyHealth < 25) &&
+        plot.residents > 0) {
       // check if the user has a property manager hired
       final index = save.staff?.staffOptions.indexOf("manager") ?? -1;
       if (index == -1 || save.staff?.staffValues[index] == false) {
+        final random = Random();
+        save.economyHealth -= random.nextDouble() * 1.0;
         plot.residents -= 1;
         final index =
             plot.plotUpgrades?.upgradeOptions.indexOf("easyTurnover") ?? -1;
         if (index == -1 || plot.plotUpgrades?.upgradeValues[index] == false) {
-          save.money -= (plot.rent / 5).floor();
+          save.money -= (plot.rent / 3).floor();
         }
       } else {
-        save.money -= (plot.rent / 10).floor();
+        save.money -= (plot.rent).floor();
         save.staff?.residentVacanciesFilledByPropertyManager += 1;
       }
 
@@ -400,6 +435,22 @@ List<Plot> calculateHappiness(List<Plot> plots) {
       plot.happiness = 300;
     } else if (plot.happiness < 1) {
       plot.happiness = 1;
+    }
+
+    final random = Random();
+
+    if (random.nextInt(30) > 25) {
+      if (plot.rent > 1500) {
+        // lower happiness by random 1-3
+        plot.happiness -= random.nextInt(3) + 1;
+      } else if (plot.rent < 800) {
+        // raise happiness by random 1-3
+        plot.happiness += random.nextInt(3) + 1;
+      }
+      // rand change between -3 and 3
+      var randChange = random.nextInt(7) - 3;
+      print(randChange);
+      plot.happiness += randChange;
     }
   }
 
@@ -460,6 +511,92 @@ int calculateStaffCosts(int profit, Staff? staff, int propertyCount) {
               propertyCount) ~/
           30;
     }
+  }
+
+  return profit;
+}
+
+double calculateEconomyHealth(GameSave save) {
+  double healthModifier = 0;
+
+  var avgRent = 0;
+  var avgHappiness = 0;
+  var numPlots = 0; // Number of plots
+  var plots = save.plotList?.plots;
+
+  if (plots != null) {
+    numPlots = plots.length;
+    for (var plot in plots) {
+      avgRent += plot.rent;
+      avgHappiness += plot.happiness;
+    }
+    avgRent = avgRent ~/ numPlots;
+    avgHappiness = avgHappiness ~/ numPlots;
+  }
+
+  var daysIntoGame = save.infoDay;
+  var money = save.money;
+
+  final random = Random();
+
+// Rent impact increased
+  if (avgRent < 1000) {
+    healthModifier += (600 - avgRent) / 4000;
+  } else if (avgRent >= 1800) {
+    healthModifier -= (avgRent - 1800) / 500;
+  }
+
+// Money impact increased
+  if (money > 100000) {
+    healthModifier -= log(money) / 2500;
+  }
+
+  double timeFactor = daysIntoGame < 750
+      ? 1 +
+          pow((daysIntoGame / 3000.0), 2)
+              .toDouble() // Reduced effect in first 1000 days
+      : 1 + pow((daysIntoGame / 1500.0), 2).toDouble();
+
+  healthModifier += random.nextDouble() * 2 * timeFactor -
+      timeFactor; // Increased effect of time in randomness
+
+// Happiness impact reduced and only added if economyHealth is less than 80
+  if (save.economyHealth < 10) {
+    healthModifier += (avgHappiness / 300.0);
+  }
+
+  if (numPlots < 10) {
+    healthModifier -= (10 - numPlots) /
+        100.0; // Decrease healthModifier if less than 10 plots
+  } else {
+    healthModifier += (numPlots - 10) /
+        750.0; // Increase healthModifier if more than 10 plots
+  }
+
+// Number of plots impact reduced and only added if economyHealth is less than 80
+  if (save.economyHealth < 75) {
+    healthModifier += (numPlots / 750.0);
+  }
+  if (daysIntoGame < 500) {
+    healthModifier += (random.nextDouble() * 2) / 500;
+  }
+  if (healthModifier > 1) {
+    healthModifier *= plots!.length;
+  }
+
+  final newHealth =
+      (save.economyHealth + healthModifier).clamp(0, 100).toDouble();
+  print('heath: $newHealth, modifier: $healthModifier');
+
+  return newHealth;
+}
+
+int calculatePropertyTaxes(int profit, List<Plot>? plots) {
+  if (plots == null) {
+    return profit;
+  }
+  for (var plot in plots) {
+    profit -= (2000 / 30).floor();
   }
 
   return profit;

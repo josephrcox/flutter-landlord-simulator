@@ -8,7 +8,9 @@ class GameSave {
   Id id = Isar.autoIncrement;
 
   int money;
-  int lastProfit;
+  List<int> profitHistory = [];
+
+  double economyHealth;
 
   String infoName;
 
@@ -24,7 +26,6 @@ class GameSave {
 
   GameSave({
     this.money = 55000,
-    this.lastProfit = 0,
     this.infoName = 'Save 1',
     this.infoDay = 1,
     this.infoYear = 1,
@@ -32,6 +33,7 @@ class GameSave {
     this.rulesNewPropCost = 50000,
     this.rulesTaxRate = 0.1,
     this.staff,
+    this.economyHealth = 100,
   });
 }
 
@@ -47,10 +49,12 @@ class Plot {
   int maxResidents = gameSettings['defaultMaxResidents'];
   int happiness = gameSettings['defaultHappiness'];
   Upgrades? plotUpgrades;
+  int propertyValue;
 
   Plot({
     this.residents = 0,
     this.plotUpgrades,
+    this.propertyValue = 1000,
   });
 }
 

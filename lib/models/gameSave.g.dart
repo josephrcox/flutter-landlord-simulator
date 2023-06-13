@@ -17,24 +17,24 @@ const GameSaveSchema = CollectionSchema(
   name: r'GameSave',
   id: -2957817159186665000,
   properties: {
-    r'infoDay': PropertySchema(
+    r'economyHealth': PropertySchema(
       id: 0,
+      name: r'economyHealth',
+      type: IsarType.double,
+    ),
+    r'infoDay': PropertySchema(
+      id: 1,
       name: r'infoDay',
       type: IsarType.long,
     ),
     r'infoName': PropertySchema(
-      id: 1,
+      id: 2,
       name: r'infoName',
       type: IsarType.string,
     ),
     r'infoYear': PropertySchema(
-      id: 2,
-      name: r'infoYear',
-      type: IsarType.long,
-    ),
-    r'lastProfit': PropertySchema(
       id: 3,
-      name: r'lastProfit',
+      name: r'infoYear',
       type: IsarType.long,
     ),
     r'money': PropertySchema(
@@ -48,18 +48,23 @@ const GameSaveSchema = CollectionSchema(
       type: IsarType.object,
       target: r'PlotList',
     ),
-    r'rulesNewPropCost': PropertySchema(
+    r'profitHistory': PropertySchema(
       id: 6,
+      name: r'profitHistory',
+      type: IsarType.longList,
+    ),
+    r'rulesNewPropCost': PropertySchema(
+      id: 7,
       name: r'rulesNewPropCost',
       type: IsarType.long,
     ),
     r'rulesTaxRate': PropertySchema(
-      id: 7,
+      id: 8,
       name: r'rulesTaxRate',
       type: IsarType.double,
     ),
     r'staff': PropertySchema(
-      id: 8,
+      id: 9,
       name: r'staff',
       type: IsarType.object,
       target: r'Staff',
@@ -98,6 +103,7 @@ int _gameSaveEstimateSize(
           PlotListSchema.estimateSize(value, allOffsets[PlotList]!, allOffsets);
     }
   }
+  bytesCount += 3 + object.profitHistory.length * 8;
   {
     final value = object.staff;
     if (value != null) {
@@ -114,10 +120,10 @@ void _gameSaveSerialize(
   List<int> offsets,
   Map<Type, List<int>> allOffsets,
 ) {
-  writer.writeLong(offsets[0], object.infoDay);
-  writer.writeString(offsets[1], object.infoName);
-  writer.writeLong(offsets[2], object.infoYear);
-  writer.writeLong(offsets[3], object.lastProfit);
+  writer.writeDouble(offsets[0], object.economyHealth);
+  writer.writeLong(offsets[1], object.infoDay);
+  writer.writeString(offsets[2], object.infoName);
+  writer.writeLong(offsets[3], object.infoYear);
   writer.writeLong(offsets[4], object.money);
   writer.writeObject<PlotList>(
     offsets[5],
@@ -125,10 +131,11 @@ void _gameSaveSerialize(
     PlotListSchema.serialize,
     object.plotList,
   );
-  writer.writeLong(offsets[6], object.rulesNewPropCost);
-  writer.writeDouble(offsets[7], object.rulesTaxRate);
+  writer.writeLongList(offsets[6], object.profitHistory);
+  writer.writeLong(offsets[7], object.rulesNewPropCost);
+  writer.writeDouble(offsets[8], object.rulesTaxRate);
   writer.writeObject<Staff>(
-    offsets[8],
+    offsets[9],
     allOffsets,
     StaffSchema.serialize,
     object.staff,
@@ -142,25 +149,26 @@ GameSave _gameSaveDeserialize(
   Map<Type, List<int>> allOffsets,
 ) {
   final object = GameSave(
-    infoDay: reader.readLongOrNull(offsets[0]) ?? 1,
-    infoName: reader.readStringOrNull(offsets[1]) ?? 'Save 1',
-    infoYear: reader.readLongOrNull(offsets[2]) ?? 1,
-    lastProfit: reader.readLongOrNull(offsets[3]) ?? 0,
+    economyHealth: reader.readDoubleOrNull(offsets[0]) ?? 100,
+    infoDay: reader.readLongOrNull(offsets[1]) ?? 1,
+    infoName: reader.readStringOrNull(offsets[2]) ?? 'Save 1',
+    infoYear: reader.readLongOrNull(offsets[3]) ?? 1,
     money: reader.readLongOrNull(offsets[4]) ?? 55000,
     plotList: reader.readObjectOrNull<PlotList>(
       offsets[5],
       PlotListSchema.deserialize,
       allOffsets,
     ),
-    rulesNewPropCost: reader.readLongOrNull(offsets[6]) ?? 50000,
-    rulesTaxRate: reader.readDoubleOrNull(offsets[7]) ?? 0.1,
+    rulesNewPropCost: reader.readLongOrNull(offsets[7]) ?? 50000,
+    rulesTaxRate: reader.readDoubleOrNull(offsets[8]) ?? 0.1,
     staff: reader.readObjectOrNull<Staff>(
-      offsets[8],
+      offsets[9],
       StaffSchema.deserialize,
       allOffsets,
     ),
   );
   object.id = id;
+  object.profitHistory = reader.readLongList(offsets[6]) ?? [];
   return object;
 }
 
@@ -172,13 +180,13 @@ P _gameSaveDeserializeProp<P>(
 ) {
   switch (propertyId) {
     case 0:
-      return (reader.readLongOrNull(offset) ?? 1) as P;
+      return (reader.readDoubleOrNull(offset) ?? 100) as P;
     case 1:
-      return (reader.readStringOrNull(offset) ?? 'Save 1') as P;
-    case 2:
       return (reader.readLongOrNull(offset) ?? 1) as P;
+    case 2:
+      return (reader.readStringOrNull(offset) ?? 'Save 1') as P;
     case 3:
-      return (reader.readLongOrNull(offset) ?? 0) as P;
+      return (reader.readLongOrNull(offset) ?? 1) as P;
     case 4:
       return (reader.readLongOrNull(offset) ?? 55000) as P;
     case 5:
@@ -188,10 +196,12 @@ P _gameSaveDeserializeProp<P>(
         allOffsets,
       )) as P;
     case 6:
-      return (reader.readLongOrNull(offset) ?? 50000) as P;
+      return (reader.readLongList(offset) ?? []) as P;
     case 7:
-      return (reader.readDoubleOrNull(offset) ?? 0.1) as P;
+      return (reader.readLongOrNull(offset) ?? 50000) as P;
     case 8:
+      return (reader.readDoubleOrNull(offset) ?? 0.1) as P;
+    case 9:
       return (reader.readObjectOrNull<Staff>(
         offset,
         StaffSchema.deserialize,
@@ -291,6 +301,69 @@ extension GameSaveQueryWhere on QueryBuilder<GameSave, GameSave, QWhereClause> {
 
 extension GameSaveQueryFilter
     on QueryBuilder<GameSave, GameSave, QFilterCondition> {
+  QueryBuilder<GameSave, GameSave, QAfterFilterCondition> economyHealthEqualTo(
+    double value, {
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'economyHealth',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<GameSave, GameSave, QAfterFilterCondition>
+      economyHealthGreaterThan(
+    double value, {
+    bool include = false,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'economyHealth',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<GameSave, GameSave, QAfterFilterCondition> economyHealthLessThan(
+    double value, {
+    bool include = false,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'economyHealth',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<GameSave, GameSave, QAfterFilterCondition> economyHealthBetween(
+    double lower,
+    double upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'economyHealth',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
   QueryBuilder<GameSave, GameSave, QAfterFilterCondition> idEqualTo(Id value) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.equalTo(
@@ -579,59 +652,6 @@ extension GameSaveQueryFilter
     });
   }
 
-  QueryBuilder<GameSave, GameSave, QAfterFilterCondition> lastProfitEqualTo(
-      int value) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'lastProfit',
-        value: value,
-      ));
-    });
-  }
-
-  QueryBuilder<GameSave, GameSave, QAfterFilterCondition> lastProfitGreaterThan(
-    int value, {
-    bool include = false,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'lastProfit',
-        value: value,
-      ));
-    });
-  }
-
-  QueryBuilder<GameSave, GameSave, QAfterFilterCondition> lastProfitLessThan(
-    int value, {
-    bool include = false,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'lastProfit',
-        value: value,
-      ));
-    });
-  }
-
-  QueryBuilder<GameSave, GameSave, QAfterFilterCondition> lastProfitBetween(
-    int lower,
-    int upper, {
-    bool includeLower = true,
-    bool includeUpper = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'lastProfit',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-      ));
-    });
-  }
-
   QueryBuilder<GameSave, GameSave, QAfterFilterCondition> moneyEqualTo(
       int value) {
     return QueryBuilder.apply(this, (query) {
@@ -698,6 +718,151 @@ extension GameSaveQueryFilter
       return query.addFilterCondition(const FilterCondition.isNotNull(
         property: r'plotList',
       ));
+    });
+  }
+
+  QueryBuilder<GameSave, GameSave, QAfterFilterCondition>
+      profitHistoryElementEqualTo(int value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'profitHistory',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<GameSave, GameSave, QAfterFilterCondition>
+      profitHistoryElementGreaterThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'profitHistory',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<GameSave, GameSave, QAfterFilterCondition>
+      profitHistoryElementLessThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'profitHistory',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<GameSave, GameSave, QAfterFilterCondition>
+      profitHistoryElementBetween(
+    int lower,
+    int upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'profitHistory',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<GameSave, GameSave, QAfterFilterCondition>
+      profitHistoryLengthEqualTo(int length) {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'profitHistory',
+        length,
+        true,
+        length,
+        true,
+      );
+    });
+  }
+
+  QueryBuilder<GameSave, GameSave, QAfterFilterCondition>
+      profitHistoryIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'profitHistory',
+        0,
+        true,
+        0,
+        true,
+      );
+    });
+  }
+
+  QueryBuilder<GameSave, GameSave, QAfterFilterCondition>
+      profitHistoryIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'profitHistory',
+        0,
+        false,
+        999999,
+        true,
+      );
+    });
+  }
+
+  QueryBuilder<GameSave, GameSave, QAfterFilterCondition>
+      profitHistoryLengthLessThan(
+    int length, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'profitHistory',
+        0,
+        true,
+        length,
+        include,
+      );
+    });
+  }
+
+  QueryBuilder<GameSave, GameSave, QAfterFilterCondition>
+      profitHistoryLengthGreaterThan(
+    int length, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'profitHistory',
+        length,
+        include,
+        999999,
+        true,
+      );
+    });
+  }
+
+  QueryBuilder<GameSave, GameSave, QAfterFilterCondition>
+      profitHistoryLengthBetween(
+    int lower,
+    int upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'profitHistory',
+        lower,
+        includeLower,
+        upper,
+        includeUpper,
+      );
     });
   }
 
@@ -858,6 +1023,18 @@ extension GameSaveQueryLinks
     on QueryBuilder<GameSave, GameSave, QFilterCondition> {}
 
 extension GameSaveQuerySortBy on QueryBuilder<GameSave, GameSave, QSortBy> {
+  QueryBuilder<GameSave, GameSave, QAfterSortBy> sortByEconomyHealth() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'economyHealth', Sort.asc);
+    });
+  }
+
+  QueryBuilder<GameSave, GameSave, QAfterSortBy> sortByEconomyHealthDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'economyHealth', Sort.desc);
+    });
+  }
+
   QueryBuilder<GameSave, GameSave, QAfterSortBy> sortByInfoDay() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'infoDay', Sort.asc);
@@ -891,18 +1068,6 @@ extension GameSaveQuerySortBy on QueryBuilder<GameSave, GameSave, QSortBy> {
   QueryBuilder<GameSave, GameSave, QAfterSortBy> sortByInfoYearDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'infoYear', Sort.desc);
-    });
-  }
-
-  QueryBuilder<GameSave, GameSave, QAfterSortBy> sortByLastProfit() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'lastProfit', Sort.asc);
-    });
-  }
-
-  QueryBuilder<GameSave, GameSave, QAfterSortBy> sortByLastProfitDesc() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'lastProfit', Sort.desc);
     });
   }
 
@@ -945,6 +1110,18 @@ extension GameSaveQuerySortBy on QueryBuilder<GameSave, GameSave, QSortBy> {
 
 extension GameSaveQuerySortThenBy
     on QueryBuilder<GameSave, GameSave, QSortThenBy> {
+  QueryBuilder<GameSave, GameSave, QAfterSortBy> thenByEconomyHealth() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'economyHealth', Sort.asc);
+    });
+  }
+
+  QueryBuilder<GameSave, GameSave, QAfterSortBy> thenByEconomyHealthDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'economyHealth', Sort.desc);
+    });
+  }
+
   QueryBuilder<GameSave, GameSave, QAfterSortBy> thenById() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'id', Sort.asc);
@@ -993,18 +1170,6 @@ extension GameSaveQuerySortThenBy
     });
   }
 
-  QueryBuilder<GameSave, GameSave, QAfterSortBy> thenByLastProfit() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'lastProfit', Sort.asc);
-    });
-  }
-
-  QueryBuilder<GameSave, GameSave, QAfterSortBy> thenByLastProfitDesc() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'lastProfit', Sort.desc);
-    });
-  }
-
   QueryBuilder<GameSave, GameSave, QAfterSortBy> thenByMoney() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'money', Sort.asc);
@@ -1044,6 +1209,12 @@ extension GameSaveQuerySortThenBy
 
 extension GameSaveQueryWhereDistinct
     on QueryBuilder<GameSave, GameSave, QDistinct> {
+  QueryBuilder<GameSave, GameSave, QDistinct> distinctByEconomyHealth() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'economyHealth');
+    });
+  }
+
   QueryBuilder<GameSave, GameSave, QDistinct> distinctByInfoDay() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'infoDay');
@@ -1063,15 +1234,15 @@ extension GameSaveQueryWhereDistinct
     });
   }
 
-  QueryBuilder<GameSave, GameSave, QDistinct> distinctByLastProfit() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addDistinctBy(r'lastProfit');
-    });
-  }
-
   QueryBuilder<GameSave, GameSave, QDistinct> distinctByMoney() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'money');
+    });
+  }
+
+  QueryBuilder<GameSave, GameSave, QDistinct> distinctByProfitHistory() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'profitHistory');
     });
   }
 
@@ -1096,6 +1267,12 @@ extension GameSaveQueryProperty
     });
   }
 
+  QueryBuilder<GameSave, double, QQueryOperations> economyHealthProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'economyHealth');
+    });
+  }
+
   QueryBuilder<GameSave, int, QQueryOperations> infoDayProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'infoDay');
@@ -1114,12 +1291,6 @@ extension GameSaveQueryProperty
     });
   }
 
-  QueryBuilder<GameSave, int, QQueryOperations> lastProfitProperty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addPropertyName(r'lastProfit');
-    });
-  }
-
   QueryBuilder<GameSave, int, QQueryOperations> moneyProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'money');
@@ -1129,6 +1300,12 @@ extension GameSaveQueryProperty
   QueryBuilder<GameSave, PlotList?, QQueryOperations> plotListProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'plotList');
+    });
+  }
+
+  QueryBuilder<GameSave, List<int>, QQueryOperations> profitHistoryProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'profitHistory');
     });
   }
 
@@ -1383,13 +1560,18 @@ const PlotSchema = Schema(
       type: IsarType.object,
       target: r'Upgrades',
     ),
-    r'rent': PropertySchema(
+    r'propertyValue': PropertySchema(
       id: 3,
+      name: r'propertyValue',
+      type: IsarType.long,
+    ),
+    r'rent': PropertySchema(
+      id: 4,
       name: r'rent',
       type: IsarType.long,
     ),
     r'residents': PropertySchema(
-      id: 4,
+      id: 5,
       name: r'residents',
       type: IsarType.long,
     )
@@ -1430,8 +1612,9 @@ void _plotSerialize(
     UpgradesSchema.serialize,
     object.plotUpgrades,
   );
-  writer.writeLong(offsets[3], object.rent);
-  writer.writeLong(offsets[4], object.residents);
+  writer.writeLong(offsets[3], object.propertyValue);
+  writer.writeLong(offsets[4], object.rent);
+  writer.writeLong(offsets[5], object.residents);
 }
 
 Plot _plotDeserialize(
@@ -1446,11 +1629,12 @@ Plot _plotDeserialize(
       UpgradesSchema.deserialize,
       allOffsets,
     ),
-    residents: reader.readLongOrNull(offsets[4]) ?? 0,
+    propertyValue: reader.readLongOrNull(offsets[3]) ?? 1000,
+    residents: reader.readLongOrNull(offsets[5]) ?? 0,
   );
   object.happiness = reader.readLong(offsets[0]);
   object.maxResidents = reader.readLong(offsets[1]);
-  object.rent = reader.readLong(offsets[3]);
+  object.rent = reader.readLong(offsets[4]);
   return object;
 }
 
@@ -1472,8 +1656,10 @@ P _plotDeserializeProp<P>(
         allOffsets,
       )) as P;
     case 3:
-      return (reader.readLong(offset)) as P;
+      return (reader.readLongOrNull(offset) ?? 1000) as P;
     case 4:
+      return (reader.readLong(offset)) as P;
+    case 5:
       return (reader.readLongOrNull(offset) ?? 0) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -1598,6 +1784,59 @@ extension PlotQueryFilter on QueryBuilder<Plot, Plot, QFilterCondition> {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(const FilterCondition.isNotNull(
         property: r'plotUpgrades',
+      ));
+    });
+  }
+
+  QueryBuilder<Plot, Plot, QAfterFilterCondition> propertyValueEqualTo(
+      int value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'propertyValue',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<Plot, Plot, QAfterFilterCondition> propertyValueGreaterThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'propertyValue',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<Plot, Plot, QAfterFilterCondition> propertyValueLessThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'propertyValue',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<Plot, Plot, QAfterFilterCondition> propertyValueBetween(
+    int lower,
+    int upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'propertyValue',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
       ));
     });
   }

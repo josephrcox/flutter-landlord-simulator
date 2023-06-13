@@ -1,8 +1,8 @@
 const Map<String, dynamic> gameSettings = {
-  "baseSearchForResidentCost": 0.3,
-  "defaultRent": 800,
+  "baseSearchForResidentCost": 0.40,
+  "defaultRent": 600,
   "defaultMaxResidents": 10,
-  "defaultHappiness": 75,
+  "defaultHappiness": 50,
 };
 
 const upgradeInfo = {
@@ -57,7 +57,7 @@ const upgradeInfo = {
         "You no longer lose money when residents leave, but residents aren't happy with how gross the apartments end up becoming.",
     "cost": 0,
     "monthlyCostPerResident": 0,
-    "instantHappiness": 20,
+    "instantHappiness": -20,
     "monthlyProfitPerResident": 0,
     "icon": "🧹",
   },

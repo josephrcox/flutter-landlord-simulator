@@ -9,6 +9,7 @@ import 'package:flutter_slidable/flutter_slidable.dart';
 import '../staffMenu.dart';
 import 'helpScreen.dart';
 import '../upgradeMenu.dart';
+import '../sellMenu.dart';
 import '../configSettings.dart';
 import 'package:intl/intl.dart';
 
@@ -48,6 +49,13 @@ class _GameScreenState extends ConsumerState<GameScreen>
     Color happyColor = const Color.fromARGB(255, 17, 95, 51);
     Color sadColor = const Color.fromARGB(255, 121, 50, 41);
     Color amenitiesColor = const Color.fromARGB(255, 73, 17, 89);
+
+    bool paused = false;
+
+    final avgProfit = save!.profitHistory.isNotEmpty
+        ? save.profitHistory.reduce((a, b) => a + b) ~/
+            save.profitHistory.length
+        : 0;
 
     Widget displayProperties() {
       if (propertyList != null &&
@@ -138,6 +146,22 @@ class _GameScreenState extends ConsumerState<GameScreen>
                             foregroundColor: Colors.white,
                             icon: Icons.home_repair_service,
                             label: 'Amenities',
+                          ),
+                          SlidableAction(
+                            onPressed: (BuildContext context) {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => SellMenu(
+                                    plotIndex: index,
+                                  ),
+                                ),
+                              );
+                            },
+                            backgroundColor: Colors.blueAccent,
+                            foregroundColor: Colors.white,
+                            icon: Icons.wallet,
+                            label: 'Sell',
                           ),
                         ],
                       ),
@@ -421,9 +445,17 @@ class _GameScreenState extends ConsumerState<GameScreen>
           ),
           IconButton(
             onPressed: () {
+              if (paused) {
+                paused = false;
+              } else {
+                paused = true;
+              }
+
               saveProvider.pauseGame();
             },
-            icon: const Icon(Icons.pause_circle),
+            icon: paused == true
+                ? const Icon(Icons.play_circle)
+                : const Icon(Icons.pause_circle),
           ),
           IconButton(
             onPressed: () {
@@ -471,7 +503,8 @@ class _GameScreenState extends ConsumerState<GameScreen>
                     year: save.infoYear,
                     background: headerBackgroundColorARGB,
                     taxRate: save.rulesTaxRate,
-                    lastProfit: save.lastProfit,
+                    avgProfit: avgProfit,
+                    economyHealth: save.economyHealth,
                   ),
                   displayProperties(),
                 ],
@@ -483,11 +516,12 @@ class _GameScreenState extends ConsumerState<GameScreen>
 
 Widget headerWidget({
   required int money,
-  required int lastProfit,
+  required int avgProfit,
   required int day,
   required int year,
   required Color background,
   required double taxRate,
+  required double economyHealth,
 }) {
   // convert money int to string with commas for money
   var f = NumberFormat("###,###,###,###,###", "en_US");
@@ -507,13 +541,19 @@ Widget headerWidget({
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Money: $moneyString (daily profit \$$lastProfit)',
+              'Money: $moneyString // avg profit \$$avgProfit',
             ),
             const SizedBox(
               height: 4,
             ),
             Text(
               'Tax rate: ${taxRate * 100}%',
+            ),
+            const SizedBox(
+              height: 4,
+            ),
+            Text(
+              'Economy health rating: ${economyHealth.toStringAsFixed(4)}%',
             ),
           ],
         ),
