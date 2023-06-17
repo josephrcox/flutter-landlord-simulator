@@ -22,19 +22,15 @@ class _HelpScreenState extends State<HelpScreen> {
     widget.economy = widget.economy
         .asMap()
         .entries
-        .where((e) => e.key % 250 == 0)
+        .where((e) => e.key % 20 == 0)
         .map((e) => e.value)
         .toList();
 
     // do every value 10 times so [1,2] becomes [1,1,1,1,1,1,1,1,1,1,2,2,2,2,2...]
-    widget.economy = widget.economy.expand((e) => List.filled(250, e)).toList();
+    widget.economy = widget.economy.expand((e) => List.filled(20, e)).toList();
 
-    // truncate so that it only shows days in the past, and only last 100 days
-    // widget.economy = widget.economy.sublist(0, widget.day);
-
-    // if (widget.day > 100) {
-    //   widget.economy = widget.economy.sublist(widget.day - 100, widget.day);
-    // }
+    // truncate so that it only shows days in the past
+    widget.economy = widget.economy.sublist(0, widget.day);
 
     return Scaffold(
         // app bar
@@ -53,6 +49,7 @@ class _HelpScreenState extends State<HelpScreen> {
                 maxY: 1,
                 lineBarsData: [
                   LineChartBarData(
+                    curveSmoothness: 0.01,
                       // for spots, use [index, value] from economy
                       spots: widget.economy
                           .asMap()

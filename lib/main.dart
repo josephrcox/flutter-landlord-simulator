@@ -81,7 +81,7 @@ class _MenuState extends ConsumerState<Menu> with WidgetsBindingObserver {
     }
     isLooping = true;
 
-    Timer.periodic(const Duration(seconds: 1), (timer) {
+    Timer.periodic(const Duration(milliseconds: 600), (timer) {
       if (shouldLoopContinue) {
         saveProvider.triggerLoop();
       }

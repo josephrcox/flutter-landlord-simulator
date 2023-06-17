@@ -154,10 +154,10 @@ class _GameScreenState extends ConsumerState<GameScreen>
                           ),
                           SlidableAction(
                             onPressed: (BuildContext context) async {
-                              final success =
+                              final response =
                                   await saveProvider.actionUpgradePlotLevel(
                                       propertyIndex: plotIndex);
-                              if (success) {
+                              if (response == 0) {
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   const SnackBar(
                                     content: Text('Property upgraded.'),
@@ -165,9 +165,9 @@ class _GameScreenState extends ConsumerState<GameScreen>
                                 );
                               } else {
                                 ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
+                                  SnackBar(
                                     content: Text(
-                                        'You do not have enough money to upgrade this property.'),
+                                        'You need \$$response more to upgrade this property. '),
                                   ),
                                 );
                               }

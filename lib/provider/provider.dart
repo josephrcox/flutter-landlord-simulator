@@ -194,7 +194,7 @@ class SaveProvider with ChangeNotifier {
     return true;
   }
 
-  Future<bool> actionUpgradePlotLevel({
+  Future<int> actionUpgradePlotLevel({
     required propertyIndex,
   }) async {
     pauseLoop = true;
@@ -203,21 +203,23 @@ class SaveProvider with ChangeNotifier {
     final currentLevel = newPlots?[propertyIndex].level;
     final costToUpgrade = gameSettings['level${currentLevel! + 1}cost'] as num;
     if (_save!.money < costToUpgrade) {
-      return false;
+      pauseLoop = false;
+      return costToUpgrade.toInt();
     }
     _save!.money -= costToUpgrade.toInt();
     newPlots?[propertyIndex].level += 1;
     newPlots?[propertyIndex].happiness += 20;
+    newPlots?[propertyIndex].maxResidents =
+        gameSettings['level${currentLevel + 1}maxResidents'] as int;
     _save?.plotList?.plots = newPlots;
 
     await isar.writeTxn(() async {
       _save?.plotList?.plots = newPlots;
       await isar.gameSaves.put(_save!);
       pauseLoop = false;
-      return true;
+      return 0;
     });
-    pauseLoop = false;
-    return false;
+    return costToUpgrade.toInt();
   }
 
   Future<bool> actionToggleStaff(
@@ -467,8 +469,8 @@ List<Plot> calculateHappiness(List<Plot> plots, GameSave save) {
 
     final random = Random();
 
-    if (save.infoDay % 30 == 0) {
-      int happinessChange = 0; // between -3 and 3
+    if (save.infoDay % 15 == 0) {
+      int happinessChange = 0;
 
       // Change based on economy health. The higher the health, the more likely happiness will go up.
       if (random.nextInt(300) < save.economyHealth) {
@@ -477,21 +479,13 @@ List<Plot> calculateHappiness(List<Plot> plots, GameSave save) {
         happinessChange -= random.nextInt(3);
       }
 
-      print(happinessChange);
       // Change based on rent. The higher the rent, the more likely happiness will go down.
       final acceptableRentBasedOnEconomicHealth =
-          (plot.level * 750 * (save.economyHealth / 150)).clamp(600, 10000);
-      print(
-          'rent: ${plot.rent}, acceptableRentBasedOnEconomicHealth: $acceptableRentBasedOnEconomicHealth');
+          (plot.level * 900 * (save.economyHealth / 150)).clamp(600, 10000);
 
-      if (plot.rent < acceptableRentBasedOnEconomicHealth) {
-        happinessChange += random.nextInt(3) + 1;
-      } else {
-        happinessChange -= random.nextInt(3) - 1;
+      if (plot.rent > acceptableRentBasedOnEconomicHealth) {
+        happinessChange -= random.nextInt(4) + 2;
       }
-
-      print(happinessChange);
-      print('-----------');
 
       plot.happiness += happinessChange;
 
@@ -572,21 +566,29 @@ double calculateEconomyHealth(GameSave save) {
   final random = Random();
   if (economyTrends.isEmpty) {
     bool isPositive = true;
+    int positives = 0;
+    int negatives = 0;
 
     int remaining = 10000;
     while (remaining > 0) {
-      int sprintLength = min(remaining, random.nextInt(300) + 120);
+      int sprintLength = min(remaining, random.nextInt(120) + 60);
       remaining -= sprintLength;
 
       // generate a sprint
       for (int i = 0; i < sprintLength; i++) {
-        // note that 1.0 means no change, so the range of change is (-0.5, 0.5)
         double change = (random.nextDouble() - (random.nextDouble() * 1)) *
             (isPositive ? 1 : -1);
         economyTrends.add(change);
       }
-      isPositive = !isPositive;
+
+      isPositive = random.nextBool();
+      if (isPositive) {
+        positives++;
+      } else {
+        negatives++;
+      }
     }
+    print('positives: $positives, negatives: $negatives');
   }
   // developer.log(economyTrends.toString());
 
@@ -617,13 +619,8 @@ double calculateEconomyHealth(GameSave save) {
 
   //// The wealthier the player, the less happy the economy is
   if (money > 100000) {
-    healthModifier -= log(money) / 2500;
+    healthModifier -= log(money) / (1 / money);
   }
-
-  //// The longer the game goes on, the more the economy will affect health
-  double timeFactor = daysIntoGame < 3000
-      ? 1 + pow((daysIntoGame / 3000.0), 2).toDouble()
-      : 1 + pow((daysIntoGame / 3000.0), 2).toDouble();
 
   //// The happier the avg happiness, the happier the economy
   healthModifier += (avgHappiness / 100.0);
@@ -643,15 +640,14 @@ double calculateEconomyHealth(GameSave save) {
     economyTrendIndex = 0;
   }
 
-  // print('$healthModifier');
-  // print('${economyTrends[economyTrendIndex]}');
-  // healthModifier += economyTrends[economyTrendIndex];
-  // print('$healthModifier');
-  // print('----------');
+  healthModifier /= 5;
+
+  healthModifier += economyTrends[economyTrendIndex] * (daysIntoGame / 500);
 
   final newHealth =
-      (save.economyHealth + healthModifier).clamp(0, 300.0).toDouble();
+      (save.economyHealth + (healthModifier*2)).clamp(0, 300.0).toDouble();
 
+  print('economy health: $newHealth, modifier: $healthModifier, trend number: ${economyTrends[economyTrendIndex]}');
   return newHealth;
 }
 
