@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:real/provider/provider.dart';
 
-import '../configSettings.dart';
-import 'models/gameSave.dart';
+import '../../configSettings.dart';
+import '../models/gameSave.dart';
 
 class UpgradeMenu extends ConsumerStatefulWidget {
   // require saveProvider to be passed in
@@ -22,6 +22,7 @@ class _UpgradeMenuState extends ConsumerState<UpgradeMenu> {
     var save = saveProvider.save;
     final propertyList = save?.plotList;
     final plotIndex = widget.plotIndex;
+    final plotLevel = propertyList!.plots![plotIndex].level;
 
     Map<String, bool> upgradesMap = {};
 
@@ -57,31 +58,48 @@ class _UpgradeMenuState extends ConsumerState<UpgradeMenu> {
                 String propertyName = upgradesMap.keys.elementAt(index);
                 bool propertyValue = upgradesMap.values.elementAt(index);
 
+                final availableForUpgrade =
+                    (upgradeInfo[propertyName]!['levelRequired'] as int) <=
+                            plotLevel
+                        ? true
+                        : false;
+
                 return Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 8.0),
                   child: InkWell(
                     onTap: () async {
-                      final success = await saveProvider.actionToggleUpgrade(
-                        propertyIndex: plotIndex,
-                        upgradeIndex: index,
-                        upgradeName: upgradesMap.keys.elementAt(index),
-                        toggleTo: !propertyValue,
-                      );
-                      if (success) {
-                        setState(
-                          () {
-                            upgradesMap[propertyName] =
-                                !propertyValue; // Toggle the boolean value
-                            save = saveProvider.save;
-                          },
+                      if (availableForUpgrade) {
+                        final success = await saveProvider.actionToggleUpgrade(
+                          propertyIndex: plotIndex,
+                          upgradeIndex: index,
+                          upgradeName: upgradesMap.keys.elementAt(index),
+                          toggleTo: !propertyValue,
                         );
+                        if (success) {
+                          setState(
+                            () {
+                              upgradesMap[propertyName] =
+                                  !propertyValue; // Toggle the boolean value
+                              save = saveProvider.save;
+                            },
+                          );
+                        }
                       }
                     },
                     child: Column(
                       children: [
                         const SizedBox(height: 10),
                         Container(
-                          color: propertyValue ? Colors.green : Colors.red,
+                          decoration: BoxDecoration(
+                            borderRadius: const BorderRadius.all(
+                              Radius.circular(10),
+                            ),
+                            color: propertyValue
+                                ? Colors.green
+                                : availableForUpgrade
+                                    ? Colors.red
+                                    : Colors.grey,
+                          ),
                           child: Row(
                             children: [
                               Expanded(
@@ -91,6 +109,22 @@ class _UpgradeMenuState extends ConsumerState<UpgradeMenu> {
                                     crossAxisAlignment:
                                         CrossAxisAlignment.start,
                                     children: [
+                                      availableForUpgrade
+                                          ? const SizedBox.shrink()
+                                          : Column(
+                                              children: [
+                                                Center(
+                                                  child: Text(
+                                                    'PROPERTY NEEDS TO BE LEVEL ${(upgradeInfo[propertyName]!['levelRequired'])}',
+                                                    style: const TextStyle(
+                                                      fontWeight:
+                                                          FontWeight.bold,
+                                                    ),
+                                                  ),
+                                                ),
+                                                const SizedBox(height: 8),
+                                              ],
+                                            ),
                                       _upgradeNameAndDescription(
                                         upgradeInfo[propertyName]!['name']
                                             .toString(),
@@ -98,28 +132,34 @@ class _UpgradeMenuState extends ConsumerState<UpgradeMenu> {
                                             .toString(),
                                         propertyValue,
                                       ),
-                                      const SizedBox(height: 16),
-                                      Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.spaceBetween,
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          _costs(
-                                            upgradeInfo[propertyName]!["cost"]
-                                                .toString(),
-                                            upgradeInfo[propertyName]![
-                                                    "monthlyCostPerResident"]
-                                                .toString(),
-                                          ),
-                                          const SizedBox(width: 10),
-                                          _profits(
-                                            upgradeInfo[propertyName]![
-                                                    "monthlyProfitPerResident"]
-                                                .toString(),
-                                          ),
-                                        ],
-                                      ),
+                                      availableForUpgrade
+                                          ? const SizedBox(height: 16)
+                                          : const SizedBox.shrink(),
+                                      availableForUpgrade
+                                          ? Row(
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment
+                                                      .spaceBetween,
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              children: [
+                                                _costs(
+                                                  upgradeInfo[propertyName]![
+                                                          "cost"]
+                                                      .toString(),
+                                                  upgradeInfo[propertyName]![
+                                                          "monthlyCostPerResident"]
+                                                      .toString(),
+                                                ),
+                                                const SizedBox(width: 10),
+                                                _profits(
+                                                  upgradeInfo[propertyName]![
+                                                          "monthlyProfitPerResident"]
+                                                      .toString(),
+                                                ),
+                                              ],
+                                            )
+                                          : const SizedBox.shrink(),
                                     ],
                                   ),
                                 ),

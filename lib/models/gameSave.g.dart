@@ -1883,29 +1883,34 @@ const PlotSchema = Schema(
       name: r'happiness',
       type: IsarType.long,
     ),
-    r'maxResidents': PropertySchema(
+    r'level': PropertySchema(
       id: 1,
+      name: r'level',
+      type: IsarType.long,
+    ),
+    r'maxResidents': PropertySchema(
+      id: 2,
       name: r'maxResidents',
       type: IsarType.long,
     ),
     r'plotUpgrades': PropertySchema(
-      id: 2,
+      id: 3,
       name: r'plotUpgrades',
       type: IsarType.object,
       target: r'Upgrades',
     ),
     r'propertyValue': PropertySchema(
-      id: 3,
+      id: 4,
       name: r'propertyValue',
       type: IsarType.long,
     ),
     r'rent': PropertySchema(
-      id: 4,
+      id: 5,
       name: r'rent',
       type: IsarType.long,
     ),
     r'residents': PropertySchema(
-      id: 5,
+      id: 6,
       name: r'residents',
       type: IsarType.long,
     )
@@ -1939,16 +1944,17 @@ void _plotSerialize(
   Map<Type, List<int>> allOffsets,
 ) {
   writer.writeLong(offsets[0], object.happiness);
-  writer.writeLong(offsets[1], object.maxResidents);
+  writer.writeLong(offsets[1], object.level);
+  writer.writeLong(offsets[2], object.maxResidents);
   writer.writeObject<Upgrades>(
-    offsets[2],
+    offsets[3],
     allOffsets,
     UpgradesSchema.serialize,
     object.plotUpgrades,
   );
-  writer.writeLong(offsets[3], object.propertyValue);
-  writer.writeLong(offsets[4], object.rent);
-  writer.writeLong(offsets[5], object.residents);
+  writer.writeLong(offsets[4], object.propertyValue);
+  writer.writeLong(offsets[5], object.rent);
+  writer.writeLong(offsets[6], object.residents);
 }
 
 Plot _plotDeserialize(
@@ -1959,16 +1965,17 @@ Plot _plotDeserialize(
 ) {
   final object = Plot(
     plotUpgrades: reader.readObjectOrNull<Upgrades>(
-      offsets[2],
+      offsets[3],
       UpgradesSchema.deserialize,
       allOffsets,
     ),
-    propertyValue: reader.readLongOrNull(offsets[3]) ?? 1000,
-    residents: reader.readLongOrNull(offsets[5]) ?? 0,
+    propertyValue: reader.readLongOrNull(offsets[4]) ?? 1000,
+    residents: reader.readLongOrNull(offsets[6]) ?? 0,
   );
   object.happiness = reader.readLong(offsets[0]);
-  object.maxResidents = reader.readLong(offsets[1]);
-  object.rent = reader.readLong(offsets[4]);
+  object.level = reader.readLong(offsets[1]);
+  object.maxResidents = reader.readLong(offsets[2]);
+  object.rent = reader.readLong(offsets[5]);
   return object;
 }
 
@@ -1984,16 +1991,18 @@ P _plotDeserializeProp<P>(
     case 1:
       return (reader.readLong(offset)) as P;
     case 2:
+      return (reader.readLong(offset)) as P;
+    case 3:
       return (reader.readObjectOrNull<Upgrades>(
         offset,
         UpgradesSchema.deserialize,
         allOffsets,
       )) as P;
-    case 3:
-      return (reader.readLongOrNull(offset) ?? 1000) as P;
     case 4:
-      return (reader.readLong(offset)) as P;
+      return (reader.readLongOrNull(offset) ?? 1000) as P;
     case 5:
+      return (reader.readLong(offset)) as P;
+    case 6:
       return (reader.readLongOrNull(offset) ?? 0) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -2045,6 +2054,58 @@ extension PlotQueryFilter on QueryBuilder<Plot, Plot, QFilterCondition> {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.between(
         property: r'happiness',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<Plot, Plot, QAfterFilterCondition> levelEqualTo(int value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'level',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<Plot, Plot, QAfterFilterCondition> levelGreaterThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'level',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<Plot, Plot, QAfterFilterCondition> levelLessThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'level',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<Plot, Plot, QAfterFilterCondition> levelBetween(
+    int lower,
+    int upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'level',
         lower: lower,
         includeLower: includeLower,
         upper: upper,

@@ -11,8 +11,9 @@ const upgradeInfo = {
     "desc": "This is a pool",
     "cost": 15000,
     "monthlyCostPerResident": 80,
-    "instantHappiness": 25,
+    "instantHappiness": 18,
     "monthlyProfitPerResident": 0,
+    "levelRequired": 2,
     "icon": "🩳",
   },
   "freeUitilities": {
@@ -20,8 +21,9 @@ const upgradeInfo = {
     "desc": "Is it really free if the landlord pays for it?",
     "cost": 0,
     "monthlyCostPerResident": 100,
-    "instantHappiness": 25,
+    "instantHappiness": 20,
     "monthlyProfitPerResident": 0,
+    "levelRequired": 1,
     "icon": "💡",
   },
   "dogsAllowed": {
@@ -31,6 +33,7 @@ const upgradeInfo = {
     "monthlyCostPerResident": 0,
     "instantHappiness": 10,
     "monthlyProfitPerResident": 10,
+    "levelRequired": 1,
     "icon": "🐶",
   },
   "catsAllowed": {
@@ -40,16 +43,8 @@ const upgradeInfo = {
     "monthlyCostPerResident": 0,
     "instantHappiness": 10,
     "monthlyProfitPerResident": 6,
+    "levelRequired": 1,
     "icon": "🐱",
-  },
-  "improvedSecurity": {
-    "name": "Improved security",
-    "desc": "Keep your residents safe, and YOUR money safer",
-    "cost": 15000,
-    "monthlyCostPerResident": 30,
-    "instantHappiness": 10,
-    "monthlyProfitPerResident": 0,
-    "icon": "🔒",
   },
   "easyTurnover": {
     "name": "Easy turnover",
@@ -59,7 +54,18 @@ const upgradeInfo = {
     "monthlyCostPerResident": 0,
     "instantHappiness": -20,
     "monthlyProfitPerResident": 0,
+    "levelRequired": 1,
     "icon": "🧹",
+  },
+  "improvedSecurity": {
+    "name": "Improved security",
+    "desc": "Keep your residents safe, and YOUR money safer",
+    "cost": 15000,
+    "monthlyCostPerResident": 40,
+    "instantHappiness": 15,
+    "monthlyProfitPerResident": 0,
+    "levelRequired": 2,
+    "icon": "🔒",
   },
 };
 

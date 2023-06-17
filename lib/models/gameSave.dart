@@ -47,6 +47,7 @@ class Plot {
   int happiness = gameSettings['defaultHappiness'];
   Upgrades? plotUpgrades;
   int propertyValue;
+  int level = 1;
 
   Plot({
     this.residents = 0,
@@ -58,14 +59,38 @@ class Plot {
 @embedded
 class Upgrades {
   List<String> upgradeOptions = [
-    'swimmingPool',
-    'freeUitilities',
     'dogsAllowed',
     'catsAllowed',
-    'improvedSecurity',
+    'freeUitilities',
     'easyTurnover',
+    'improvedSecurity', // start of level 2
+    'swimmingPool',
   ];
   List<bool> upgradeValues = [
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
     false,
     false,
     false,
@@ -87,11 +112,7 @@ class Upgrades {
 class Staff {
   int residentVacanciesFilledByPropertyManager = 0;
 
-  List<String> staffOptions = [
-    'manager'
-  ];
+  List<String> staffOptions = ['manager'];
 
-  List<bool> staffValues = [
-    false
-  ];
+  List<bool> staffValues = [false];
 }

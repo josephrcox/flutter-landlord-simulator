@@ -9,7 +9,7 @@ import 'package:flutter_slidable/flutter_slidable.dart';
 import 'gameOver.dart';
 import 'staffMenu.dart';
 import 'helpScreen.dart';
-import '../upgradeMenu.dart';
+import 'upgradeMenu.dart';
 import 'sellMenu.dart';
 import '../configSettings.dart';
 import 'package:intl/intl.dart';
@@ -120,6 +120,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
                           color: const Color.fromARGB(75, 0, 0, 0),
                           strokeAlign: BorderSide.strokeAlignInside,
                         ),
+                        borderRadius: BorderRadius.circular(10),
                         color: isTappedList[index]
                             ? propertyList.plots![index].happiness < 40
                                 ? sadColor.withOpacity(0.4)
@@ -132,6 +133,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
                     child: Slidable(
                       closeOnScroll: true,
                       endActionPane: ActionPane(
+                        extentRatio: 0.7,
                         motion: const ScrollMotion(),
                         children: [
                           SlidableAction(
@@ -151,6 +153,10 @@ class _GameScreenState extends ConsumerState<GameScreen>
                             label: 'Amenities',
                           ),
                           SlidableAction(
+                            borderRadius: BorderRadius.only(
+                              topRight: Radius.circular(10),
+                              bottomRight: Radius.circular(10),
+                            ),
                             onPressed: (BuildContext context) {
                               Navigator.push(
                                 context,
@@ -338,30 +344,8 @@ class _GameScreenState extends ConsumerState<GameScreen>
                     });
                     final increase =
                         await saveProvider.actionSearchForResidents(index);
-                    print('increase: $increase');
-                    if (increase > 0) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          backgroundColor:
-                              const Color.fromARGB(255, 30, 167, 35),
-                          behavior: SnackBarBehavior.floating,
-                          width: 200,
-                          shape: const RoundedRectangleBorder(
-                            borderRadius: BorderRadius.all(
-                              Radius.circular(5),
-                            ),
-                          ),
-                          duration: const Duration(milliseconds: 600),
-                          content: Text(
-                            '$increase resident found! 🎉',
-                            textAlign: TextAlign.center,
-                            style: const TextStyle(
-                              color: Colors.white,
-                            ),
-                          ),
-                        ),
-                      );
-                    } else if (increase < 0) {
+
+                    if (increase < 0) {
                       // not enough money
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
