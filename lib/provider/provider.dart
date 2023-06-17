@@ -154,7 +154,7 @@ class SaveProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  Future<bool> actionToggleUpgrade(
+  Future<bool> actionToggleAmen(
       {required propertyIndex,
       required upgradeIndex,
       required upgradeName,
@@ -189,6 +189,32 @@ class SaveProvider with ChangeNotifier {
     });
     pauseLoop = false;
     return true;
+  }
+
+  Future<bool> actionUpgradePlotLevel({
+    required propertyIndex,
+  }) async {
+    pauseLoop = true;
+
+    final newPlots = _save?.plotList!.plots!.toList();
+    final currentLevel = newPlots?[propertyIndex].level;
+    final costToUpgrade = gameSettings['level${currentLevel! + 1}cost'] as num;
+    if (_save!.money < costToUpgrade) {
+      return false;
+    }
+    _save!.money -= costToUpgrade.toInt();
+    newPlots?[propertyIndex].level += 1;
+    newPlots?[propertyIndex].happiness += 20;
+    _save?.plotList?.plots = newPlots;
+
+    await isar.writeTxn(() async {
+      _save?.plotList?.plots = newPlots;
+      await isar.gameSaves.put(_save!);
+      pauseLoop = false;
+      return true;
+    });
+    pauseLoop = false;
+    return false;
   }
 
   Future<bool> actionToggleStaff(

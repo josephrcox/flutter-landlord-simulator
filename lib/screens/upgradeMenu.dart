@@ -69,7 +69,7 @@ class _UpgradeMenuState extends ConsumerState<UpgradeMenu> {
                   child: InkWell(
                     onTap: () async {
                       if (availableForUpgrade) {
-                        final success = await saveProvider.actionToggleUpgrade(
+                        final success = await saveProvider.actionToggleAmen(
                           propertyIndex: plotIndex,
                           upgradeIndex: index,
                           upgradeName: upgradesMap.keys.elementAt(index),

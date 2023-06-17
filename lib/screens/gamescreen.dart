@@ -153,6 +153,31 @@ class _GameScreenState extends ConsumerState<GameScreen>
                             label: 'Amenities',
                           ),
                           SlidableAction(
+                            onPressed: (BuildContext context) async {
+                              final success =
+                                  await saveProvider.actionUpgradePlotLevel(
+                                      propertyIndex: plotIndex);
+                              if (success) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text('Property upgraded.'),
+                                  ),
+                                );
+                              } else {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text(
+                                        'You do not have enough money to upgrade this property.'),
+                                  ),
+                                );
+                              }
+                            },
+                            backgroundColor: Colors.purple,
+                            foregroundColor: Colors.white,
+                            icon: Icons.arrow_upward_rounded,
+                            label: 'Upgrade',
+                          ),
+                          SlidableAction(
                             borderRadius: BorderRadius.only(
                               topRight: Radius.circular(10),
                               bottomRight: Radius.circular(10),
@@ -175,11 +200,10 @@ class _GameScreenState extends ConsumerState<GameScreen>
                         ],
                       ),
                       child: Container(
-                        padding: const EdgeInsets.symmetric(vertical: 15),
+                        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
                         child: Row(
                           crossAxisAlignment: CrossAxisAlignment.center,
                           children: [
-                            const SizedBox(width: 20),
                             Expanded(
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -190,59 +214,183 @@ class _GameScreenState extends ConsumerState<GameScreen>
                                         CrossAxisAlignment.start,
                                     children: [
                                       Row(
-                                        mainAxisSize: MainAxisSize.min,
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.spaceBetween,
+                                        mainAxisSize: MainAxisSize.max,
                                         crossAxisAlignment:
-                                            CrossAxisAlignment.end,
+                                            CrossAxisAlignment.center,
                                         children: [
-                                          Text(
-                                            '\$${propertyList.plots![index].rent.toString()}',
-                                            style: const TextStyle(
-                                              fontSize: 24,
+                                          Row(
+                                            mainAxisSize: MainAxisSize.max,
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.end,
+                                            children: [
+                                              Text(
+                                                '\$${propertyList.plots![index].rent.toString()}',
+                                                style: const TextStyle(
+                                                  fontSize: 28,
+                                                ),
+                                              ),
+                                              const SizedBox(
+                                                width: 8,
+                                                height: 0,
+                                              ),
+                                              const Padding(
+                                                padding: EdgeInsets.only(
+                                                    bottom: 4.0),
+                                                child: Text(
+                                                  '/ month',
+                                                  style: TextStyle(
+                                                    fontSize: 12,
+                                                    color: Colors.grey,
+                                                  ),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                          Container(
+                                            padding: const EdgeInsets.only(
+                                              left: 8.0,
+                                              right: 8.0,
+                                              top: 2.0,
+                                              bottom: 2.0,
+                                            ),
+                                            decoration: BoxDecoration(
+                                              color:
+                                                  Colors.black.withOpacity(0.5),
+                                              borderRadius:
+                                                  BorderRadius.circular(10),
+                                            ),
+                                            child: Column(
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment.center,
+                                              children: [
+                                                Text(
+                                                  'Level ${propertyList.plots![index].level}',
+                                                  style: const TextStyle(
+                                                    fontSize: 14,
+                                                    color: Colors.white,
+                                                  ),
+                                                ),
+                                              ],
                                             ),
                                           ),
-                                          const SizedBox(
-                                            width: 5,
-                                            height: 0,
+                                        ],
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Row(
+                                            children: [
+                                              // Residents
+                                              Text(
+                                                '👭 ${propertyList.plots![index].residents}/${propertyList.plots![index].maxResidents}',
+                                                style: TextStyle(
+                                                  fontSize: 16,
+                                                  color: propertyList
+                                                              .plots![index]
+                                                              .residents <
+                                                          propertyList
+                                                              .plots![index]
+                                                              .maxResidents
+                                                      ? Colors.yellow
+                                                      : Colors.white,
+                                                ),
+                                              ),
+                                              const SizedBox(width: 12),
+                                              // Happiness
+                                              Text(
+                                                '😊 ${propertyList.plots![index].happiness}%',
+                                                style: const TextStyle(
+                                                  fontSize: 16,
+                                                ),
+                                              ),
+                                            ],
                                           ),
-                                          const Padding(
-                                            padding:
-                                                EdgeInsets.only(bottom: 4.0),
-                                            child: Text(
-                                              '/ month',
-                                              style: TextStyle(
-                                                fontSize: 12,
-                                                color: Colors.grey,
+                                          const SizedBox(height: 8),
+                                          Row(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.spaceBetween,
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              Text(
+                                                'Costs $costToSearch to headhunt',
+                                                style: const TextStyle(
+                                                  fontSize: 14,
+                                                  color: Color.fromARGB(
+                                                      255, 190, 189, 189),
+                                                  // italic
+                                                  fontStyle: FontStyle.italic,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ],
+                                      ),
+                                      Row(
+                                        children: [
+                                          InkWell(
+                                            onTap: () {
+                                              saveProvider.actionSetRent(
+                                                propertyList
+                                                        .plots![index].rent -
+                                                    100,
+                                                index,
+                                              );
+                                            },
+                                            child: Container(
+                                              decoration: BoxDecoration(
+                                                color: const Color.fromARGB(
+                                                    255, 255, 136, 0),
+                                                borderRadius:
+                                                    BorderRadius.circular(5),
+                                              ),
+                                              padding:
+                                                  const EdgeInsets.all(5.0),
+                                              child: const Icon(
+                                                Icons.arrow_downward_outlined,
+                                                size: 24,
+                                              ),
+                                            ),
+                                          ),
+                                          const SizedBox(width: 32),
+                                          InkWell(
+                                            onTap: () {
+                                              saveProvider.actionSetRent(
+                                                propertyList
+                                                        .plots![index].rent +
+                                                    100,
+                                                index,
+                                              );
+                                            },
+                                            child: Container(
+                                              decoration: BoxDecoration(
+                                                color: const Color.fromARGB(
+                                                    255, 0, 94, 255),
+                                                borderRadius:
+                                                    BorderRadius.circular(5),
+                                              ),
+                                              padding:
+                                                  const EdgeInsets.all(5.0),
+                                              child: const Icon(
+                                                Icons.arrow_upward_outlined,
+                                                size: 24,
                                               ),
                                             ),
                                           ),
                                         ],
                                       ),
-                                      const SizedBox(height: 4),
-                                      Text(
-                                        'Costs $costToSearch to headhunt',
-                                        style: const TextStyle(
-                                          fontSize: 14,
-                                          color: Color.fromARGB(
-                                              255, 255, 255, 255),
-                                        ),
-                                      ),
                                     ],
                                   ),
-                                  const SizedBox(height: 5),
-                                  Text(
-                                    '${propertyList.plots![index].residents}/${propertyList.plots![index].maxResidents} residents',
-                                    style: TextStyle(
-                                      color:
-                                          propertyList.plots![index].residents <
-                                                  propertyList.plots![index]
-                                                      .maxResidents
-                                              ? Colors.yellow
-                                              : Colors.white,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 5),
-                                  Text(
-                                      '${propertyList.plots![index].happiness}% happiness'),
                                   upgradeListString == ""
                                       ? const SizedBox.shrink()
                                       : Column(
@@ -252,80 +400,11 @@ class _GameScreenState extends ConsumerState<GameScreen>
                                               upgradeListString,
                                             ),
                                           ],
-                                        )
+                                        ),
                                 ],
                               ),
                             ),
-                            Padding(
-                              padding: const EdgeInsets.only(
-                                  right: 16.0, bottom: 16),
-                              child: Column(
-                                mainAxisSize: MainAxisSize.max,
-                                crossAxisAlignment: CrossAxisAlignment.center,
-                                mainAxisAlignment: MainAxisAlignment.start,
-                                children: [
-                                  const Text(
-                                    'Adjust rent',
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      color: Colors.grey,
-                                      fontStyle: FontStyle.italic,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 8),
-                                  Row(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      InkWell(
-                                        onTap: () {
-                                          saveProvider.actionSetRent(
-                                            propertyList.plots![index].rent -
-                                                100,
-                                            index,
-                                          );
-                                        },
-                                        child: Container(
-                                          decoration: BoxDecoration(
-                                            color: const Color.fromARGB(
-                                                255, 255, 136, 0),
-                                            borderRadius:
-                                                BorderRadius.circular(5),
-                                          ),
-                                          padding: const EdgeInsets.all(5.0),
-                                          child: const Icon(
-                                            Icons.arrow_downward_outlined,
-                                            size: 24,
-                                          ),
-                                        ),
-                                      ),
-                                      const SizedBox(width: 32),
-                                      InkWell(
-                                        onTap: () {
-                                          saveProvider.actionSetRent(
-                                            propertyList.plots![index].rent +
-                                                100,
-                                            index,
-                                          );
-                                        },
-                                        child: Container(
-                                          decoration: BoxDecoration(
-                                            color: const Color.fromARGB(
-                                                255, 0, 94, 255),
-                                            borderRadius:
-                                                BorderRadius.circular(5),
-                                          ),
-                                          padding: const EdgeInsets.all(5.0),
-                                          child: const Icon(
-                                            Icons.arrow_upward_outlined,
-                                            size: 24,
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ],
-                              ),
-                            ),
+                            
                           ],
                         ),
                       ),

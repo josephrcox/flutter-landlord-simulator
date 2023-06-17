@@ -3,6 +3,9 @@ const Map<String, dynamic> gameSettings = {
   "defaultRent": 600,
   "defaultMaxResidents": 10,
   "defaultHappiness": 50,
+  "level2cost": 175000,
+  "level3cost": 400000,
+  "level4cost": 1000000,
 };
 
 const upgradeInfo = {
