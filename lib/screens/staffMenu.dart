@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:real/provider/provider.dart';
 
-import '../configSettings.dart';
-import 'models/gameSave.dart';
+import '../../configSettings.dart';
+import '../models/gameSave.dart';
 
 class StaffMenu extends ConsumerStatefulWidget {
   // require saveProvider to be passed in

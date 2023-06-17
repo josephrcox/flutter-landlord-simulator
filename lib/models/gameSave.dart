@@ -6,25 +6,19 @@ part 'gameSave.g.dart';
 @collection
 class GameSave {
   Id id = Isar.autoIncrement;
-
   int money;
   List<int> profitHistory = [];
   List<double> economyTrends = [];
   int economyTrendIndex = 0;
-
   double economyHealth;
-
   String infoName;
-
   int infoDay;
   int infoYear;
-
   PlotList? plotList;
-
   Staff? staff;
-
   int rulesNewPropCost;
   double rulesTaxRate;
+  bool gameOver;
 
   GameSave({
     this.money = 55000,
@@ -36,6 +30,7 @@ class GameSave {
     this.rulesTaxRate = 0.1,
     this.staff,
     this.economyHealth = 100,
+    this.gameOver = false,
   });
 }
 

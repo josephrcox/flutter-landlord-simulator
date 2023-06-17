@@ -6,10 +6,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:real/provider/provider.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 
-import '../staffMenu.dart';
+import 'gameOver.dart';
+import 'staffMenu.dart';
 import 'helpScreen.dart';
 import '../upgradeMenu.dart';
-import '../sellMenu.dart';
+import 'sellMenu.dart';
 import '../configSettings.dart';
 import 'package:intl/intl.dart';
 
@@ -24,6 +25,8 @@ class _GameScreenState extends ConsumerState<GameScreen>
     with WidgetsBindingObserver {
   bool isTapped = false;
   List<bool> isTappedList = [];
+  int daysInDebt = 0;
+
   @override
   void initState() {
     super.initState();
@@ -402,6 +405,9 @@ class _GameScreenState extends ConsumerState<GameScreen>
       }
     }
 
+    if (save.gameOver == true) {
+      return GameOver();
+    }
     return Scaffold(
       persistentFooterAlignment: AlignmentDirectional.center,
       persistentFooterButtons: [
@@ -505,6 +511,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
                     taxRate: save.rulesTaxRate,
                     avgProfit: avgProfit,
                     economyHealth: save.economyHealth,
+                    context: context,
                   ),
                   displayProperties(),
                 ],
@@ -522,6 +529,7 @@ Widget headerWidget({
   required Color background,
   required double taxRate,
   required double economyHealth,
+  context,
 }) {
   // convert money int to string with commas for money
   var f = NumberFormat("###,###,###,###,###", "en_US");
@@ -552,8 +560,32 @@ Widget headerWidget({
             const SizedBox(
               height: 4,
             ),
-            Text(
-              'Economy health rating: ${economyHealth.toStringAsFixed(4)}%',
+            InkWell(
+              child: Text(
+                'Economy health rating: ${economyHealth.toStringAsFixed(2)}',
+              ),
+              onTap: () {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    backgroundColor: Colors.blueGrey,
+                    behavior: SnackBarBehavior.floating,
+                    width: 200,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.all(
+                        Radius.circular(5),
+                      ),
+                    ),
+                    duration: Duration(seconds: 10),
+                    content: Text(
+                      'Bad (0-35), \nGood (35-150), \nGreat (>150))\n\nThe better the economy, the less likely residents are to leave, and the lower your costs.',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                );
+              },
             ),
           ],
         ),

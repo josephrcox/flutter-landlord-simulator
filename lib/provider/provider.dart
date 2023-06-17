@@ -369,6 +369,9 @@ void loop(Isar isar, save, resetting) async {
   //// Adjust tax rate based on money in bank
   save?.rulesTaxRate = calculateTaxRateChanges(save?.rulesTaxRate, save?.money);
 
+  //// Check if game over
+  save.gameOver = checkIfGameOver(save);
+
   final firstSave = await isar.gameSaves.where().findFirst();
   if (firstSave == null) {
     return;
@@ -592,16 +595,13 @@ double calculateEconomyHealth(GameSave save) {
   if (numPlots > random.nextInt(10)) {
     healthModifier += (numPlots - 10) / 750.0;
   }
-  print('$healthModifier, ${economyTrends[economyTrendIndex]}');
-  healthModifier *= economyTrends[economyTrendIndex];
-  print(healthModifier);
-  print('-------');
 
   if (economyTrendIndex == economyTrends.length - 1) {
     economyTrendIndex = 0;
   }
 
-  final newHealth = (save.economyHealth + healthModifier).toDouble();
+  final newHealth =
+      (save.economyHealth + healthModifier).clamp(0, 300.0).toDouble();
 
   return newHealth;
 }
@@ -615,4 +615,19 @@ int calculatePropertyTaxes(int profit, List<Plot>? plots) {
   }
 
   return profit;
+}
+
+int daysInDebt = 0;
+
+bool checkIfGameOver(GameSave save) {
+  if (save.money < 0) {
+    if (daysInDebt > 15) {
+      return true;
+    } else {
+      daysInDebt++;
+    }
+  } else {
+    daysInDebt = 0;
+  }
+  return false;
 }

@@ -32,49 +32,54 @@ const GameSaveSchema = CollectionSchema(
       name: r'economyTrends',
       type: IsarType.doubleList,
     ),
-    r'infoDay': PropertySchema(
+    r'gameOver': PropertySchema(
       id: 3,
+      name: r'gameOver',
+      type: IsarType.bool,
+    ),
+    r'infoDay': PropertySchema(
+      id: 4,
       name: r'infoDay',
       type: IsarType.long,
     ),
     r'infoName': PropertySchema(
-      id: 4,
+      id: 5,
       name: r'infoName',
       type: IsarType.string,
     ),
     r'infoYear': PropertySchema(
-      id: 5,
+      id: 6,
       name: r'infoYear',
       type: IsarType.long,
     ),
     r'money': PropertySchema(
-      id: 6,
+      id: 7,
       name: r'money',
       type: IsarType.long,
     ),
     r'plotList': PropertySchema(
-      id: 7,
+      id: 8,
       name: r'plotList',
       type: IsarType.object,
       target: r'PlotList',
     ),
     r'profitHistory': PropertySchema(
-      id: 8,
+      id: 9,
       name: r'profitHistory',
       type: IsarType.longList,
     ),
     r'rulesNewPropCost': PropertySchema(
-      id: 9,
+      id: 10,
       name: r'rulesNewPropCost',
       type: IsarType.long,
     ),
     r'rulesTaxRate': PropertySchema(
-      id: 10,
+      id: 11,
       name: r'rulesTaxRate',
       type: IsarType.double,
     ),
     r'staff': PropertySchema(
-      id: 11,
+      id: 12,
       name: r'staff',
       type: IsarType.object,
       target: r'Staff',
@@ -134,21 +139,22 @@ void _gameSaveSerialize(
   writer.writeDouble(offsets[0], object.economyHealth);
   writer.writeLong(offsets[1], object.economyTrendIndex);
   writer.writeDoubleList(offsets[2], object.economyTrends);
-  writer.writeLong(offsets[3], object.infoDay);
-  writer.writeString(offsets[4], object.infoName);
-  writer.writeLong(offsets[5], object.infoYear);
-  writer.writeLong(offsets[6], object.money);
+  writer.writeBool(offsets[3], object.gameOver);
+  writer.writeLong(offsets[4], object.infoDay);
+  writer.writeString(offsets[5], object.infoName);
+  writer.writeLong(offsets[6], object.infoYear);
+  writer.writeLong(offsets[7], object.money);
   writer.writeObject<PlotList>(
-    offsets[7],
+    offsets[8],
     allOffsets,
     PlotListSchema.serialize,
     object.plotList,
   );
-  writer.writeLongList(offsets[8], object.profitHistory);
-  writer.writeLong(offsets[9], object.rulesNewPropCost);
-  writer.writeDouble(offsets[10], object.rulesTaxRate);
+  writer.writeLongList(offsets[9], object.profitHistory);
+  writer.writeLong(offsets[10], object.rulesNewPropCost);
+  writer.writeDouble(offsets[11], object.rulesTaxRate);
   writer.writeObject<Staff>(
-    offsets[11],
+    offsets[12],
     allOffsets,
     StaffSchema.serialize,
     object.staff,
@@ -163,19 +169,20 @@ GameSave _gameSaveDeserialize(
 ) {
   final object = GameSave(
     economyHealth: reader.readDoubleOrNull(offsets[0]) ?? 100,
-    infoDay: reader.readLongOrNull(offsets[3]) ?? 1,
-    infoName: reader.readStringOrNull(offsets[4]) ?? 'Save 1',
-    infoYear: reader.readLongOrNull(offsets[5]) ?? 1,
-    money: reader.readLongOrNull(offsets[6]) ?? 55000,
+    gameOver: reader.readBoolOrNull(offsets[3]) ?? false,
+    infoDay: reader.readLongOrNull(offsets[4]) ?? 1,
+    infoName: reader.readStringOrNull(offsets[5]) ?? 'Save 1',
+    infoYear: reader.readLongOrNull(offsets[6]) ?? 1,
+    money: reader.readLongOrNull(offsets[7]) ?? 55000,
     plotList: reader.readObjectOrNull<PlotList>(
-      offsets[7],
+      offsets[8],
       PlotListSchema.deserialize,
       allOffsets,
     ),
-    rulesNewPropCost: reader.readLongOrNull(offsets[9]) ?? 50000,
-    rulesTaxRate: reader.readDoubleOrNull(offsets[10]) ?? 0.1,
+    rulesNewPropCost: reader.readLongOrNull(offsets[10]) ?? 50000,
+    rulesTaxRate: reader.readDoubleOrNull(offsets[11]) ?? 0.1,
     staff: reader.readObjectOrNull<Staff>(
-      offsets[11],
+      offsets[12],
       StaffSchema.deserialize,
       allOffsets,
     ),
@@ -183,7 +190,7 @@ GameSave _gameSaveDeserialize(
   object.economyTrendIndex = reader.readLong(offsets[1]);
   object.economyTrends = reader.readDoubleList(offsets[2]) ?? [];
   object.id = id;
-  object.profitHistory = reader.readLongList(offsets[8]) ?? [];
+  object.profitHistory = reader.readLongList(offsets[9]) ?? [];
   return object;
 }
 
@@ -201,26 +208,28 @@ P _gameSaveDeserializeProp<P>(
     case 2:
       return (reader.readDoubleList(offset) ?? []) as P;
     case 3:
-      return (reader.readLongOrNull(offset) ?? 1) as P;
+      return (reader.readBoolOrNull(offset) ?? false) as P;
     case 4:
-      return (reader.readStringOrNull(offset) ?? 'Save 1') as P;
-    case 5:
       return (reader.readLongOrNull(offset) ?? 1) as P;
+    case 5:
+      return (reader.readStringOrNull(offset) ?? 'Save 1') as P;
     case 6:
-      return (reader.readLongOrNull(offset) ?? 55000) as P;
+      return (reader.readLongOrNull(offset) ?? 1) as P;
     case 7:
+      return (reader.readLongOrNull(offset) ?? 55000) as P;
+    case 8:
       return (reader.readObjectOrNull<PlotList>(
         offset,
         PlotListSchema.deserialize,
         allOffsets,
       )) as P;
-    case 8:
-      return (reader.readLongList(offset) ?? []) as P;
     case 9:
-      return (reader.readLongOrNull(offset) ?? 50000) as P;
+      return (reader.readLongList(offset) ?? []) as P;
     case 10:
-      return (reader.readDoubleOrNull(offset) ?? 0.1) as P;
+      return (reader.readLongOrNull(offset) ?? 50000) as P;
     case 11:
+      return (reader.readDoubleOrNull(offset) ?? 0.1) as P;
+    case 12:
       return (reader.readObjectOrNull<Staff>(
         offset,
         StaffSchema.deserialize,
@@ -591,6 +600,16 @@ extension GameSaveQueryFilter
         upper,
         includeUpper,
       );
+    });
+  }
+
+  QueryBuilder<GameSave, GameSave, QAfterFilterCondition> gameOverEqualTo(
+      bool value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'gameOver',
+        value: value,
+      ));
     });
   }
 
@@ -1277,6 +1296,18 @@ extension GameSaveQuerySortBy on QueryBuilder<GameSave, GameSave, QSortBy> {
     });
   }
 
+  QueryBuilder<GameSave, GameSave, QAfterSortBy> sortByGameOver() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'gameOver', Sort.asc);
+    });
+  }
+
+  QueryBuilder<GameSave, GameSave, QAfterSortBy> sortByGameOverDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'gameOver', Sort.desc);
+    });
+  }
+
   QueryBuilder<GameSave, GameSave, QAfterSortBy> sortByInfoDay() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'infoDay', Sort.asc);
@@ -1373,6 +1404,18 @@ extension GameSaveQuerySortThenBy
   QueryBuilder<GameSave, GameSave, QAfterSortBy> thenByEconomyTrendIndexDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'economyTrendIndex', Sort.desc);
+    });
+  }
+
+  QueryBuilder<GameSave, GameSave, QAfterSortBy> thenByGameOver() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'gameOver', Sort.asc);
+    });
+  }
+
+  QueryBuilder<GameSave, GameSave, QAfterSortBy> thenByGameOverDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'gameOver', Sort.desc);
     });
   }
 
@@ -1481,6 +1524,12 @@ extension GameSaveQueryWhereDistinct
     });
   }
 
+  QueryBuilder<GameSave, GameSave, QDistinct> distinctByGameOver() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'gameOver');
+    });
+  }
+
   QueryBuilder<GameSave, GameSave, QDistinct> distinctByInfoDay() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'infoDay');
@@ -1549,6 +1598,12 @@ extension GameSaveQueryProperty
       economyTrendsProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'economyTrends');
+    });
+  }
+
+  QueryBuilder<GameSave, bool, QQueryOperations> gameOverProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'gameOver');
     });
   }
 
