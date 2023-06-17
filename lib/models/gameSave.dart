@@ -9,6 +9,8 @@ class GameSave {
 
   int money;
   List<int> profitHistory = [];
+  List<double> economyTrends = [];
+  int economyTrendIndex = 0;
 
   double economyHealth;
 

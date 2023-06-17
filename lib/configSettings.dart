@@ -1,5 +1,5 @@
 const Map<String, dynamic> gameSettings = {
-  "baseSearchForResidentCost": 0.40,
+  "baseSearchForResidentCost": 0.20,
   "defaultRent": 600,
   "defaultMaxResidents": 10,
   "defaultHappiness": 50,

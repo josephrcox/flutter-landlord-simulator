@@ -1,4 +1,5 @@
 import 'dart:math';
+import 'dart:developer' as developer;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -349,6 +350,7 @@ void loop(Isar isar, save, resetting) async {
 
   //// Calculate economy helath
   save?.economyHealth = calculateEconomyHealth(save);
+  save.economyTrendIndex++;
 
   save?.profitHistory ??= List<int>;
 
@@ -399,11 +401,11 @@ GameSave calculateResidentsLeaving(GameSave save) {
       return save;
     }
     final random = Random();
-    final roll = random.nextInt((plot.happiness / 2).floor() + 1);
-    final adjustedRoll = (roll + (100 - save.economyHealth) / 10).round();
+    final target =
+        (plot.happiness / 2).floor() * ((save.economyHealth * 3) / 100).floor();
+    final roll = random.nextInt(target + 1);
 
-    if ((adjustedRoll >= (plot.happiness).floor() || save.economyHealth < 25) &&
-        plot.residents > 0) {
+    if ((roll == target || save.economyHealth < 25) && plot.residents > 0) {
       // check if the user has a property manager hired
       final index = save.staff?.staffOptions.indexOf("manager") ?? -1;
       if (index == -1 || save.staff?.staffValues[index] == false) {
@@ -449,7 +451,6 @@ List<Plot> calculateHappiness(List<Plot> plots) {
       }
       // rand change between -3 and 3
       var randChange = random.nextInt(7) - 3;
-      print(randChange);
       plot.happiness += randChange;
     }
   }
@@ -517,14 +518,41 @@ int calculateStaffCosts(int profit, Staff? staff, int propertyCount) {
 }
 
 double calculateEconomyHealth(GameSave save) {
-  double healthModifier = 0;
+  var economyTrends = save.economyTrends;
+  var economyTrendIndex = save.economyTrendIndex;
 
+  final random = Random();
+  if (economyTrends.isEmpty) {
+    bool isPositive = true;
+
+    int remaining = 10000;
+    while (remaining > 0) {
+      int sprintLength = min(remaining, random.nextInt(300) + 60);
+      remaining -= sprintLength;
+
+      // generate a sprint
+      for (int i = 0; i < sprintLength; i++) {
+        // note that 1.0 means no change, so the range of change is (-0.5, 0.5)
+        double change = (random.nextDouble() - (random.nextDouble() * 0.55)) *
+            (isPositive ? 1 : -1);
+        economyTrends.add(change);
+      }
+
+      // flip the sign for the next sprint
+      isPositive = !isPositive;
+    }
+  }
+  // developer.log(economyTrends.toString());
+
+  double healthModifier = 0;
   var avgRent = 0;
   var avgHappiness = 0;
-  var numPlots = 0; // Number of plots
+  var numPlots = 0;
   var plots = save.plotList?.plots;
+  var daysIntoGame = save.infoDay;
+  var money = save.money;
 
-  if (plots != null) {
+  if (plots != null && plots.isNotEmpty) {
     numPlots = plots.length;
     for (var plot in plots) {
       avgRent += plot.rent;
@@ -534,59 +562,46 @@ double calculateEconomyHealth(GameSave save) {
     avgHappiness = avgHappiness ~/ numPlots;
   }
 
-  var daysIntoGame = save.infoDay;
-  var money = save.money;
-
-  final random = Random();
-
-// Rent impact increased
+  //// Adjust based on rent averages
   if (avgRent < 1000) {
-    healthModifier += (600 - avgRent) / 4000;
+    healthModifier += (1000 - avgRent) / 500;
   } else if (avgRent >= 1800) {
     healthModifier -= (avgRent - 1800) / 500;
   }
 
-// Money impact increased
+  //// The wealthier the player, the less happy the economy is
   if (money > 100000) {
     healthModifier -= log(money) / 2500;
   }
 
-  double timeFactor = daysIntoGame < 750
-      ? 1 +
-          pow((daysIntoGame / 3000.0), 2)
-              .toDouble() // Reduced effect in first 1000 days
-      : 1 + pow((daysIntoGame / 1500.0), 2).toDouble();
+  //// The longer the game goes on, the more the economy will affect health
+  double timeFactor = daysIntoGame < 3000
+      ? 1 + pow((daysIntoGame / 3000.0), 2).toDouble()
+      : 1 + pow((daysIntoGame / 3000.0), 2).toDouble();
 
-  healthModifier += random.nextDouble() * 2 * timeFactor -
-      timeFactor; // Increased effect of time in randomness
-
-// Happiness impact reduced and only added if economyHealth is less than 80
-  if (save.economyHealth < 10) {
-    healthModifier += (avgHappiness / 300.0);
+  //// The happier the avg happiness, the happier the economy
+  healthModifier += (avgHappiness / 100.0);
+  if (avgHappiness < 40) {
+    healthModifier -= (40 - avgHappiness) / 50.0;
   }
 
-  if (numPlots < 10) {
-    healthModifier -= (10 - numPlots) /
-        100.0; // Decrease healthModifier if less than 10 plots
-  } else {
-    healthModifier += (numPlots - 10) /
-        750.0; // Increase healthModifier if more than 10 plots
+  // Bring healthModifer 50% closer to 1, if it's at 1.5, bring it to 1.25. If it's at -0.5, bring it to -0.25
+  // healthModifier = (healthModifier - 1) / 2 + 1;
+
+  //// The more plots the player has, the happier the economy
+  if (numPlots > random.nextInt(10)) {
+    healthModifier += (numPlots - 10) / 750.0;
+  }
+  print('$healthModifier, ${economyTrends[economyTrendIndex]}');
+  healthModifier *= economyTrends[economyTrendIndex];
+  print(healthModifier);
+  print('-------');
+
+  if (economyTrendIndex == economyTrends.length - 1) {
+    economyTrendIndex = 0;
   }
 
-// Number of plots impact reduced and only added if economyHealth is less than 80
-  if (save.economyHealth < 75) {
-    healthModifier += (numPlots / 750.0);
-  }
-  if (daysIntoGame < 500) {
-    healthModifier += (random.nextDouble() * 2) / 500;
-  }
-  if (healthModifier > 1) {
-    healthModifier *= plots!.length;
-  }
-
-  final newHealth =
-      (save.economyHealth + healthModifier).clamp(0, 100).toDouble();
-  print('heath: $newHealth, modifier: $healthModifier');
+  final newHealth = (save.economyHealth + healthModifier).toDouble();
 
   return newHealth;
 }

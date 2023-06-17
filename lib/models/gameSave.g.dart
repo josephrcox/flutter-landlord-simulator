@@ -22,49 +22,59 @@ const GameSaveSchema = CollectionSchema(
       name: r'economyHealth',
       type: IsarType.double,
     ),
-    r'infoDay': PropertySchema(
+    r'economyTrendIndex': PropertySchema(
       id: 1,
+      name: r'economyTrendIndex',
+      type: IsarType.long,
+    ),
+    r'economyTrends': PropertySchema(
+      id: 2,
+      name: r'economyTrends',
+      type: IsarType.doubleList,
+    ),
+    r'infoDay': PropertySchema(
+      id: 3,
       name: r'infoDay',
       type: IsarType.long,
     ),
     r'infoName': PropertySchema(
-      id: 2,
+      id: 4,
       name: r'infoName',
       type: IsarType.string,
     ),
     r'infoYear': PropertySchema(
-      id: 3,
+      id: 5,
       name: r'infoYear',
       type: IsarType.long,
     ),
     r'money': PropertySchema(
-      id: 4,
+      id: 6,
       name: r'money',
       type: IsarType.long,
     ),
     r'plotList': PropertySchema(
-      id: 5,
+      id: 7,
       name: r'plotList',
       type: IsarType.object,
       target: r'PlotList',
     ),
     r'profitHistory': PropertySchema(
-      id: 6,
+      id: 8,
       name: r'profitHistory',
       type: IsarType.longList,
     ),
     r'rulesNewPropCost': PropertySchema(
-      id: 7,
+      id: 9,
       name: r'rulesNewPropCost',
       type: IsarType.long,
     ),
     r'rulesTaxRate': PropertySchema(
-      id: 8,
+      id: 10,
       name: r'rulesTaxRate',
       type: IsarType.double,
     ),
     r'staff': PropertySchema(
-      id: 9,
+      id: 11,
       name: r'staff',
       type: IsarType.object,
       target: r'Staff',
@@ -95,6 +105,7 @@ int _gameSaveEstimateSize(
   Map<Type, List<int>> allOffsets,
 ) {
   var bytesCount = offsets.last;
+  bytesCount += 3 + object.economyTrends.length * 8;
   bytesCount += 3 + object.infoName.length * 3;
   {
     final value = object.plotList;
@@ -121,21 +132,23 @@ void _gameSaveSerialize(
   Map<Type, List<int>> allOffsets,
 ) {
   writer.writeDouble(offsets[0], object.economyHealth);
-  writer.writeLong(offsets[1], object.infoDay);
-  writer.writeString(offsets[2], object.infoName);
-  writer.writeLong(offsets[3], object.infoYear);
-  writer.writeLong(offsets[4], object.money);
+  writer.writeLong(offsets[1], object.economyTrendIndex);
+  writer.writeDoubleList(offsets[2], object.economyTrends);
+  writer.writeLong(offsets[3], object.infoDay);
+  writer.writeString(offsets[4], object.infoName);
+  writer.writeLong(offsets[5], object.infoYear);
+  writer.writeLong(offsets[6], object.money);
   writer.writeObject<PlotList>(
-    offsets[5],
+    offsets[7],
     allOffsets,
     PlotListSchema.serialize,
     object.plotList,
   );
-  writer.writeLongList(offsets[6], object.profitHistory);
-  writer.writeLong(offsets[7], object.rulesNewPropCost);
-  writer.writeDouble(offsets[8], object.rulesTaxRate);
+  writer.writeLongList(offsets[8], object.profitHistory);
+  writer.writeLong(offsets[9], object.rulesNewPropCost);
+  writer.writeDouble(offsets[10], object.rulesTaxRate);
   writer.writeObject<Staff>(
-    offsets[9],
+    offsets[11],
     allOffsets,
     StaffSchema.serialize,
     object.staff,
@@ -150,25 +163,27 @@ GameSave _gameSaveDeserialize(
 ) {
   final object = GameSave(
     economyHealth: reader.readDoubleOrNull(offsets[0]) ?? 100,
-    infoDay: reader.readLongOrNull(offsets[1]) ?? 1,
-    infoName: reader.readStringOrNull(offsets[2]) ?? 'Save 1',
-    infoYear: reader.readLongOrNull(offsets[3]) ?? 1,
-    money: reader.readLongOrNull(offsets[4]) ?? 55000,
+    infoDay: reader.readLongOrNull(offsets[3]) ?? 1,
+    infoName: reader.readStringOrNull(offsets[4]) ?? 'Save 1',
+    infoYear: reader.readLongOrNull(offsets[5]) ?? 1,
+    money: reader.readLongOrNull(offsets[6]) ?? 55000,
     plotList: reader.readObjectOrNull<PlotList>(
-      offsets[5],
+      offsets[7],
       PlotListSchema.deserialize,
       allOffsets,
     ),
-    rulesNewPropCost: reader.readLongOrNull(offsets[7]) ?? 50000,
-    rulesTaxRate: reader.readDoubleOrNull(offsets[8]) ?? 0.1,
+    rulesNewPropCost: reader.readLongOrNull(offsets[9]) ?? 50000,
+    rulesTaxRate: reader.readDoubleOrNull(offsets[10]) ?? 0.1,
     staff: reader.readObjectOrNull<Staff>(
-      offsets[9],
+      offsets[11],
       StaffSchema.deserialize,
       allOffsets,
     ),
   );
+  object.economyTrendIndex = reader.readLong(offsets[1]);
+  object.economyTrends = reader.readDoubleList(offsets[2]) ?? [];
   object.id = id;
-  object.profitHistory = reader.readLongList(offsets[6]) ?? [];
+  object.profitHistory = reader.readLongList(offsets[8]) ?? [];
   return object;
 }
 
@@ -182,26 +197,30 @@ P _gameSaveDeserializeProp<P>(
     case 0:
       return (reader.readDoubleOrNull(offset) ?? 100) as P;
     case 1:
-      return (reader.readLongOrNull(offset) ?? 1) as P;
+      return (reader.readLong(offset)) as P;
     case 2:
-      return (reader.readStringOrNull(offset) ?? 'Save 1') as P;
+      return (reader.readDoubleList(offset) ?? []) as P;
     case 3:
       return (reader.readLongOrNull(offset) ?? 1) as P;
     case 4:
-      return (reader.readLongOrNull(offset) ?? 55000) as P;
+      return (reader.readStringOrNull(offset) ?? 'Save 1') as P;
     case 5:
+      return (reader.readLongOrNull(offset) ?? 1) as P;
+    case 6:
+      return (reader.readLongOrNull(offset) ?? 55000) as P;
+    case 7:
       return (reader.readObjectOrNull<PlotList>(
         offset,
         PlotListSchema.deserialize,
         allOffsets,
       )) as P;
-    case 6:
-      return (reader.readLongList(offset) ?? []) as P;
-    case 7:
-      return (reader.readLongOrNull(offset) ?? 50000) as P;
     case 8:
-      return (reader.readDoubleOrNull(offset) ?? 0.1) as P;
+      return (reader.readLongList(offset) ?? []) as P;
     case 9:
+      return (reader.readLongOrNull(offset) ?? 50000) as P;
+    case 10:
+      return (reader.readDoubleOrNull(offset) ?? 0.1) as P;
+    case 11:
       return (reader.readObjectOrNull<Staff>(
         offset,
         StaffSchema.deserialize,
@@ -361,6 +380,217 @@ extension GameSaveQueryFilter
         includeUpper: includeUpper,
         epsilon: epsilon,
       ));
+    });
+  }
+
+  QueryBuilder<GameSave, GameSave, QAfterFilterCondition>
+      economyTrendIndexEqualTo(int value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'economyTrendIndex',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<GameSave, GameSave, QAfterFilterCondition>
+      economyTrendIndexGreaterThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'economyTrendIndex',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<GameSave, GameSave, QAfterFilterCondition>
+      economyTrendIndexLessThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'economyTrendIndex',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<GameSave, GameSave, QAfterFilterCondition>
+      economyTrendIndexBetween(
+    int lower,
+    int upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'economyTrendIndex',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<GameSave, GameSave, QAfterFilterCondition>
+      economyTrendsElementEqualTo(
+    double value, {
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'economyTrends',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<GameSave, GameSave, QAfterFilterCondition>
+      economyTrendsElementGreaterThan(
+    double value, {
+    bool include = false,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'economyTrends',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<GameSave, GameSave, QAfterFilterCondition>
+      economyTrendsElementLessThan(
+    double value, {
+    bool include = false,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'economyTrends',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<GameSave, GameSave, QAfterFilterCondition>
+      economyTrendsElementBetween(
+    double lower,
+    double upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'economyTrends',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<GameSave, GameSave, QAfterFilterCondition>
+      economyTrendsLengthEqualTo(int length) {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'economyTrends',
+        length,
+        true,
+        length,
+        true,
+      );
+    });
+  }
+
+  QueryBuilder<GameSave, GameSave, QAfterFilterCondition>
+      economyTrendsIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'economyTrends',
+        0,
+        true,
+        0,
+        true,
+      );
+    });
+  }
+
+  QueryBuilder<GameSave, GameSave, QAfterFilterCondition>
+      economyTrendsIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'economyTrends',
+        0,
+        false,
+        999999,
+        true,
+      );
+    });
+  }
+
+  QueryBuilder<GameSave, GameSave, QAfterFilterCondition>
+      economyTrendsLengthLessThan(
+    int length, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'economyTrends',
+        0,
+        true,
+        length,
+        include,
+      );
+    });
+  }
+
+  QueryBuilder<GameSave, GameSave, QAfterFilterCondition>
+      economyTrendsLengthGreaterThan(
+    int length, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'economyTrends',
+        length,
+        include,
+        999999,
+        true,
+      );
+    });
+  }
+
+  QueryBuilder<GameSave, GameSave, QAfterFilterCondition>
+      economyTrendsLengthBetween(
+    int lower,
+    int upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'economyTrends',
+        lower,
+        includeLower,
+        upper,
+        includeUpper,
+      );
     });
   }
 
@@ -1035,6 +1265,18 @@ extension GameSaveQuerySortBy on QueryBuilder<GameSave, GameSave, QSortBy> {
     });
   }
 
+  QueryBuilder<GameSave, GameSave, QAfterSortBy> sortByEconomyTrendIndex() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'economyTrendIndex', Sort.asc);
+    });
+  }
+
+  QueryBuilder<GameSave, GameSave, QAfterSortBy> sortByEconomyTrendIndexDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'economyTrendIndex', Sort.desc);
+    });
+  }
+
   QueryBuilder<GameSave, GameSave, QAfterSortBy> sortByInfoDay() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'infoDay', Sort.asc);
@@ -1119,6 +1361,18 @@ extension GameSaveQuerySortThenBy
   QueryBuilder<GameSave, GameSave, QAfterSortBy> thenByEconomyHealthDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'economyHealth', Sort.desc);
+    });
+  }
+
+  QueryBuilder<GameSave, GameSave, QAfterSortBy> thenByEconomyTrendIndex() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'economyTrendIndex', Sort.asc);
+    });
+  }
+
+  QueryBuilder<GameSave, GameSave, QAfterSortBy> thenByEconomyTrendIndexDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'economyTrendIndex', Sort.desc);
     });
   }
 
@@ -1215,6 +1469,18 @@ extension GameSaveQueryWhereDistinct
     });
   }
 
+  QueryBuilder<GameSave, GameSave, QDistinct> distinctByEconomyTrendIndex() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'economyTrendIndex');
+    });
+  }
+
+  QueryBuilder<GameSave, GameSave, QDistinct> distinctByEconomyTrends() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'economyTrends');
+    });
+  }
+
   QueryBuilder<GameSave, GameSave, QDistinct> distinctByInfoDay() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'infoDay');
@@ -1270,6 +1536,19 @@ extension GameSaveQueryProperty
   QueryBuilder<GameSave, double, QQueryOperations> economyHealthProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'economyHealth');
+    });
+  }
+
+  QueryBuilder<GameSave, int, QQueryOperations> economyTrendIndexProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'economyTrendIndex');
+    });
+  }
+
+  QueryBuilder<GameSave, List<double>, QQueryOperations>
+      economyTrendsProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'economyTrends');
     });
   }
 
