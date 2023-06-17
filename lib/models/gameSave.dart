@@ -29,7 +29,7 @@ class GameSave {
     this.rulesNewPropCost = 50000,
     this.rulesTaxRate = 0.1,
     this.staff,
-    this.economyHealth = 100,
+    this.economyHealth = 150,
     this.gameOver = false,
   });
 }
