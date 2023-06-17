@@ -168,7 +168,7 @@ GameSave _gameSaveDeserialize(
   Map<Type, List<int>> allOffsets,
 ) {
   final object = GameSave(
-    economyHealth: reader.readDoubleOrNull(offsets[0]) ?? 100,
+    economyHealth: reader.readDoubleOrNull(offsets[0]) ?? 150,
     gameOver: reader.readBoolOrNull(offsets[3]) ?? false,
     infoDay: reader.readLongOrNull(offsets[4]) ?? 1,
     infoName: reader.readStringOrNull(offsets[5]) ?? 'Save 1',
@@ -202,7 +202,7 @@ P _gameSaveDeserializeProp<P>(
 ) {
   switch (propertyId) {
     case 0:
-      return (reader.readDoubleOrNull(offset) ?? 100) as P;
+      return (reader.readDoubleOrNull(offset) ?? 150) as P;
     case 1:
       return (reader.readLong(offset)) as P;
     case 2:

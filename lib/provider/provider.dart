@@ -485,9 +485,9 @@ List<Plot> calculateHappiness(List<Plot> plots, GameSave save) {
           'rent: ${plot.rent}, acceptableRentBasedOnEconomicHealth: $acceptableRentBasedOnEconomicHealth');
 
       if (plot.rent < acceptableRentBasedOnEconomicHealth) {
-        happinessChange += random.nextInt(3);
+        happinessChange += random.nextInt(3) + 1;
       } else {
-        happinessChange -= random.nextInt(3);
+        happinessChange -= random.nextInt(3) - 1;
       }
 
       print(happinessChange);
