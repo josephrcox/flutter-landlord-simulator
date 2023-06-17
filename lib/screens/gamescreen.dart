@@ -628,7 +628,15 @@ Widget headerWidget({
             ),
             InkWell(
               child: Text(
-                'Economy health rating: ${economyHealth.toStringAsFixed(2)}',
+                'Economy health: ${economyHealth.toStringAsFixed(2)} / 300',
+                // green if above 150, yellow if above 35, red if below 35
+                style: TextStyle(
+                  color: economyHealth > 150
+                      ? const Color.fromARGB(255, 14, 222, 21)
+                      : economyHealth > 35
+                          ? const Color.fromARGB(255, 224, 205, 35)
+                          : Colors.red,
+                ),
               ),
               onTap: () {
                 ScaffoldMessenger.of(context).showSnackBar(

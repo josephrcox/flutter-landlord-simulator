@@ -136,14 +136,17 @@ class SaveProvider with ChangeNotifier {
     }
     final percentageRentIncrease = rent / _save!.plotList!.plots![index].rent;
 
+    final random = Random();
     await isar.writeTxn(() async {
       final newPlots = _save?.plotList?.plots?.toList();
       newPlots?[index].rent = rent;
 
       if (percentageRentIncrease > 1) {
-        newPlots?[index].happiness -= 5;
+        newPlots?[index].happiness -=
+            random.nextInt(((-0.02 * _save!.economyHealth) + 9).floor());
       } else if (percentageRentIncrease < 1) {
-        newPlots?[index].happiness += 5;
+        newPlots?[index].happiness +=
+            random.nextInt(((-0.02 * _save!.economyHealth) + 9).floor());
       }
 
       _save?.plotList?.plots = newPlots;
@@ -362,7 +365,7 @@ void loop(Isar isar, save, resetting) async {
 
   //// Calculate happiness (random changes based on things)
   if (save?.plotList?.plots != null) {
-    save?.plotList.plots = calculateHappiness(save?.plotList?.plots);
+    save?.plotList.plots = calculateHappiness(save?.plotList?.plots, save);
     //// Calculate profits and losses from upgrades
     profit = calculateUpgradesProfitAndLoss(profit, save?.plotList?.plots);
 
@@ -458,29 +461,45 @@ GameSave calculateResidentsLeaving(GameSave save) {
   return save;
 }
 
-List<Plot> calculateHappiness(List<Plot> plots) {
+List<Plot> calculateHappiness(List<Plot> plots, GameSave save) {
   for (var i = 0; i < plots.length; i++) {
     final plot = plots[i];
 
-    if (plot.happiness > 300) {
-      plot.happiness = 300;
-    } else if (plot.happiness < 1) {
-      plot.happiness = 1;
-    }
-
     final random = Random();
 
-    if (random.nextInt(30) > 25) {
-      if (plot.rent > 1500) {
-        // lower happiness by random 1-3
-        plot.happiness -= random.nextInt(3) + 1;
-      } else if (plot.rent < 800) {
-        // raise happiness by random 1-3
-        plot.happiness += random.nextInt(3) + 1;
+    if (save.infoDay % 30 == 0) {
+      int happinessChange = 0; // between -3 and 3
+
+      // Change based on economy health. The higher the health, the more likely happiness will go up.
+      if (random.nextInt(300) < save.economyHealth) {
+        happinessChange += random.nextInt(3);
+      } else {
+        happinessChange -= random.nextInt(3);
       }
-      // rand change between -3 and 3
-      var randChange = random.nextInt(7) - 3;
-      plot.happiness += randChange;
+
+      print(happinessChange);
+      // Change based on rent. The higher the rent, the more likely happiness will go down.
+      final acceptableRentBasedOnEconomicHealth =
+          (plot.level * 750 * (save.economyHealth / 150)).clamp(600, 10000);
+      print(
+          'rent: ${plot.rent}, acceptableRentBasedOnEconomicHealth: $acceptableRentBasedOnEconomicHealth');
+
+      if (plot.rent < acceptableRentBasedOnEconomicHealth) {
+        happinessChange += random.nextInt(3);
+      } else {
+        happinessChange -= random.nextInt(3);
+      }
+
+      print(happinessChange);
+      print('-----------');
+
+      plot.happiness += happinessChange;
+
+      if (plot.happiness > 100) {
+        plot.happiness = 100;
+      } else if (plot.happiness < 1) {
+        plot.happiness = 0;
+      }
     }
   }
 
@@ -623,11 +642,12 @@ double calculateEconomyHealth(GameSave save) {
   if (economyTrendIndex == economyTrends.length - 1) {
     economyTrendIndex = 0;
   }
-  print('$healthModifier');
-  print('${economyTrends[economyTrendIndex]}');
-  healthModifier += economyTrends[economyTrendIndex];
-  print('$healthModifier');
-  print('----------');
+
+  // print('$healthModifier');
+  // print('${economyTrends[economyTrendIndex]}');
+  // healthModifier += economyTrends[economyTrendIndex];
+  // print('$healthModifier');
+  // print('----------');
 
   final newHealth =
       (save.economyHealth + healthModifier).clamp(0, 300.0).toDouble();
