@@ -406,7 +406,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
     }
 
     if (save.gameOver == true) {
-      return GameOver();
+      return const GameOver();
     }
     return Scaffold(
       persistentFooterAlignment: AlignmentDirectional.center,
