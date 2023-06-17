@@ -506,7 +506,10 @@ class _GameScreenState extends ConsumerState<GameScreen>
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => const HelpScreen(),
+                  builder: (context) => HelpScreen(
+                    economy: save.economyTrends,
+                    day: save.infoDay,
+                  ),
                 ),
               );
             },

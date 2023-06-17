@@ -431,7 +431,7 @@ GameSave calculateResidentsLeaving(GameSave save) {
     }
     final random = Random();
     final target =
-        (plot.happiness / 2).floor() * ((save.economyHealth * 3) / 100).floor();
+        (plot.happiness / 2).floor() * ((save.economyHealth * 1) / 100).floor();
     final roll = random.nextInt(target + 1);
 
     if ((roll == target || save.economyHealth < 25) && plot.residents > 0) {
@@ -556,18 +556,16 @@ double calculateEconomyHealth(GameSave save) {
 
     int remaining = 10000;
     while (remaining > 0) {
-      int sprintLength = min(remaining, random.nextInt(300) + 60);
+      int sprintLength = min(remaining, random.nextInt(300) + 120);
       remaining -= sprintLength;
 
       // generate a sprint
       for (int i = 0; i < sprintLength; i++) {
         // note that 1.0 means no change, so the range of change is (-0.5, 0.5)
-        double change = (random.nextDouble() - (random.nextDouble() * 0.55)) *
+        double change = (random.nextDouble() - (random.nextDouble() * 1)) *
             (isPositive ? 1 : -1);
         economyTrends.add(change);
       }
-
-      // flip the sign for the next sprint
       isPositive = !isPositive;
     }
   }
@@ -625,6 +623,11 @@ double calculateEconomyHealth(GameSave save) {
   if (economyTrendIndex == economyTrends.length - 1) {
     economyTrendIndex = 0;
   }
+  print('$healthModifier');
+  print('${economyTrends[economyTrendIndex]}');
+  healthModifier += economyTrends[economyTrendIndex];
+  print('$healthModifier');
+  print('----------');
 
   final newHealth =
       (save.economyHealth + healthModifier).clamp(0, 300.0).toDouble();
