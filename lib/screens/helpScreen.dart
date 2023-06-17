@@ -1,96 +1,146 @@
-// help screen widget
-
 import 'package:flutter/material.dart';
+import 'package:fl_chart/fl_chart.dart';
 
 // stateless widget
-class HelpScreen extends StatelessWidget {
-  const HelpScreen({Key? key}) : super(key: key);
+class HelpScreen extends StatefulWidget {
+  HelpScreen({Key? key, required this.economy, required this.day})
+      : super(key: key);
+
+  List<double> economy;
+  int day;
 
   @override
+  State<HelpScreen> createState() => _HelpScreenState();
+}
+
+class _HelpScreenState extends State<HelpScreen> {
+  @override
   Widget build(BuildContext context) {
+    print(widget.economy.length);
+
+    // average out the List by only using every 10th value
+    widget.economy = widget.economy
+        .asMap()
+        .entries
+        .where((e) => e.key % 250 == 0)
+        .map((e) => e.value)
+        .toList();
+
+    // do every value 10 times so [1,2] becomes [1,1,1,1,1,1,1,1,1,1,2,2,2,2,2...]
+    widget.economy = widget.economy.expand((e) => List.filled(250, e)).toList();
+
+    // truncate so that it only shows days in the past, and only last 100 days
+    // widget.economy = widget.economy.sublist(0, widget.day);
+
+    // if (widget.day > 100) {
+    //   widget.economy = widget.economy.sublist(widget.day - 100, widget.day);
+    // }
+
     return Scaffold(
-      // app bar
-      appBar: AppBar(
-        title: const Text('How to play'),
-      ),
-      body: const Padding(
-        padding: EdgeInsets.fromLTRB(10, 20, 10, 20),
-        child: Column(
-          children: [
-            Expanded(
-              child: SingleChildScrollView(
-                child: HelpScreenContent(),
+        // app bar
+        appBar: AppBar(
+          title: const Text('How to play'),
+        ),
+        body: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: AspectRatio(
+            aspectRatio: 1,
+            child: LineChart(
+              LineChartData(
+                maxX: widget.economy.length.toDouble() - 1,
+                minX: 0,
+                minY: -1,
+                maxY: 1,
+                lineBarsData: [
+                  LineChartBarData(
+                      // for spots, use [index, value] from economy
+                      spots: widget.economy
+                          .asMap()
+                          .entries
+                          .map((e) => FlSpot(e.key.toDouble(), e.value))
+                          .toList(),
+                      isCurved: true,
+                      dotData: const FlDotData(
+                        show: false,
+                      ),
+                      color: Colors.red),
+                ],
+                // borderData: FlBorderData(
+                //     border:
+                //         const Border(bottom: BorderSide(), left: BorderSide())),
+                gridData: const FlGridData(show: false),
+                titlesData: FlTitlesData(
+                  leftTitles: AxisTitles(
+                    sideTitles: leftTitles(),
+                  ),
+                  topTitles: const AxisTitles(
+                      sideTitles: SideTitles(showTitles: false)),
+                  rightTitles: const AxisTitles(
+                      sideTitles: SideTitles(showTitles: false)),
+                  bottomTitles: const AxisTitles(
+                      sideTitles: SideTitles(showTitles: true)),
+                ),
               ),
             ),
-          ],
-        ),
-      ),
-    );
+          ),
+        ));
   }
 }
 
-class HelpScreenContent extends StatelessWidget {
-  const HelpScreenContent({Key? key}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return const Padding(
-      padding: EdgeInsets.fromLTRB(8, 20, 8, 20),
-      child: Column(
-        children: [
-          Text(
-            'Objective',
-            style: TextStyle(
-              fontSize: 32,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          SizedBox(height: 8),
-          Text(
-            'Your goal is to stay in business, and make as much money as possible. As you purchase more properties and upgrade them, you will face more challenges. You will need to balance your income and expenses, and keep your tenants happy.',
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.w300,
-              height: 1.8,
-            ),
-          ),
-          SizedBox(height: 16),
-          Text(
-            'Gameplay',
-            style: TextStyle(
-              fontSize: 32,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          SizedBox(height: 8),
-          Text(
-            'You start with a single property. Set the rent and tap on the property to search for tenants. Searching cost 1/10th of the rent. If you are lucky, you will find a tenant. If not, you will have to search again. 1 month takes about 30 seconds. ',
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.w300,
-              height: 1.8,
-            ),
-          ),
-          SizedBox(height: 8),
-          Text(
-            'To customize your property, slide right-to-left and tap on Upgrades. Some upgrades help make residents happier, some make you more money, and some do both. You are limited in the number of upgrades per property.',
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.w300,
-              height: 1.8,
-            ),
-          ),
-          SizedBox(height: 8),
-          Text(
-            'All income is subject to a tax rate that changes over time. You can view the tax rate in the top header.',
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.w300,
-              height: 1.8,
-            ),
-          ),
-        ],
-      ),
-    );
+Widget leftTitleWidgets(double value, TitleMeta meta) {
+  const style = TextStyle(
+    fontWeight: FontWeight.bold,
+    fontSize: 14,
+  );
+  String text;
+  switch (value.toInt()) {
+    case 1:
+      text = 'Great';
+      break;
+    case 0:
+      text = 'Fine';
+      break;
+    case -1:
+      text = 'Bad';
+      break;
+    default:
+      return Container();
   }
+
+  return Text(text, style: style, textAlign: TextAlign.center);
+}
+
+SideTitles leftTitles() => SideTitles(
+      getTitlesWidget: leftTitleWidgets,
+      showTitles: true,
+      interval: 1,
+      reservedSize: 40,
+    );
+
+Widget bottomTitleWidgets(double value, TitleMeta meta) {
+  const style = TextStyle(
+    fontWeight: FontWeight.bold,
+    fontSize: 16,
+  );
+  Widget text;
+  switch (value.toInt()) {
+    case 2:
+      text = const Text('SEPT', style: style);
+      break;
+    case 7:
+      text = const Text('OCT', style: style);
+      break;
+    case 12:
+      text = const Text('DEC', style: style);
+      break;
+    default:
+      text = const Text('');
+      break;
+  }
+
+  return SideTitleWidget(
+    axisSide: meta.axisSide,
+    space: 10,
+    child: text,
+  );
 }
