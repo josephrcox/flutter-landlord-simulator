@@ -115,7 +115,39 @@ class Upgrades {
 class Staff {
   int residentVacanciesFilledByLeasingAgent = 0;
 
-  List<String> staffOptions = ['leasingAgent'];
+  List<String> staffOptions = [
+    'leasingAgent',
+    'propertyManager',
+  ];
 
-  List<bool> staffValues = [false];
+  List<bool> staffValues = [
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+  ];
 }

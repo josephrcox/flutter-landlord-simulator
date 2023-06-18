@@ -9,6 +9,7 @@ const Map<String, dynamic> gameSettings = {
   "level2maxResidents": 30,
   "level3maxResidents": 50,
   "level4maxResidents": 75,
+  "propertyManagerHappinessImpact": 20,
 };
 
 const upgradeInfo = {
@@ -93,7 +94,7 @@ const upgradeInfo = {
     "levelRequired": 3,
     "icon": "🛝",
   },
-    "basketball": {
+  "basketball": {
     "name": "😊 Basketball Court",
     "desc": "Residents can play some b-ball. Cheap and encourages community",
     "cost": 10000,
@@ -113,6 +114,14 @@ const staffInfo = {
     "cost": 0,
     "baseMonthlyCost": 5000,
     "monthlyCostPerProperty": 5000
+  },
+  "propertyManager": {
+    "name": "Property Mangaer",
+    "desc":
+        "Property Managers raise your properties' happiness and property value, by making sure that the properties are well maintained.",
+    "cost": 0,
+    "baseMonthlyCost": 3500,
+    "monthlyCostPerProperty": 6000
   },
 };
 

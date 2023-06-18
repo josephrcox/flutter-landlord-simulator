@@ -175,8 +175,7 @@ class SaveProvider with ChangeNotifier {
     }
 
     // update the upgradeValue based on the upgradeIndex
-    newPlots?[propertyIndex].plotUpgrades!.amenValues[upgradeIndex] =
-        toggleTo;
+    newPlots?[propertyIndex].plotUpgrades!.amenValues[upgradeIndex] = toggleTo;
 
     if (toggleTo == true) {
       _save?.money -= (upgradeConfig['cost'] as num).toInt();
@@ -240,6 +239,11 @@ class SaveProvider with ChangeNotifier {
 
     if (staffName == "leasingAgent" && toggleTo == false) {
       newStaff?.residentVacanciesFilledByLeasingAgent = 0;
+    } else if (staffName == "propertyManager" && toggleTo == true) {
+      for (var i = 0; i < _save!.plotList!.plots!.length; i++) {
+        _save!.plotList!.plots![i].happiness +=
+            gameSettings['propertyManagerHappinessImpact'] as int;
+      }
     }
 
     if (toggleTo == true) {
@@ -706,14 +710,19 @@ List<Plot> calculatePlotValues(GameSave save) {
   }
   for (var plot in plots) {
     int addedValue = 0;
+    if (save.staff?.staffValues[
+            save.staff?.staffOptions.indexOf("propertyManager") ?? -1] ==
+        true) {
+      addedValue = (plot.propertyValue ~/ 75000);
+    }
     if (save.economyHealth < 50) {
-      addedValue = plot.propertyValue ~/ 1000;
+      addedValue += plot.propertyValue ~/ 1000;
     } else if (save.economyHealth < 150) {
-      addedValue = 0;
+      addedValue += 0;
     } else if (save.economyHealth < 250) {
-      addedValue = (plot.propertyValue ~/ 50000);
+      addedValue += (plot.propertyValue ~/ 50000);
     } else if (save.economyHealth < 300) {
-      addedValue = (plot.propertyValue ~/ 25000);
+      addedValue += (plot.propertyValue ~/ 25000);
     }
     plot.propertyValue += addedValue;
   }
