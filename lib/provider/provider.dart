@@ -170,6 +170,7 @@ class SaveProvider with ChangeNotifier {
             _save!.money < (upgradeInfo[upgradeName]!['cost'] as num) ||
         upgradeConfig == null ||
         newPlots?[propertyIndex].plotUpgrades == null) {
+      pauseLoop = false;
       return false;
     }
 
@@ -188,6 +189,7 @@ class SaveProvider with ChangeNotifier {
     await isar.writeTxn(() async {
       _save?.plotList?.plots = newPlots;
       await isar.gameSaves.put(_save!);
+      pauseLoop = false;
       return true;
     });
     pauseLoop = false;
@@ -489,8 +491,8 @@ List<Plot> calculateHappiness(List<Plot> plots, GameSave save) {
 
       plot.happiness += happinessChange;
 
-      if (plot.happiness > 100) {
-        plot.happiness = 100;
+      if (plot.happiness > 300) {
+        plot.happiness = 300;
       } else if (plot.happiness < 1) {
         plot.happiness = 0;
       }
@@ -559,6 +561,8 @@ int calculateStaffCosts(int profit, Staff? staff, int propertyCount) {
   return profit;
 }
 
+bool tooHigh = false;
+
 double calculateEconomyHealth(GameSave save) {
   var economyTrends = save.economyTrends;
   var economyTrendIndex = save.economyTrendIndex;
@@ -618,8 +622,8 @@ double calculateEconomyHealth(GameSave save) {
   }
 
   //// The wealthier the player, the less happy the economy is
-  if (money > 100000) {
-    healthModifier -= log(money) / (1 / money);
+  if (money > 500000) {
+    healthModifier -= ((money - 500000) / 500000).clamp(-5, 5);
   }
 
   //// The happier the avg happiness, the happier the economy
@@ -627,9 +631,6 @@ double calculateEconomyHealth(GameSave save) {
   if (avgHappiness < 40) {
     healthModifier -= (40 - avgHappiness) / 50.0;
   }
-
-  // Bring healthModifer 50% closer to 1, if it's at 1.5, bring it to 1.25. If it's at -0.5, bring it to -0.25
-  // healthModifier = (healthModifier - 1) / 2 + 1;
 
   //// The more plots the player has, the happier the economy
   if (numPlots > random.nextInt(10)) {
@@ -641,13 +642,31 @@ double calculateEconomyHealth(GameSave save) {
   }
 
   healthModifier /= 5;
+  healthModifier += economyTrends[economyTrendIndex] * (daysIntoGame / 1000);
 
-  healthModifier += economyTrends[economyTrendIndex] * (daysIntoGame / 500);
+  if (healthModifier > 5) {
+    print('🚨 health modifier is greater than 5, $healthModifier');
+    healthModifier = 5;
+  } else if (healthModifier < -5) {
+    print('🚨 health modifier is less than -5, $healthModifier');
+    healthModifier = -5;
+  } else {
+    print('👍 health modifier is $healthModifier');
+  }
 
-  final newHealth =
-      (save.economyHealth + (healthModifier*2)).clamp(0, 300.0).toDouble();
+  var newHealth =
+      (save.economyHealth + (healthModifier * 2)).clamp(0, 300.0).toDouble();
 
-  print('economy health: $newHealth, modifier: $healthModifier, trend number: ${economyTrends[economyTrendIndex]}');
+  // bring newHealth 25% closer to 150 if it is above 150
+  if (newHealth > 250) {
+    tooHigh = true;
+    newHealth = newHealth - 150 * 0.05;
+  } else {
+    tooHigh = false;
+  }
+
+  print(
+      'economy health: $newHealth, modifier: $healthModifier, trend number: ${economyTrends[economyTrendIndex]}');
   return newHealth;
 }
 

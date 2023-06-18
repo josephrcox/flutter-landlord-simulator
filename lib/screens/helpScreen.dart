@@ -16,8 +16,6 @@ class HelpScreen extends StatefulWidget {
 class _HelpScreenState extends State<HelpScreen> {
   @override
   Widget build(BuildContext context) {
-    print(widget.economy.length);
-
     // average out the List by only using every 10th value
     widget.economy = widget.economy
         .asMap()
@@ -30,7 +28,7 @@ class _HelpScreenState extends State<HelpScreen> {
     widget.economy = widget.economy.expand((e) => List.filled(20, e)).toList();
 
     // truncate so that it only shows days in the past
-    widget.economy = widget.economy.sublist(0, widget.day);
+    // widget.economy = widget.economy.sublist(0, widget.day);
 
     return Scaffold(
         // app bar

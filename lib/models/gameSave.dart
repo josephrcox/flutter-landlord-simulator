@@ -21,7 +21,7 @@ class GameSave {
   bool gameOver;
 
   GameSave({
-    this.money = 55000,
+    this.money = 75000,
     this.infoName = 'Save 1',
     this.infoDay = 1,
     this.infoYear = 1,
