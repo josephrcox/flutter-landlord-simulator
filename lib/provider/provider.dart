@@ -175,7 +175,7 @@ class SaveProvider with ChangeNotifier {
     }
 
     // update the upgradeValue based on the upgradeIndex
-    newPlots?[propertyIndex].plotUpgrades!.upgradeValues[upgradeIndex] =
+    newPlots?[propertyIndex].plotUpgrades!.amenValues[upgradeIndex] =
         toggleTo;
 
     if (toggleTo == true) {
@@ -385,6 +385,10 @@ void loop(Isar isar, save, resetting) async {
   save?.economyHealth = calculateEconomyHealth(save);
   save.economyTrendIndex++;
 
+  //// Calculate plot values
+  save?.plotList?.plots = calculatePlotValues(save);
+
+  ///////////////////////////////// End of calculations
   save?.profitHistory ??= List<int>;
 
   var profitHistory = save?.profitHistory.toList();
@@ -449,8 +453,8 @@ GameSave calculateResidentsLeaving(GameSave save) {
         save.economyHealth -= random.nextDouble() * 1.0;
         plot.residents -= 1;
         final index =
-            plot.plotUpgrades?.upgradeOptions.indexOf("easyTurnover") ?? -1;
-        if (index == -1 || plot.plotUpgrades?.upgradeValues[index] == false) {
+            plot.plotUpgrades?.amenOptions.indexOf("easyTurnover") ?? -1;
+        if (index == -1 || plot.plotUpgrades?.amenValues[index] == false) {
           save.money -= (plot.rent / 3).floor();
         }
       } else {
@@ -510,9 +514,9 @@ int calculateUpgradesProfitAndLoss(int profit, List<Plot>? plots) {
     if (plot.plotUpgrades == null) {
       continue;
     }
-    for (var i = 0; i < plot.plotUpgrades!.upgradeValues.length; i++) {
-      if (plot.plotUpgrades!.upgradeValues[i] == true) {
-        final upgradeName = plot.plotUpgrades!.upgradeOptions[i];
+    for (var i = 0; i < plot.plotUpgrades!.amenValues.length; i++) {
+      if (plot.plotUpgrades!.amenValues[i] == true) {
+        final upgradeName = plot.plotUpgrades!.amenOptions[i];
         final upgradeConfig = upgradeInfo[upgradeName];
         profit -= ((upgradeConfig?['monthlyCostPerResident'] as num).toInt() *
                 plot.residents) ~/
@@ -694,4 +698,26 @@ bool checkIfGameOver(GameSave save) {
     daysInDebt = 0;
   }
   return false;
+}
+
+List<Plot> calculatePlotValues(GameSave save) {
+  final plots = save.plotList?.plots;
+  if (plots == null) {
+    return [];
+  }
+  for (var plot in plots) {
+    int addedValue = 0;
+    if (save.economyHealth < 50) {
+      addedValue = plot.propertyValue ~/ 1000;
+    } else if (save.economyHealth < 150) {
+      addedValue = 0;
+    } else if (save.economyHealth < 250) {
+      addedValue = (plot.propertyValue ~/ 50000);
+    } else if (save.economyHealth < 300) {
+      addedValue = (plot.propertyValue ~/ 25000);
+    }
+    plot.propertyValue += addedValue;
+  }
+
+  return plots;
 }

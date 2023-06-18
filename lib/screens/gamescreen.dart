@@ -83,12 +83,12 @@ class _GameScreenState extends ConsumerState<GameScreen>
               for (int i = 0;
                   i <
                       propertyList!.plots![plotIndex].plotUpgrades!
-                          .upgradeOptions.length;
+                          .amenOptions.length;
                   i++) {
                 upgradesMap[propertyList
-                        .plots![plotIndex].plotUpgrades!.upgradeOptions[i]] =
+                        .plots![plotIndex].plotUpgrades!.amenOptions[i]] =
                     propertyList
-                        .plots![plotIndex].plotUpgrades!.upgradeValues[i];
+                        .plots![plotIndex].plotUpgrades!.amenValues[i];
               }
 
               var upgradeListString = "";

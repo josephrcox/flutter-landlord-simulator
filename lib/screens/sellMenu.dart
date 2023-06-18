@@ -16,9 +16,9 @@ class SellMenu extends ConsumerStatefulWidget {
 
 class _SellMenuState extends ConsumerState<SellMenu> {
   @override
+  @override
   Widget build(BuildContext context) {
-    final saveProvider =
-        ref.read(saveProviderNotifier); // Use read instead of watch
+    final saveProvider = ref.watch(saveProviderNotifier);
     var save = saveProvider.save;
     final propertyList = save?.plotList;
     final plotIndex = widget.plotIndex;

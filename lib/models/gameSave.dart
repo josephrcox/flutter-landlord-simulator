@@ -52,21 +52,24 @@ class Plot {
   Plot({
     this.residents = 0,
     this.plotUpgrades,
-    this.propertyValue = 1000,
+    this.propertyValue = 50000,
   });
 }
 
 @embedded
 class Upgrades {
-  List<String> upgradeOptions = [
+  List<String> amenOptions = [
     'dogsAllowed',
     'catsAllowed',
     'freeUitilities',
     'easyTurnover',
     'improvedSecurity', // start of level 2
     'swimmingPool',
+    'gym',
+    'playground', // start of level 3
+    'basketball',
   ];
-  List<bool> upgradeValues = [
+  List<bool> amenValues = [
     false,
     false,
     false,

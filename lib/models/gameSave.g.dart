@@ -173,7 +173,7 @@ GameSave _gameSaveDeserialize(
     infoDay: reader.readLongOrNull(offsets[4]) ?? 1,
     infoName: reader.readStringOrNull(offsets[5]) ?? 'Save 1',
     infoYear: reader.readLongOrNull(offsets[6]) ?? 1,
-    money: reader.readLongOrNull(offsets[7]) ?? 55000,
+    money: reader.readLongOrNull(offsets[7]) ?? 75000,
     plotList: reader.readObjectOrNull<PlotList>(
       offsets[8],
       PlotListSchema.deserialize,
@@ -216,7 +216,7 @@ P _gameSaveDeserializeProp<P>(
     case 6:
       return (reader.readLongOrNull(offset) ?? 1) as P;
     case 7:
-      return (reader.readLongOrNull(offset) ?? 55000) as P;
+      return (reader.readLongOrNull(offset) ?? 75000) as P;
     case 8:
       return (reader.readObjectOrNull<PlotList>(
         offset,
@@ -1969,7 +1969,7 @@ Plot _plotDeserialize(
       UpgradesSchema.deserialize,
       allOffsets,
     ),
-    propertyValue: reader.readLongOrNull(offsets[4]) ?? 1000,
+    propertyValue: reader.readLongOrNull(offsets[4]) ?? 50000,
     residents: reader.readLongOrNull(offsets[6]) ?? 0,
   );
   object.happiness = reader.readLong(offsets[0]);
@@ -1999,7 +1999,7 @@ P _plotDeserializeProp<P>(
         allOffsets,
       )) as P;
     case 4:
-      return (reader.readLongOrNull(offset) ?? 1000) as P;
+      return (reader.readLongOrNull(offset) ?? 50000) as P;
     case 5:
       return (reader.readLong(offset)) as P;
     case 6:
@@ -2357,14 +2357,14 @@ const UpgradesSchema = Schema(
   name: r'Upgrades',
   id: 3176977477447023689,
   properties: {
-    r'upgradeOptions': PropertySchema(
+    r'amenOptions': PropertySchema(
       id: 0,
-      name: r'upgradeOptions',
+      name: r'amenOptions',
       type: IsarType.stringList,
     ),
-    r'upgradeValues': PropertySchema(
+    r'amenValues': PropertySchema(
       id: 1,
-      name: r'upgradeValues',
+      name: r'amenValues',
       type: IsarType.boolList,
     )
   },
@@ -2380,14 +2380,14 @@ int _upgradesEstimateSize(
   Map<Type, List<int>> allOffsets,
 ) {
   var bytesCount = offsets.last;
-  bytesCount += 3 + object.upgradeOptions.length * 3;
+  bytesCount += 3 + object.amenOptions.length * 3;
   {
-    for (var i = 0; i < object.upgradeOptions.length; i++) {
-      final value = object.upgradeOptions[i];
+    for (var i = 0; i < object.amenOptions.length; i++) {
+      final value = object.amenOptions[i];
       bytesCount += value.length * 3;
     }
   }
-  bytesCount += 3 + object.upgradeValues.length;
+  bytesCount += 3 + object.amenValues.length;
   return bytesCount;
 }
 
@@ -2397,8 +2397,8 @@ void _upgradesSerialize(
   List<int> offsets,
   Map<Type, List<int>> allOffsets,
 ) {
-  writer.writeStringList(offsets[0], object.upgradeOptions);
-  writer.writeBoolList(offsets[1], object.upgradeValues);
+  writer.writeStringList(offsets[0], object.amenOptions);
+  writer.writeBoolList(offsets[1], object.amenValues);
 }
 
 Upgrades _upgradesDeserialize(
@@ -2408,8 +2408,8 @@ Upgrades _upgradesDeserialize(
   Map<Type, List<int>> allOffsets,
 ) {
   final object = Upgrades();
-  object.upgradeOptions = reader.readStringList(offsets[0]) ?? [];
-  object.upgradeValues = reader.readBoolList(offsets[1]) ?? [];
+  object.amenOptions = reader.readStringList(offsets[0]) ?? [];
+  object.amenValues = reader.readBoolList(offsets[1]) ?? [];
   return object;
 }
 
@@ -2432,13 +2432,13 @@ P _upgradesDeserializeProp<P>(
 extension UpgradesQueryFilter
     on QueryBuilder<Upgrades, Upgrades, QFilterCondition> {
   QueryBuilder<Upgrades, Upgrades, QAfterFilterCondition>
-      upgradeOptionsElementEqualTo(
+      amenOptionsElementEqualTo(
     String value, {
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'upgradeOptions',
+        property: r'amenOptions',
         value: value,
         caseSensitive: caseSensitive,
       ));
@@ -2446,7 +2446,7 @@ extension UpgradesQueryFilter
   }
 
   QueryBuilder<Upgrades, Upgrades, QAfterFilterCondition>
-      upgradeOptionsElementGreaterThan(
+      amenOptionsElementGreaterThan(
     String value, {
     bool include = false,
     bool caseSensitive = true,
@@ -2454,7 +2454,7 @@ extension UpgradesQueryFilter
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.greaterThan(
         include: include,
-        property: r'upgradeOptions',
+        property: r'amenOptions',
         value: value,
         caseSensitive: caseSensitive,
       ));
@@ -2462,7 +2462,7 @@ extension UpgradesQueryFilter
   }
 
   QueryBuilder<Upgrades, Upgrades, QAfterFilterCondition>
-      upgradeOptionsElementLessThan(
+      amenOptionsElementLessThan(
     String value, {
     bool include = false,
     bool caseSensitive = true,
@@ -2470,7 +2470,7 @@ extension UpgradesQueryFilter
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.lessThan(
         include: include,
-        property: r'upgradeOptions',
+        property: r'amenOptions',
         value: value,
         caseSensitive: caseSensitive,
       ));
@@ -2478,7 +2478,7 @@ extension UpgradesQueryFilter
   }
 
   QueryBuilder<Upgrades, Upgrades, QAfterFilterCondition>
-      upgradeOptionsElementBetween(
+      amenOptionsElementBetween(
     String lower,
     String upper, {
     bool includeLower = true,
@@ -2487,7 +2487,7 @@ extension UpgradesQueryFilter
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.between(
-        property: r'upgradeOptions',
+        property: r'amenOptions',
         lower: lower,
         includeLower: includeLower,
         upper: upper,
@@ -2498,13 +2498,13 @@ extension UpgradesQueryFilter
   }
 
   QueryBuilder<Upgrades, Upgrades, QAfterFilterCondition>
-      upgradeOptionsElementStartsWith(
+      amenOptionsElementStartsWith(
     String value, {
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.startsWith(
-        property: r'upgradeOptions',
+        property: r'amenOptions',
         value: value,
         caseSensitive: caseSensitive,
       ));
@@ -2512,13 +2512,13 @@ extension UpgradesQueryFilter
   }
 
   QueryBuilder<Upgrades, Upgrades, QAfterFilterCondition>
-      upgradeOptionsElementEndsWith(
+      amenOptionsElementEndsWith(
     String value, {
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.endsWith(
-        property: r'upgradeOptions',
+        property: r'amenOptions',
         value: value,
         caseSensitive: caseSensitive,
       ));
@@ -2526,10 +2526,10 @@ extension UpgradesQueryFilter
   }
 
   QueryBuilder<Upgrades, Upgrades, QAfterFilterCondition>
-      upgradeOptionsElementContains(String value, {bool caseSensitive = true}) {
+      amenOptionsElementContains(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.contains(
-        property: r'upgradeOptions',
+        property: r'amenOptions',
         value: value,
         caseSensitive: caseSensitive,
       ));
@@ -2537,11 +2537,10 @@ extension UpgradesQueryFilter
   }
 
   QueryBuilder<Upgrades, Upgrades, QAfterFilterCondition>
-      upgradeOptionsElementMatches(String pattern,
-          {bool caseSensitive = true}) {
+      amenOptionsElementMatches(String pattern, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.matches(
-        property: r'upgradeOptions',
+        property: r'amenOptions',
         wildcard: pattern,
         caseSensitive: caseSensitive,
       ));
@@ -2549,30 +2548,30 @@ extension UpgradesQueryFilter
   }
 
   QueryBuilder<Upgrades, Upgrades, QAfterFilterCondition>
-      upgradeOptionsElementIsEmpty() {
+      amenOptionsElementIsEmpty() {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'upgradeOptions',
+        property: r'amenOptions',
         value: '',
       ));
     });
   }
 
   QueryBuilder<Upgrades, Upgrades, QAfterFilterCondition>
-      upgradeOptionsElementIsNotEmpty() {
+      amenOptionsElementIsNotEmpty() {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.greaterThan(
-        property: r'upgradeOptions',
+        property: r'amenOptions',
         value: '',
       ));
     });
   }
 
   QueryBuilder<Upgrades, Upgrades, QAfterFilterCondition>
-      upgradeOptionsLengthEqualTo(int length) {
+      amenOptionsLengthEqualTo(int length) {
     return QueryBuilder.apply(this, (query) {
       return query.listLength(
-        r'upgradeOptions',
+        r'amenOptions',
         length,
         true,
         length,
@@ -2581,11 +2580,10 @@ extension UpgradesQueryFilter
     });
   }
 
-  QueryBuilder<Upgrades, Upgrades, QAfterFilterCondition>
-      upgradeOptionsIsEmpty() {
+  QueryBuilder<Upgrades, Upgrades, QAfterFilterCondition> amenOptionsIsEmpty() {
     return QueryBuilder.apply(this, (query) {
       return query.listLength(
-        r'upgradeOptions',
+        r'amenOptions',
         0,
         true,
         0,
@@ -2595,10 +2593,10 @@ extension UpgradesQueryFilter
   }
 
   QueryBuilder<Upgrades, Upgrades, QAfterFilterCondition>
-      upgradeOptionsIsNotEmpty() {
+      amenOptionsIsNotEmpty() {
     return QueryBuilder.apply(this, (query) {
       return query.listLength(
-        r'upgradeOptions',
+        r'amenOptions',
         0,
         false,
         999999,
@@ -2608,13 +2606,13 @@ extension UpgradesQueryFilter
   }
 
   QueryBuilder<Upgrades, Upgrades, QAfterFilterCondition>
-      upgradeOptionsLengthLessThan(
+      amenOptionsLengthLessThan(
     int length, {
     bool include = false,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.listLength(
-        r'upgradeOptions',
+        r'amenOptions',
         0,
         true,
         length,
@@ -2624,13 +2622,13 @@ extension UpgradesQueryFilter
   }
 
   QueryBuilder<Upgrades, Upgrades, QAfterFilterCondition>
-      upgradeOptionsLengthGreaterThan(
+      amenOptionsLengthGreaterThan(
     int length, {
     bool include = false,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.listLength(
-        r'upgradeOptions',
+        r'amenOptions',
         length,
         include,
         999999,
@@ -2640,7 +2638,7 @@ extension UpgradesQueryFilter
   }
 
   QueryBuilder<Upgrades, Upgrades, QAfterFilterCondition>
-      upgradeOptionsLengthBetween(
+      amenOptionsLengthBetween(
     int lower,
     int upper, {
     bool includeLower = true,
@@ -2648,7 +2646,7 @@ extension UpgradesQueryFilter
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.listLength(
-        r'upgradeOptions',
+        r'amenOptions',
         lower,
         includeLower,
         upper,
@@ -2658,20 +2656,20 @@ extension UpgradesQueryFilter
   }
 
   QueryBuilder<Upgrades, Upgrades, QAfterFilterCondition>
-      upgradeValuesElementEqualTo(bool value) {
+      amenValuesElementEqualTo(bool value) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'upgradeValues',
+        property: r'amenValues',
         value: value,
       ));
     });
   }
 
   QueryBuilder<Upgrades, Upgrades, QAfterFilterCondition>
-      upgradeValuesLengthEqualTo(int length) {
+      amenValuesLengthEqualTo(int length) {
     return QueryBuilder.apply(this, (query) {
       return query.listLength(
-        r'upgradeValues',
+        r'amenValues',
         length,
         true,
         length,
@@ -2680,11 +2678,10 @@ extension UpgradesQueryFilter
     });
   }
 
-  QueryBuilder<Upgrades, Upgrades, QAfterFilterCondition>
-      upgradeValuesIsEmpty() {
+  QueryBuilder<Upgrades, Upgrades, QAfterFilterCondition> amenValuesIsEmpty() {
     return QueryBuilder.apply(this, (query) {
       return query.listLength(
-        r'upgradeValues',
+        r'amenValues',
         0,
         true,
         0,
@@ -2694,10 +2691,10 @@ extension UpgradesQueryFilter
   }
 
   QueryBuilder<Upgrades, Upgrades, QAfterFilterCondition>
-      upgradeValuesIsNotEmpty() {
+      amenValuesIsNotEmpty() {
     return QueryBuilder.apply(this, (query) {
       return query.listLength(
-        r'upgradeValues',
+        r'amenValues',
         0,
         false,
         999999,
@@ -2707,13 +2704,13 @@ extension UpgradesQueryFilter
   }
 
   QueryBuilder<Upgrades, Upgrades, QAfterFilterCondition>
-      upgradeValuesLengthLessThan(
+      amenValuesLengthLessThan(
     int length, {
     bool include = false,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.listLength(
-        r'upgradeValues',
+        r'amenValues',
         0,
         true,
         length,
@@ -2723,13 +2720,13 @@ extension UpgradesQueryFilter
   }
 
   QueryBuilder<Upgrades, Upgrades, QAfterFilterCondition>
-      upgradeValuesLengthGreaterThan(
+      amenValuesLengthGreaterThan(
     int length, {
     bool include = false,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.listLength(
-        r'upgradeValues',
+        r'amenValues',
         length,
         include,
         999999,
@@ -2739,7 +2736,7 @@ extension UpgradesQueryFilter
   }
 
   QueryBuilder<Upgrades, Upgrades, QAfterFilterCondition>
-      upgradeValuesLengthBetween(
+      amenValuesLengthBetween(
     int lower,
     int upper, {
     bool includeLower = true,
@@ -2747,7 +2744,7 @@ extension UpgradesQueryFilter
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.listLength(
-        r'upgradeValues',
+        r'amenValues',
         lower,
         includeLower,
         upper,

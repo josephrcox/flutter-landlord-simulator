@@ -29,11 +29,11 @@ class _UpgradeMenuState extends ConsumerState<UpgradeMenu> {
     for (int i = 0;
         i <
             propertyList!
-                .plots![widget.plotIndex].plotUpgrades!.upgradeOptions.length;
+                .plots![widget.plotIndex].plotUpgrades!.amenOptions.length;
         i++) {
       upgradesMap[
-              propertyList.plots![plotIndex].plotUpgrades!.upgradeOptions[i]] =
-          propertyList.plots![plotIndex].plotUpgrades!.upgradeValues[i];
+              propertyList.plots![plotIndex].plotUpgrades!.amenOptions[i]] =
+          propertyList.plots![plotIndex].plotUpgrades!.amenValues[i];
     }
 
     Color backgroundColorARGB = const Color.fromARGB(255, 36, 59, 80);
@@ -192,7 +192,7 @@ Widget _upgradeNameAndDescription(
             style: const TextStyle(
               color: Colors.white,
               fontWeight: FontWeight.bold,
-              fontSize: 18,
+              fontSize: 24,
             ),
           ),
           const Spacer(),
