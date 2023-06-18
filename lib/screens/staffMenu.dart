@@ -164,7 +164,7 @@ Widget _staffOptionButton(GameSave? save, String name, String description,
           Text('\$$monthlyCostPerProperty per property per month'),
         ],
       ),
-      name == "Property Manager" && enabled
+      name == "Leasing Agent" && enabled
           ? Column(
               children: [
                 const SizedBox(height: 20),
@@ -181,14 +181,14 @@ Widget _staffOptionButton(GameSave? save, String name, String description,
                       mainAxisSize: MainAxisSize.max,
                       children: [
                         const Text(
-                          '💜 This manager has filled',
+                          '💜 This employee has filled',
                           textAlign: TextAlign.center,
                           style: TextStyle(
                             fontSize: 14,
                           ),
                         ),
                         Text(
-                          '${save!.staff?.residentVacanciesFilledByPropertyManager}',
+                          '${save!.staff?.residentVacanciesFilledByLeasingAgent}',
                           textAlign: TextAlign.center,
                           style: const TextStyle(
                             fontSize: 14,

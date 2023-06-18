@@ -238,8 +238,8 @@ class SaveProvider with ChangeNotifier {
 
     newStaff?.staffValues[staffIndex] = toggleTo;
 
-    if (staffName == "manager" && toggleTo == false) {
-      newStaff?.residentVacanciesFilledByPropertyManager = 0;
+    if (staffName == "leasingAgent" && toggleTo == false) {
+      newStaff?.residentVacanciesFilledByLeasingAgent = 0;
     }
 
     if (toggleTo == true) {
@@ -261,11 +261,11 @@ class SaveProvider with ChangeNotifier {
     return await isar.writeTxn(() async {
       final newPlots = _save?.plotList?.plots?.toList();
       final plot = newPlots?[index];
-      final hasManager = _save?.staff?.staffValues[0] ?? false;
-      final hasManagerDivider = hasManager ? 2 : 1;
+      final hasLeasingAgent = _save?.staff?.staffValues[0] ?? false;
+      final hasLADivier = hasLeasingAgent ? 2 : 1;
 
       final costToSearch =
-          ((gameSettings['baseSearchForResidentCost'] / hasManagerDivider) *
+          ((gameSettings['baseSearchForResidentCost'] / hasLADivier) *
                   plot!.rent)
               .floor();
 
@@ -446,8 +446,7 @@ GameSave calculateResidentsLeaving(GameSave save) {
     final roll = random.nextInt(target + 1);
 
     if ((roll == target || save.economyHealth < 25) && plot.residents > 0) {
-      // check if the user has a property manager hired
-      final index = save.staff?.staffOptions.indexOf("manager") ?? -1;
+      final index = save.staff?.staffOptions.indexOf("leasingAgent") ?? -1;
       if (index == -1 || save.staff?.staffValues[index] == false) {
         final random = Random();
         save.economyHealth -= random.nextDouble() * 1.0;
@@ -459,7 +458,7 @@ GameSave calculateResidentsLeaving(GameSave save) {
         }
       } else {
         save.money -= (plot.rent).floor();
-        save.staff?.residentVacanciesFilledByPropertyManager += 1;
+        save.staff?.residentVacanciesFilledByLeasingAgent += 1;
       }
 
       continue;

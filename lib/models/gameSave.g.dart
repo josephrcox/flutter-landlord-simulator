@@ -2764,9 +2764,9 @@ const StaffSchema = Schema(
   name: r'Staff',
   id: -1348815836572273625,
   properties: {
-    r'residentVacanciesFilledByPropertyManager': PropertySchema(
+    r'residentVacanciesFilledByLeasingAgent': PropertySchema(
       id: 0,
-      name: r'residentVacanciesFilledByPropertyManager',
+      name: r'residentVacanciesFilledByLeasingAgent',
       type: IsarType.long,
     ),
     r'staffOptions': PropertySchema(
@@ -2809,7 +2809,7 @@ void _staffSerialize(
   List<int> offsets,
   Map<Type, List<int>> allOffsets,
 ) {
-  writer.writeLong(offsets[0], object.residentVacanciesFilledByPropertyManager);
+  writer.writeLong(offsets[0], object.residentVacanciesFilledByLeasingAgent);
   writer.writeStringList(offsets[1], object.staffOptions);
   writer.writeBoolList(offsets[2], object.staffValues);
 }
@@ -2821,7 +2821,7 @@ Staff _staffDeserialize(
   Map<Type, List<int>> allOffsets,
 ) {
   final object = Staff();
-  object.residentVacanciesFilledByPropertyManager = reader.readLong(offsets[0]);
+  object.residentVacanciesFilledByLeasingAgent = reader.readLong(offsets[0]);
   object.staffOptions = reader.readStringList(offsets[1]) ?? [];
   object.staffValues = reader.readBoolList(offsets[2]) ?? [];
   return object;
@@ -2847,45 +2847,45 @@ P _staffDeserializeProp<P>(
 
 extension StaffQueryFilter on QueryBuilder<Staff, Staff, QFilterCondition> {
   QueryBuilder<Staff, Staff, QAfterFilterCondition>
-      residentVacanciesFilledByPropertyManagerEqualTo(int value) {
+      residentVacanciesFilledByLeasingAgentEqualTo(int value) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'residentVacanciesFilledByPropertyManager',
+        property: r'residentVacanciesFilledByLeasingAgent',
         value: value,
       ));
     });
   }
 
   QueryBuilder<Staff, Staff, QAfterFilterCondition>
-      residentVacanciesFilledByPropertyManagerGreaterThan(
+      residentVacanciesFilledByLeasingAgentGreaterThan(
     int value, {
     bool include = false,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.greaterThan(
         include: include,
-        property: r'residentVacanciesFilledByPropertyManager',
+        property: r'residentVacanciesFilledByLeasingAgent',
         value: value,
       ));
     });
   }
 
   QueryBuilder<Staff, Staff, QAfterFilterCondition>
-      residentVacanciesFilledByPropertyManagerLessThan(
+      residentVacanciesFilledByLeasingAgentLessThan(
     int value, {
     bool include = false,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.lessThan(
         include: include,
-        property: r'residentVacanciesFilledByPropertyManager',
+        property: r'residentVacanciesFilledByLeasingAgent',
         value: value,
       ));
     });
   }
 
   QueryBuilder<Staff, Staff, QAfterFilterCondition>
-      residentVacanciesFilledByPropertyManagerBetween(
+      residentVacanciesFilledByLeasingAgentBetween(
     int lower,
     int upper, {
     bool includeLower = true,
@@ -2893,7 +2893,7 @@ extension StaffQueryFilter on QueryBuilder<Staff, Staff, QFilterCondition> {
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.between(
-        property: r'residentVacanciesFilledByPropertyManager',
+        property: r'residentVacanciesFilledByLeasingAgent',
         lower: lower,
         includeLower: includeLower,
         upper: upper,

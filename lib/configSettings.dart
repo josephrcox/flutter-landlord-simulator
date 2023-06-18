@@ -106,10 +106,10 @@ const upgradeInfo = {
 };
 
 const staffInfo = {
-  "manager": {
-    "name": "Property Manager",
+  "leasingAgent": {
+    "name": "Leasing Agent",
     "desc":
-        "Property Managers ensure that when residents leave, the vacancy is quickly filled without your intervention. The manager also reduces the cost to get new residents by half.",
+        "Leasing Agents ensure that when residents leave, the vacancy is quickly filled without your intervention. They also reduce the cost to get new residents by half.",
     "cost": 0,
     "baseMonthlyCost": 5000,
     "monthlyCostPerProperty": 5000
@@ -118,12 +118,12 @@ const staffInfo = {
 
 const situationsList = [
   {
-    "name": "One of your properties burned down",
-    "req_propertyCount": 1,
+    "name": "One of your properties has burned down",
+    "req_propertyCount": 3,
     "req_propertyManagerHired": false,
     "req_money": 0,
     "options": [],
     "optionsActions": [],
-    "globalHappinessImpact": -25,
+    "globalHappinessImpact": -20,
   },
 ];

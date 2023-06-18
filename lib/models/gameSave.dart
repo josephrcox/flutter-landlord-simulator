@@ -113,9 +113,9 @@ class Upgrades {
 
 @embedded
 class Staff {
-  int residentVacanciesFilledByPropertyManager = 0;
+  int residentVacanciesFilledByLeasingAgent = 0;
 
-  List<String> staffOptions = ['manager'];
+  List<String> staffOptions = ['leasingAgent'];
 
   List<bool> staffValues = [false];
 }
