@@ -82,13 +82,12 @@ class _GameScreenState extends ConsumerState<GameScreen>
               Map<String, bool> upgradesMap = {};
               for (int i = 0;
                   i <
-                      propertyList!.plots![plotIndex].plotUpgrades!
-                          .amenOptions.length;
+                      propertyList!
+                          .plots![plotIndex].plotUpgrades!.amenOptions.length;
                   i++) {
                 upgradesMap[propertyList
                         .plots![plotIndex].plotUpgrades!.amenOptions[i]] =
-                    propertyList
-                        .plots![plotIndex].plotUpgrades!.amenValues[i];
+                    propertyList.plots![plotIndex].plotUpgrades!.amenValues[i];
               }
 
               var upgradeListString = "";
@@ -200,7 +199,8 @@ class _GameScreenState extends ConsumerState<GameScreen>
                         ],
                       ),
                       child: Container(
-                        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+                        padding: const EdgeInsets.symmetric(
+                            vertical: 16, horizontal: 16),
                         child: Row(
                           crossAxisAlignment: CrossAxisAlignment.center,
                           children: [
@@ -404,7 +404,6 @@ class _GameScreenState extends ConsumerState<GameScreen>
                                 ],
                               ),
                             ),
-                            
                           ],
                         ),
                       ),
@@ -574,7 +573,12 @@ class _GameScreenState extends ConsumerState<GameScreen>
                     day: save.infoDay,
                     year: save.infoYear,
                     background: headerBackgroundColorARGB,
-                    taxRate: save.rulesTaxRate,
+                    // only go to 2 decimal places
+                    taxRate: save.rulesTaxRate.toDouble(),
+                    hasTaxExpert: save.staff?.staffValues[
+                            save.staff?.staffOptions.indexOf('taxExpert') ??
+                                -1] ??
+                        false,
                     avgProfit: avgProfit,
                     economyHealth: save.economyHealth,
                     context: context,
@@ -594,6 +598,7 @@ Widget headerWidget({
   required int year,
   required Color background,
   required double taxRate,
+  required bool hasTaxExpert,
   required double economyHealth,
   context,
 }) {
@@ -605,6 +610,20 @@ Widget headerWidget({
     moneyString = '\$$moneyString';
   }
 
+  final taxRateString = (taxRate * 100).toStringAsFixed(2);
+  var taxLevel;
+  if (money < gameSettings['taxRateBreakpoints'][0]) {
+    taxLevel = 0;
+  } else if (money < gameSettings['taxRateBreakpoints'][1]) {
+    taxLevel = 1;
+  } else if (money < gameSettings['taxRateBreakpoints'][2]) {
+    taxLevel = 2;
+  } else if (money < gameSettings['taxRateBreakpoints'][3]) {
+    taxLevel = 3;
+  } else {
+    taxLevel = 4;
+  }
+
   return Container(
     color: background,
     padding: const EdgeInsets.all(20),
@@ -614,18 +633,6 @@ Widget headerWidget({
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              'Money: $moneyString // avg profit \$$avgProfit',
-            ),
-            const SizedBox(
-              height: 4,
-            ),
-            Text(
-              'Tax rate: ${taxRate * 100}%',
-            ),
-            const SizedBox(
-              height: 4,
-            ),
             InkWell(
               child: Text(
                 'Economy health: ${economyHealth.toStringAsFixed(2)} / 300',
@@ -660,6 +667,28 @@ Widget headerWidget({
                   ),
                 );
               },
+            ),
+            const SizedBox(
+              height: 4,
+            ),
+            Text(
+              'Money: $moneyString // avg profit \$$avgProfit',
+            ),
+            const SizedBox(
+              height: 4,
+            ),
+            Row(
+              children: [
+                Text(
+                  'Tax rate: $taxRateString%',
+                ),
+                if (hasTaxExpert)
+                  Text(
+                    ' (normally ${gameSettings['taxRates'][taxLevel] * 100}%)',
+                    style: const TextStyle(
+                        color: Color.fromARGB(255, 14, 222, 21)),
+                  ),
+              ],
             ),
           ],
         ),

@@ -244,6 +244,8 @@ class SaveProvider with ChangeNotifier {
         _save!.plotList!.plots![i].happiness +=
             gameSettings['propertyManagerHappinessImpact'] as int;
       }
+    } else if (staffName == 'taxExpert' && toggleTo == false) {
+      calculateTaxRateChanges(_save!, _save!.rulesTaxRate, _save!.money, true);
     }
 
     if (toggleTo == true) {
@@ -408,7 +410,8 @@ void loop(Isar isar, save, resetting) async {
   save?.money += profit;
 
   //// Adjust tax rate based on money in bank
-  save?.rulesTaxRate = calculateTaxRateChanges(save?.rulesTaxRate, save?.money);
+  save?.rulesTaxRate =
+      calculateTaxRateChanges(save, save?.rulesTaxRate, save?.money, false);
 
   //// Check if game over
   save.gameOver = checkIfGameOver(save);
@@ -446,7 +449,7 @@ GameSave calculateResidentsLeaving(GameSave save) {
     }
     final random = Random();
     final target =
-        (plot.happiness / 2).floor() * ((save.economyHealth * 1) / 100).floor();
+        (plot.happiness / 3).floor() * ((save.economyHealth * 1) / 100).floor();
     final roll = random.nextInt(target + 1);
 
     if ((roll == target || save.economyHealth < 25) && plot.residents > 0) {
@@ -534,18 +537,37 @@ int calculateUpgradesProfitAndLoss(int profit, List<Plot>? plots) {
   return profit;
 }
 
-double calculateTaxRateChanges(double taxRate, int money) {
-  if (money < 100000) {
-    taxRate = 0.185;
-  } else if (money < 250000) {
-    taxRate = 0.25;
-  } else if (money < 1000000) {
-    taxRate = 0.325;
-  } else if (money < 2500000) {
-    taxRate = 0.40;
-  } else {
-    taxRate = 0.5;
+double calculateTaxRateChanges(
+    GameSave save, double taxRate, int money, bool override) {
+  if (save.infoDay % 30 != 0 && !override) {
+    return taxRate;
   }
+  final hasTaxExpert = save.staff
+          ?.staffValues[save.staff?.staffOptions.indexOf("taxExpert") ?? -1] ??
+      false;
+
+  if (money < gameSettings['taxRateBreakpoints'][0]) {
+    taxRate = gameSettings['taxRates'][0];
+  } else if (money < gameSettings['taxRateBreakpoints'][1]) {
+    taxRate = gameSettings['taxRates'][1];
+  } else if (money < gameSettings['taxRateBreakpoints'][2]) {
+    taxRate = gameSettings['taxRates'][2];
+  } else if (money < gameSettings['taxRateBreakpoints'][3]) {
+    taxRate = gameSettings['taxRates'][3];
+  } else {
+    taxRate = gameSettings['taxRates'][4];
+  }
+
+  print('rate:$taxRate');
+  if (hasTaxExpert) {
+    final random = Random();
+    // between 0.3 and 0.7
+    final randomModifier = random.nextDouble() * 0.4 + 0.3;
+    // round to 2 decimal places
+    taxRate = (taxRate * randomModifier * 100).round() / 100;
+  }
+  print('rate:$taxRate');
+  print('rate-----');
 
   return taxRate;
 }
@@ -562,6 +584,10 @@ int calculateStaffCosts(int profit, Staff? staff, int propertyCount) {
       profit -= ((staffConfig?['monthlyCostPerProperty'] as num).toInt() *
               propertyCount) ~/
           30;
+      if (staffConfig?['percentageOfAllProfit'] != null) {
+        profit -=
+            (profit * (staffConfig?['percentageOfAllProfit'] as num)).toInt();
+      }
     }
   }
 
@@ -682,7 +708,8 @@ int calculatePropertyTaxes(int profit, List<Plot>? plots) {
     return profit;
   }
   for (var plot in plots) {
-    profit -= (2000 / 30).floor();
+    print((plot.propertyValue / 50 / 30).floor());
+    profit -= (plot.propertyValue / 50 / 30).floor();
   }
 
   return profit;

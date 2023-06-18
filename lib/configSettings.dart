@@ -10,6 +10,20 @@ const Map<String, dynamic> gameSettings = {
   "level3maxResidents": 50,
   "level4maxResidents": 75,
   "propertyManagerHappinessImpact": 20,
+  "taxRates": [
+    0.185,
+    0.25,
+    0.325,
+    0.45,
+    0.55
+  ],
+  "taxRateBreakpoints": [
+    150000,
+    400000,
+    750000,
+    1500000,
+    3000000
+  ],
 };
 
 const upgradeInfo = {
@@ -122,6 +136,15 @@ const staffInfo = {
     "cost": 0,
     "baseMonthlyCost": 3500,
     "monthlyCostPerProperty": 6000
+  },
+  "taxExpert": {
+    "name": "Tax Expert",
+    "desc":
+        "Lower the amount you pay to the gov with a tax expert. May or may not be legal.",
+    "cost": 0,
+    "baseMonthlyCost": 0,
+    "monthlyCostPerProperty": 0,
+    "percentageOfAllProfit": 0.1
   },
 };
 
