@@ -6,9 +6,10 @@ import '../../configSettings.dart';
 import '../models/gameSave.dart';
 
 class SituationScreen extends ConsumerStatefulWidget {
-  const SituationScreen({Key? key, required this.situation}) : super(key: key);
+  const SituationScreen({Key? key, required this.situation, required this.index}) : super(key: key);
 
   final Map<String, dynamic> situation;
+  final int index;
 
   @override
   _SituationScreenState createState() => _SituationScreenState();
@@ -52,8 +53,9 @@ class _SituationScreenState extends ConsumerState<SituationScreen> {
               const SizedBox(height: 32),
               ElevatedButton(
                 onPressed: () async {
+                  
                   saveProvider.activeSituation = null;
-                  saveProvider.pauseLoop = false;
+                  saveProvider.actionDealWithSituationRepercussions(widget.index);
                   Navigator.pop(context);
                 },
                 child: const Text(

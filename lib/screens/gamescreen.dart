@@ -47,6 +47,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
     var save = saveProvider.save;
     var propertyList = save?.plotList;
     const tapAnimationDurationMS = 150;
+    
 
     Color backgroundColorARGB = const Color.fromARGB(255, 36, 59, 80);
     Color headerBackgroundColorARGB = const Color.fromARGB(255, 37, 68, 97);
@@ -64,12 +65,12 @@ class _GameScreenState extends ConsumerState<GameScreen>
     void checkForSituation() {
       final response = saveProvider.checkForSituation();
       if (response != null) {
-        // materialpageroute
         Navigator.push(
           context,
           MaterialPageRoute(
             builder: (context) => SituationScreen(
               situation: situationsList[response],
+              index: response,
             ),
           ),
         );
@@ -172,8 +173,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
                               final response =
                                   await saveProvider.actionUpgradePlotLevel(
                                       propertyIndex: plotIndex);
-                              print('response: $response');
-                              if (response != 0) {
+                              if (response == 0) {
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   const SnackBar(
                                     content: Text('Property upgraded.'),
@@ -183,7 +183,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   SnackBar(
                                     content: Text(
-                                        'You need \$$response more to upgrade this property. '),
+                                        'You need \$${response.toString()} to upgrade this property. '),
                                   ),
                                 );
                               }
@@ -389,6 +389,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
                                                     100,
                                                 index,
                                               );
+                                              checkForSituation();
                                             },
                                             child: Container(
                                               decoration: BoxDecoration(
@@ -437,6 +438,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
                           isTappedList[index] = false;
                         });
                       });
+                      checkForSituation();
                     });
                     final increase =
                         await saveProvider.actionSearchForResidents(index);

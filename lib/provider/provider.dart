@@ -144,11 +144,12 @@ class SaveProvider with ChangeNotifier {
       newPlots?[index].rent = rent;
 
       if (percentageRentIncrease > 1) {
+        // adjust the happiness based on economyHealth. The lower the economyHealth, the larger the decrease in happiness
         newPlots?[index].happiness -=
-            random.nextInt(((-0.02 * _save!.economyHealth) + 9).floor());
+            random.nextInt((0.02 * _save!.economyHealth + 4).floor());
       } else if (percentageRentIncrease < 1) {
         newPlots?[index].happiness +=
-            random.nextInt(((-0.02 * _save!.economyHealth) + 9).floor());
+            random.nextInt(((0.02 * _save!.economyHealth) + 4).floor());
       }
 
       _save?.plotList?.plots = newPlots;
@@ -203,7 +204,18 @@ class SaveProvider with ChangeNotifier {
     final roll = random.nextInt(chance);
 
     if (roll == 0) {
-      return 0;
+      var situationIndex;
+      var tries = 0;
+      while (situationIndex == null && tries < 10) {
+        situationIndex = random.nextInt(situationsList.length);
+        if (_save!.plotList!.plots!.length <
+            (situationsList[situationIndex]['req_propertyCount'] as int)) {
+          situationIndex = null;
+        }
+        tries += 1;
+      }
+
+      return situationIndex;
     } else {
       return null;
     }
@@ -355,6 +367,45 @@ class SaveProvider with ChangeNotifier {
       await isar.gameSaves.put(_save!);
     });
   }
+
+  void actionDealWithSituationRepercussions(int index) async {
+    pauseLoop = true;
+    final situation = situationsList[index];
+    final random = Random();
+    var newSave = _save;
+
+    if (situation['specialCase'] != null) {
+      // TO DO
+    }
+    if (situation['impactOnGlobalHappiness'] != null) {
+      for (var i = 0; i < newSave!.plotList!.plots!.length; i++) {
+        newSave.plotList?.plots?[i].happiness +=
+            situation['impactOnGlobalHappiness'] as int;
+      }
+    }
+    if (situation['impactOnMoney'] != null) {
+      newSave!.money += situation['impactOnMoney'] as int;
+    }
+    if (situation['impactOnEconomy'] != null) {
+      newSave!.economyHealth += situation['impactOnEconomy'] as int;
+    }
+    if (situation['impactOnPlotCount'] != null) {
+      if (situation['impactOnPlotCount'] as int < 0) {
+        final randomIndex = random.nextInt(_save!.plotList!.plots!.length);
+        final list = _save!.plotList!.plots!.toList();
+        list.removeAt(randomIndex);
+        newSave!.plotList!.plots = list;
+      } else {
+        // TO DO
+      }
+    }
+
+    await isar.writeTxn(() async {
+      _save = newSave;
+      await isar.gameSaves.put(_save!);
+    });
+    pauseLoop = false;
+  }
 }
 
 final saveProvider = ChangeNotifierProvider((ref) => SaveProvider());
@@ -493,6 +544,9 @@ GameSave calculateResidentsLeaving(GameSave save) {
 List<Plot> calculateHappiness(List<Plot> plots, GameSave save) {
   for (var i = 0; i < plots.length; i++) {
     final plot = plots[i];
+    if (plot.residents == 0) {
+      continue;
+    }
 
     final random = Random();
 
