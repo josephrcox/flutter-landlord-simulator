@@ -15,15 +15,16 @@ const Map<String, dynamic> gameSettings = {
     0.25,
     0.325,
     0.45,
-    0.55
+    0.55,
   ],
   "taxRateBreakpoints": [
     150000,
     400000,
     750000,
     1500000,
-    3000000
+    3000000,
   ],
+  "situationChance": 100, // Out of X rolls, 1 will be a situation
 };
 
 const upgradeInfo = {
@@ -146,16 +147,30 @@ const staffInfo = {
     "monthlyCostPerProperty": 0,
     "percentageOfAllProfit": 0.1
   },
+  "advancedLeasingAgent": {
+    "name": "Leasing Agent (advanced)",
+    "desc": "This leasing agent is focused on finding new residents ",
+    "cost": 0,
+    "baseMonthlyCost": 0,
+    "monthlyCostPerProperty": 0,
+    "percentageOfAllProfit": 0.1
+  },
 };
 
 const situationsList = [
   {
-    "name": "One of your properties has burned down",
-    "req_propertyCount": 3,
-    "req_propertyManagerHired": false,
-    "req_money": 0,
+    "description": "One of your properties has burned down",
+    "specialCase": null,
+    "req_propertyCount": 3, // number of properties required
+    "req_propertyManagerHired":
+        false, // whether or not a property manager is required
+    "req_money": 0, // amount of money required for this to trigger
     "options": [],
     "optionsActions": [],
-    "globalHappinessImpact": -20,
+    "impactOnGlobalHappiness": -20, // between -50 and 50
+    "impactOnMoney": 0, // usually negative to indicate a loss, -150 = $150 loss
+    "impactOnEconomy": 0, // between -150 and 150, usually -50 to 50
+    "impactOnPlotCount":
+        -1, // -1 means a building disappears, 1 means a building appears
   },
 ];

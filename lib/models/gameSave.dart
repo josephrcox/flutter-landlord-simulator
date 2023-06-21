@@ -118,7 +118,8 @@ class Staff {
   List<String> staffOptions = [
     'leasingAgent',
     'propertyManager',
-    'taxExpert'
+    'taxExpert',
+    'advancedLeasingAgent',
   ];
 
   List<bool> staffValues = [

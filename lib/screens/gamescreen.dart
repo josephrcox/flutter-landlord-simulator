@@ -13,6 +13,7 @@ import 'upgradeMenu.dart';
 import 'sellMenu.dart';
 import '../configSettings.dart';
 import 'package:intl/intl.dart';
+import 'situationScreen.dart';
 
 class GameScreen extends ConsumerStatefulWidget {
   const GameScreen({Key? key}) : super(key: key);
@@ -59,6 +60,21 @@ class _GameScreenState extends ConsumerState<GameScreen>
         ? save.profitHistory.reduce((a, b) => a + b) ~/
             save.profitHistory.length
         : 0;
+
+    void checkForSituation() {
+      final response = saveProvider.checkForSituation();
+      if (response != null) {
+        // materialpageroute
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => SituationScreen(
+              situation: situationsList[response],
+            ),
+          ),
+        );
+      }
+    }
 
     Widget displayProperties() {
       if (propertyList != null &&
@@ -156,7 +172,8 @@ class _GameScreenState extends ConsumerState<GameScreen>
                               final response =
                                   await saveProvider.actionUpgradePlotLevel(
                                       propertyIndex: plotIndex);
-                              if (response == 0) {
+                              print('response: $response');
+                              if (response != 0) {
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   const SnackBar(
                                     content: Text('Property upgraded.'),
@@ -346,6 +363,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
                                                     100,
                                                 index,
                                               );
+                                              checkForSituation();
                                             },
                                             child: Container(
                                               decoration: BoxDecoration(
@@ -470,6 +488,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
     if (save.gameOver == true) {
       return const GameOver();
     }
+
     return Scaffold(
       persistentFooterAlignment: AlignmentDirectional.center,
       persistentFooterButtons: [
@@ -568,6 +587,19 @@ class _GameScreenState extends ConsumerState<GameScreen>
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.start,
                 children: <Widget>[
+                  // saveProvider.activeSituation != null
+                  //     ? Column(
+                  //         children: [
+                  //           Text('active'),
+                  //           ElevatedButton(
+                  //               onPressed: () {
+                  //                 saveProvider.activeSituation = null;
+                  //                 saveProvider.pauseLoop = false;
+                  //               },
+                  //               child: Text('')),
+                  //         ],
+                  //       )
+                  //     : const SizedBox.shrink(),
                   headerWidget(
                     money: save!.money,
                     day: save.infoDay,

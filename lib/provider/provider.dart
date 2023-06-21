@@ -24,6 +24,8 @@ class SaveProvider with ChangeNotifier {
   bool resetting = false;
   bool pauseLoop = true;
 
+  Map<String, dynamic>? activeSituation;
+
   GameSave? get save => _save;
 
   bool _loading = true;
@@ -195,6 +197,18 @@ class SaveProvider with ChangeNotifier {
     return true;
   }
 
+  int? checkForSituation() {
+    final chance = gameSettings['situationChance'] as int;
+    final random = Random();
+    final roll = random.nextInt(chance);
+
+    if (roll == 0) {
+      return 0;
+    } else {
+      return null;
+    }
+  }
+
   Future<int> actionUpgradePlotLevel({
     required propertyIndex,
   }) async {
@@ -208,6 +222,7 @@ class SaveProvider with ChangeNotifier {
       return costToUpgrade.toInt();
     }
     _save!.money -= costToUpgrade.toInt();
+    newPlots?[propertyIndex].propertyValue += costToUpgrade.toInt();
     newPlots?[propertyIndex].level += 1;
     newPlots?[propertyIndex].happiness += 20;
     newPlots?[propertyIndex].maxResidents =
@@ -352,6 +367,7 @@ void loop(Isar isar, save, resetting) async {
   save?.infoDay += 1;
 
   int profit = 0;
+
   //////////////////////////
   /////////////////
   // Calculations
@@ -368,7 +384,6 @@ void loop(Isar isar, save, resetting) async {
     int moneyAfter = save?.money ?? 0;
     // check if money has changed, and add the change to profit
     if (moneyBefore != moneyAfter) {
-      print('change from residents leaving: ${moneyAfter - moneyBefore}');
       profit += moneyAfter - moneyBefore;
     }
   }
@@ -558,7 +573,6 @@ double calculateTaxRateChanges(
     taxRate = gameSettings['taxRates'][4];
   }
 
-  print('rate:$taxRate');
   if (hasTaxExpert) {
     final random = Random();
     // between 0.3 and 0.7
@@ -566,8 +580,6 @@ double calculateTaxRateChanges(
     // round to 2 decimal places
     taxRate = (taxRate * randomModifier * 100).round() / 100;
   }
-  print('rate:$taxRate');
-  print('rate-----');
 
   return taxRate;
 }
@@ -625,7 +637,6 @@ double calculateEconomyHealth(GameSave save) {
         negatives++;
       }
     }
-    print('positives: $positives, negatives: $negatives');
   }
   // developer.log(economyTrends.toString());
 
@@ -684,7 +695,7 @@ double calculateEconomyHealth(GameSave save) {
     print('🚨 health modifier is less than -5, $healthModifier');
     healthModifier = -5;
   } else {
-    print('👍 health modifier is $healthModifier');
+    //print('👍 health modifier is $healthModifier');
   }
 
   var newHealth =
@@ -698,8 +709,8 @@ double calculateEconomyHealth(GameSave save) {
     tooHigh = false;
   }
 
-  print(
-      'economy health: $newHealth, modifier: $healthModifier, trend number: ${economyTrends[economyTrendIndex]}');
+  // print(
+  //     'economy health: $newHealth, modifier: $healthModifier, trend number: ${economyTrends[economyTrendIndex]}');
   return newHealth;
 }
 
@@ -708,7 +719,6 @@ int calculatePropertyTaxes(int profit, List<Plot>? plots) {
     return profit;
   }
   for (var plot in plots) {
-    print((plot.propertyValue / 50 / 30).floor());
     profit -= (plot.propertyValue / 50 / 30).floor();
   }
 
