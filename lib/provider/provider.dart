@@ -146,10 +146,10 @@ class SaveProvider with ChangeNotifier {
       if (percentageRentIncrease > 1) {
         // adjust the happiness based on economyHealth. The lower the economyHealth, the larger the decrease in happiness
         newPlots?[index].happiness -=
-            random.nextInt((0.02 * _save!.economyHealth + 4).floor());
+            random.nextInt((0.02 * _save!.economyHealth + 8).floor());
       } else if (percentageRentIncrease < 1) {
         newPlots?[index].happiness +=
-            random.nextInt(((0.02 * _save!.economyHealth) + 4).floor());
+            random.nextInt(((0.02 * _save!.economyHealth) + 1).floor());
       }
 
       _save?.plotList?.plots = newPlots;
@@ -203,14 +203,14 @@ class SaveProvider with ChangeNotifier {
     final random = Random();
     final roll = random.nextInt(chance);
 
-    if (roll == 0) {
-      var situationIndex;
+    if (roll == 0 && gameSettings['situationMinimumDays'] <= _save!.infoDay) {
+      int situationIndex = -1;
       var tries = 0;
-      while (situationIndex == null && tries < 10) {
+      while (situationIndex == -1 && tries < 3) {
         situationIndex = random.nextInt(situationsList.length);
         if (_save!.plotList!.plots!.length <
             (situationsList[situationIndex]['req_propertyCount'] as int)) {
-          situationIndex = null;
+          situationIndex = -1;
         }
         tries += 1;
       }
@@ -518,7 +518,7 @@ GameSave calculateResidentsLeaving(GameSave save) {
         (plot.happiness / 3).floor() * ((save.economyHealth * 1) / 100).floor();
     final roll = random.nextInt(target + 1);
 
-    if ((roll == target || save.economyHealth < 25) && plot.residents > 0) {
+    if ((roll == target || save.economyHealth < 25) && plot.residents > 0 || (save.infoDay % 30 == 0 && plot.happiness < 50)) {
       final index = save.staff?.staffOptions.indexOf("leasingAgent") ?? -1;
       if (index == -1 || save.staff?.staffValues[index] == false) {
         final random = Random();

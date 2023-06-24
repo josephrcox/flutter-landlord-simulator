@@ -46,8 +46,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
     final saveProvider = ref.watch(saveProviderNotifier);
     var save = saveProvider.save;
     var propertyList = save?.plotList;
-    const tapAnimationDurationMS = 150;
-    
+    const tapAnimationDurationMS = 120;
 
     Color backgroundColorARGB = const Color.fromARGB(255, 36, 59, 80);
     Color headerBackgroundColorARGB = const Color.fromARGB(255, 37, 68, 97);
@@ -360,7 +359,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
                                               saveProvider.actionSetRent(
                                                 propertyList
                                                         .plots![index].rent -
-                                                    100,
+                                                    50,
                                                 index,
                                               );
                                               checkForSituation();
@@ -386,7 +385,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
                                               saveProvider.actionSetRent(
                                                 propertyList
                                                         .plots![index].rent +
-                                                    100,
+                                                    50,
                                                 index,
                                               );
                                               checkForSituation();
