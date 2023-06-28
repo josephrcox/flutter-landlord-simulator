@@ -386,15 +386,20 @@ GameSave loopResLeaving(GameSave save) {
     }
     final random = Random();
     final target =
-        (plot.happiness / 3).floor() * ((save.economyHealth * 1) / 100).floor();
+        (plot.happiness).floor() * ((save.economyHealth * 1) / 100).floor();
     final roll = random.nextInt(target + 1);
+    print('roll: $roll, target: $target');
 
-    if ((roll == target || save.economyHealth < 25) && plot.residents > 0 ||
-        (save.infoDay % 30 == 0 && plot.happiness < 50)) {
+    if ((roll == target || save.economyHealth < 25) && (plot.residents > 0) ||
+        (save.infoDay % 30 == 0 && plot.happiness < 25)) {
       final index = save.staff?.staffOptions.indexOf("leasingAgent") ?? -1;
       if (index == -1 || save.staff?.staffValues[index] == false) {
         final random = Random();
         save.economyHealth -= random.nextDouble() * 1.0;
+        if (plot.residents <= 0) {
+          print('ALERT');
+          return save;
+        }
         plot.residents -= 1;
         final index = plot.amenities?.amenOptions.indexOf("easyTurnover") ?? -1;
         if (index == -1 || plot.amenities?.amenValues[index] == false) {
