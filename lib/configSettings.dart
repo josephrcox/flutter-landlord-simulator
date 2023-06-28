@@ -28,6 +28,44 @@ const Map<String, dynamic> gameSettings = {
   "situationChance": 150, // Out of X rolls, 1 will be a situation
 };
 
+const propertyTypes = [
+  [
+    {
+      "type": "residential",
+      "id": "singleFamilyHome",
+      "name": "Single Family Home",
+      "desc": "A nice small home",
+      "cost_upfront": 30000,
+      "cost_daily": 66.67,
+      "repayment_period": 1800,
+      "maxResidents": 3,
+      "icon": "🏠",
+    },
+    {
+      "type": "residential",
+      "id": "largeHome",
+      "name": "Large Home",
+      "desc": "A nice big home",
+      "cost_upfront": 50000,
+      "cost_daily": 100,
+      "repayment_period": 1800,
+      "maxResidents": 5,
+      "icon": "🏡",
+    },
+  ],
+  [
+    {
+      "type": "business",
+      "id": "laundry",
+      "name": "Laundromat",
+      "desc": "For washing clothes",
+      "cost_upfront": 350000,
+      "revenue_daily_max": 45.00,
+      "icon": "🧺",
+    },
+  ],
+];
+
 const upgradeInfo = {
   "swimmingPool": {
     "name": "😊 Swimming pool",

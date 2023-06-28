@@ -94,8 +94,9 @@ const GameSaveSchema = CollectionSchema(
   links: {},
   embeddedSchemas: {
     r'PlotList': PlotListSchema,
-    r'Plot': PlotSchema,
+    r'ResPlot': ResPlotSchema,
     r'Upgrades': UpgradesSchema,
+    r'BusPlot': BusPlotSchema,
     r'Staff': StaffSchema
   },
   getId: _gameSaveGetId,
@@ -1673,11 +1674,17 @@ const PlotListSchema = Schema(
   name: r'PlotList',
   id: -3544980990120019457,
   properties: {
-    r'plots': PropertySchema(
+    r'busPlots': PropertySchema(
       id: 0,
-      name: r'plots',
+      name: r'busPlots',
       type: IsarType.objectList,
-      target: r'Plot',
+      target: r'BusPlot',
+    ),
+    r'resPlots': PropertySchema(
+      id: 1,
+      name: r'resPlots',
+      type: IsarType.objectList,
+      target: r'ResPlot',
     )
   },
   estimateSize: _plotListEstimateSize,
@@ -1693,14 +1700,27 @@ int _plotListEstimateSize(
 ) {
   var bytesCount = offsets.last;
   {
-    final list = object.plots;
+    final list = object.busPlots;
     if (list != null) {
       bytesCount += 3 + list.length * 3;
       {
-        final offsets = allOffsets[Plot]!;
+        final offsets = allOffsets[BusPlot]!;
         for (var i = 0; i < list.length; i++) {
           final value = list[i];
-          bytesCount += PlotSchema.estimateSize(value, offsets, allOffsets);
+          bytesCount += BusPlotSchema.estimateSize(value, offsets, allOffsets);
+        }
+      }
+    }
+  }
+  {
+    final list = object.resPlots;
+    if (list != null) {
+      bytesCount += 3 + list.length * 3;
+      {
+        final offsets = allOffsets[ResPlot]!;
+        for (var i = 0; i < list.length; i++) {
+          final value = list[i];
+          bytesCount += ResPlotSchema.estimateSize(value, offsets, allOffsets);
         }
       }
     }
@@ -1714,11 +1734,17 @@ void _plotListSerialize(
   List<int> offsets,
   Map<Type, List<int>> allOffsets,
 ) {
-  writer.writeObjectList<Plot>(
+  writer.writeObjectList<BusPlot>(
     offsets[0],
     allOffsets,
-    PlotSchema.serialize,
-    object.plots,
+    BusPlotSchema.serialize,
+    object.busPlots,
+  );
+  writer.writeObjectList<ResPlot>(
+    offsets[1],
+    allOffsets,
+    ResPlotSchema.serialize,
+    object.resPlots,
   );
 }
 
@@ -1729,11 +1755,17 @@ PlotList _plotListDeserialize(
   Map<Type, List<int>> allOffsets,
 ) {
   final object = PlotList();
-  object.plots = reader.readObjectList<Plot>(
+  object.busPlots = reader.readObjectList<BusPlot>(
     offsets[0],
-    PlotSchema.deserialize,
+    BusPlotSchema.deserialize,
     allOffsets,
-    Plot(),
+    BusPlot(),
+  );
+  object.resPlots = reader.readObjectList<ResPlot>(
+    offsets[1],
+    ResPlotSchema.deserialize,
+    allOffsets,
+    ResPlot(),
   );
   return object;
 }
@@ -1746,11 +1778,18 @@ P _plotListDeserializeProp<P>(
 ) {
   switch (propertyId) {
     case 0:
-      return (reader.readObjectList<Plot>(
+      return (reader.readObjectList<BusPlot>(
         offset,
-        PlotSchema.deserialize,
+        BusPlotSchema.deserialize,
         allOffsets,
-        Plot(),
+        BusPlot(),
+      )) as P;
+    case 1:
+      return (reader.readObjectList<ResPlot>(
+        offset,
+        ResPlotSchema.deserialize,
+        allOffsets,
+        ResPlot(),
       )) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -1759,27 +1798,27 @@ P _plotListDeserializeProp<P>(
 
 extension PlotListQueryFilter
     on QueryBuilder<PlotList, PlotList, QFilterCondition> {
-  QueryBuilder<PlotList, PlotList, QAfterFilterCondition> plotsIsNull() {
+  QueryBuilder<PlotList, PlotList, QAfterFilterCondition> busPlotsIsNull() {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(const FilterCondition.isNull(
-        property: r'plots',
+        property: r'busPlots',
       ));
     });
   }
 
-  QueryBuilder<PlotList, PlotList, QAfterFilterCondition> plotsIsNotNull() {
+  QueryBuilder<PlotList, PlotList, QAfterFilterCondition> busPlotsIsNotNull() {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(const FilterCondition.isNotNull(
-        property: r'plots',
+        property: r'busPlots',
       ));
     });
   }
 
-  QueryBuilder<PlotList, PlotList, QAfterFilterCondition> plotsLengthEqualTo(
+  QueryBuilder<PlotList, PlotList, QAfterFilterCondition> busPlotsLengthEqualTo(
       int length) {
     return QueryBuilder.apply(this, (query) {
       return query.listLength(
-        r'plots',
+        r'busPlots',
         length,
         true,
         length,
@@ -1788,10 +1827,10 @@ extension PlotListQueryFilter
     });
   }
 
-  QueryBuilder<PlotList, PlotList, QAfterFilterCondition> plotsIsEmpty() {
+  QueryBuilder<PlotList, PlotList, QAfterFilterCondition> busPlotsIsEmpty() {
     return QueryBuilder.apply(this, (query) {
       return query.listLength(
-        r'plots',
+        r'busPlots',
         0,
         true,
         0,
@@ -1800,10 +1839,10 @@ extension PlotListQueryFilter
     });
   }
 
-  QueryBuilder<PlotList, PlotList, QAfterFilterCondition> plotsIsNotEmpty() {
+  QueryBuilder<PlotList, PlotList, QAfterFilterCondition> busPlotsIsNotEmpty() {
     return QueryBuilder.apply(this, (query) {
       return query.listLength(
-        r'plots',
+        r'busPlots',
         0,
         false,
         999999,
@@ -1812,13 +1851,14 @@ extension PlotListQueryFilter
     });
   }
 
-  QueryBuilder<PlotList, PlotList, QAfterFilterCondition> plotsLengthLessThan(
+  QueryBuilder<PlotList, PlotList, QAfterFilterCondition>
+      busPlotsLengthLessThan(
     int length, {
     bool include = false,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.listLength(
-        r'plots',
+        r'busPlots',
         0,
         true,
         length,
@@ -1828,13 +1868,13 @@ extension PlotListQueryFilter
   }
 
   QueryBuilder<PlotList, PlotList, QAfterFilterCondition>
-      plotsLengthGreaterThan(
+      busPlotsLengthGreaterThan(
     int length, {
     bool include = false,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.listLength(
-        r'plots',
+        r'busPlots',
         length,
         include,
         999999,
@@ -1843,7 +1883,7 @@ extension PlotListQueryFilter
     });
   }
 
-  QueryBuilder<PlotList, PlotList, QAfterFilterCondition> plotsLengthBetween(
+  QueryBuilder<PlotList, PlotList, QAfterFilterCondition> busPlotsLengthBetween(
     int lower,
     int upper, {
     bool includeLower = true,
@@ -1851,7 +1891,109 @@ extension PlotListQueryFilter
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.listLength(
-        r'plots',
+        r'busPlots',
+        lower,
+        includeLower,
+        upper,
+        includeUpper,
+      );
+    });
+  }
+
+  QueryBuilder<PlotList, PlotList, QAfterFilterCondition> resPlotsIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'resPlots',
+      ));
+    });
+  }
+
+  QueryBuilder<PlotList, PlotList, QAfterFilterCondition> resPlotsIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'resPlots',
+      ));
+    });
+  }
+
+  QueryBuilder<PlotList, PlotList, QAfterFilterCondition> resPlotsLengthEqualTo(
+      int length) {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'resPlots',
+        length,
+        true,
+        length,
+        true,
+      );
+    });
+  }
+
+  QueryBuilder<PlotList, PlotList, QAfterFilterCondition> resPlotsIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'resPlots',
+        0,
+        true,
+        0,
+        true,
+      );
+    });
+  }
+
+  QueryBuilder<PlotList, PlotList, QAfterFilterCondition> resPlotsIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'resPlots',
+        0,
+        false,
+        999999,
+        true,
+      );
+    });
+  }
+
+  QueryBuilder<PlotList, PlotList, QAfterFilterCondition>
+      resPlotsLengthLessThan(
+    int length, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'resPlots',
+        0,
+        true,
+        length,
+        include,
+      );
+    });
+  }
+
+  QueryBuilder<PlotList, PlotList, QAfterFilterCondition>
+      resPlotsLengthGreaterThan(
+    int length, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'resPlots',
+        length,
+        include,
+        999999,
+        true,
+      );
+    });
+  }
+
+  QueryBuilder<PlotList, PlotList, QAfterFilterCondition> resPlotsLengthBetween(
+    int lower,
+    int upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'resPlots',
         lower,
         includeLower,
         upper,
@@ -1863,10 +2005,17 @@ extension PlotListQueryFilter
 
 extension PlotListQueryObject
     on QueryBuilder<PlotList, PlotList, QFilterCondition> {
-  QueryBuilder<PlotList, PlotList, QAfterFilterCondition> plotsElement(
-      FilterQuery<Plot> q) {
+  QueryBuilder<PlotList, PlotList, QAfterFilterCondition> busPlotsElement(
+      FilterQuery<BusPlot> q) {
     return QueryBuilder.apply(this, (query) {
-      return query.object(q, r'plots');
+      return query.object(q, r'busPlots');
+    });
+  }
+
+  QueryBuilder<PlotList, PlotList, QAfterFilterCondition> resPlotsElement(
+      FilterQuery<ResPlot> q) {
+    return QueryBuilder.apply(this, (query) {
+      return query.object(q, r'resPlots');
     });
   }
 }
@@ -1874,112 +2023,171 @@ extension PlotListQueryObject
 // coverage:ignore-file
 // ignore_for_file: duplicate_ignore, non_constant_identifier_names, constant_identifier_names, invalid_use_of_protected_member, unnecessary_cast, prefer_const_constructors, lines_longer_than_80_chars, require_trailing_commas, inference_failure_on_function_invocation, unnecessary_parenthesis, unnecessary_raw_strings, unnecessary_null_checks, join_return_with_assignment, prefer_final_locals, avoid_js_rounded_ints, avoid_positional_boolean_parameters, always_specify_types
 
-const PlotSchema = Schema(
-  name: r'Plot',
-  id: -6891091333884084029,
+const ResPlotSchema = Schema(
+  name: r'ResPlot',
+  id: -3187895061326683208,
   properties: {
-    r'happiness': PropertySchema(
+    r'amenities': PropertySchema(
       id: 0,
-      name: r'happiness',
-      type: IsarType.long,
-    ),
-    r'level': PropertySchema(
-      id: 1,
-      name: r'level',
-      type: IsarType.long,
-    ),
-    r'maxResidents': PropertySchema(
-      id: 2,
-      name: r'maxResidents',
-      type: IsarType.long,
-    ),
-    r'plotUpgrades': PropertySchema(
-      id: 3,
-      name: r'plotUpgrades',
+      name: r'amenities',
       type: IsarType.object,
       target: r'Upgrades',
     ),
-    r'propertyValue': PropertySchema(
+    r'area': PropertySchema(
+      id: 1,
+      name: r'area',
+      type: IsarType.string,
+    ),
+    r'happiness': PropertySchema(
+      id: 2,
+      name: r'happiness',
+      type: IsarType.long,
+    ),
+    r'id': PropertySchema(
+      id: 3,
+      name: r'id',
+      type: IsarType.long,
+    ),
+    r'maxResidents': PropertySchema(
       id: 4,
+      name: r'maxResidents',
+      type: IsarType.long,
+    ),
+    r'propertyValue': PropertySchema(
+      id: 5,
       name: r'propertyValue',
       type: IsarType.long,
     ),
+    r'purchaseDate': PropertySchema(
+      id: 6,
+      name: r'purchaseDate',
+      type: IsarType.long,
+    ),
     r'rent': PropertySchema(
-      id: 5,
+      id: 7,
       name: r'rent',
       type: IsarType.long,
     ),
     r'residents': PropertySchema(
-      id: 6,
+      id: 8,
       name: r'residents',
       type: IsarType.long,
+    ),
+    r'subArea': PropertySchema(
+      id: 9,
+      name: r'subArea',
+      type: IsarType.string,
+    ),
+    r'subType': PropertySchema(
+      id: 10,
+      name: r'subType',
+      type: IsarType.string,
+    ),
+    r'type': PropertySchema(
+      id: 11,
+      name: r'type',
+      type: IsarType.string,
     )
   },
-  estimateSize: _plotEstimateSize,
-  serialize: _plotSerialize,
-  deserialize: _plotDeserialize,
-  deserializeProp: _plotDeserializeProp,
+  estimateSize: _resPlotEstimateSize,
+  serialize: _resPlotSerialize,
+  deserialize: _resPlotDeserialize,
+  deserializeProp: _resPlotDeserializeProp,
 );
 
-int _plotEstimateSize(
-  Plot object,
+int _resPlotEstimateSize(
+  ResPlot object,
   List<int> offsets,
   Map<Type, List<int>> allOffsets,
 ) {
   var bytesCount = offsets.last;
   {
-    final value = object.plotUpgrades;
+    final value = object.amenities;
     if (value != null) {
       bytesCount += 3 +
           UpgradesSchema.estimateSize(value, allOffsets[Upgrades]!, allOffsets);
     }
   }
+  {
+    final value = object.area;
+    if (value != null) {
+      bytesCount += 3 + value.length * 3;
+    }
+  }
+  {
+    final value = object.subArea;
+    if (value != null) {
+      bytesCount += 3 + value.length * 3;
+    }
+  }
+  {
+    final value = object.subType;
+    if (value != null) {
+      bytesCount += 3 + value.length * 3;
+    }
+  }
+  {
+    final value = object.type;
+    if (value != null) {
+      bytesCount += 3 + value.length * 3;
+    }
+  }
   return bytesCount;
 }
 
-void _plotSerialize(
-  Plot object,
+void _resPlotSerialize(
+  ResPlot object,
   IsarWriter writer,
   List<int> offsets,
   Map<Type, List<int>> allOffsets,
 ) {
-  writer.writeLong(offsets[0], object.happiness);
-  writer.writeLong(offsets[1], object.level);
-  writer.writeLong(offsets[2], object.maxResidents);
   writer.writeObject<Upgrades>(
-    offsets[3],
+    offsets[0],
     allOffsets,
     UpgradesSchema.serialize,
-    object.plotUpgrades,
+    object.amenities,
   );
-  writer.writeLong(offsets[4], object.propertyValue);
-  writer.writeLong(offsets[5], object.rent);
-  writer.writeLong(offsets[6], object.residents);
+  writer.writeString(offsets[1], object.area);
+  writer.writeLong(offsets[2], object.happiness);
+  writer.writeLong(offsets[3], object.id);
+  writer.writeLong(offsets[4], object.maxResidents);
+  writer.writeLong(offsets[5], object.propertyValue);
+  writer.writeLong(offsets[6], object.purchaseDate);
+  writer.writeLong(offsets[7], object.rent);
+  writer.writeLong(offsets[8], object.residents);
+  writer.writeString(offsets[9], object.subArea);
+  writer.writeString(offsets[10], object.subType);
+  writer.writeString(offsets[11], object.type);
 }
 
-Plot _plotDeserialize(
+ResPlot _resPlotDeserialize(
   Id id,
   IsarReader reader,
   List<int> offsets,
   Map<Type, List<int>> allOffsets,
 ) {
-  final object = Plot(
-    plotUpgrades: reader.readObjectOrNull<Upgrades>(
-      offsets[3],
+  final object = ResPlot(
+    amenities: reader.readObjectOrNull<Upgrades>(
+      offsets[0],
       UpgradesSchema.deserialize,
       allOffsets,
     ),
-    propertyValue: reader.readLongOrNull(offsets[4]) ?? 50000,
-    residents: reader.readLongOrNull(offsets[6]) ?? 0,
+    propertyValue: reader.readLongOrNull(offsets[5]) ?? 50000,
+    purchaseDate: reader.readLongOrNull(offsets[6]) ?? -1,
+    residents: reader.readLongOrNull(offsets[8]) ?? 0,
   );
-  object.happiness = reader.readLong(offsets[0]);
-  object.level = reader.readLong(offsets[1]);
-  object.maxResidents = reader.readLong(offsets[2]);
-  object.rent = reader.readLong(offsets[5]);
+  object.area = reader.readStringOrNull(offsets[1]);
+  object.happiness = reader.readLong(offsets[2]);
+  object.id = reader.readLong(offsets[3]);
+  object.maxResidents = reader.readLong(offsets[4]);
+  object.rent = reader.readLong(offsets[7]);
+  object.subArea = reader.readStringOrNull(offsets[9]);
+  object.subType = reader.readStringOrNull(offsets[10]);
+  object.type = reader.readStringOrNull(offsets[11]);
   return object;
 }
 
-P _plotDeserializeProp<P>(
+P _resPlotDeserializeProp<P>(
   IsarReader reader,
   int propertyId,
   int offset,
@@ -1987,65 +2195,1300 @@ P _plotDeserializeProp<P>(
 ) {
   switch (propertyId) {
     case 0:
-      return (reader.readLong(offset)) as P;
-    case 1:
-      return (reader.readLong(offset)) as P;
-    case 2:
-      return (reader.readLong(offset)) as P;
-    case 3:
       return (reader.readObjectOrNull<Upgrades>(
         offset,
         UpgradesSchema.deserialize,
         allOffsets,
       )) as P;
-    case 4:
-      return (reader.readLongOrNull(offset) ?? 50000) as P;
-    case 5:
+    case 1:
+      return (reader.readStringOrNull(offset)) as P;
+    case 2:
       return (reader.readLong(offset)) as P;
+    case 3:
+      return (reader.readLong(offset)) as P;
+    case 4:
+      return (reader.readLong(offset)) as P;
+    case 5:
+      return (reader.readLongOrNull(offset) ?? 50000) as P;
     case 6:
+      return (reader.readLongOrNull(offset) ?? -1) as P;
+    case 7:
+      return (reader.readLong(offset)) as P;
+    case 8:
+      return (reader.readLongOrNull(offset) ?? 0) as P;
+    case 9:
+      return (reader.readStringOrNull(offset)) as P;
+    case 10:
+      return (reader.readStringOrNull(offset)) as P;
+    case 11:
+      return (reader.readStringOrNull(offset)) as P;
+    default:
+      throw IsarError('Unknown property with id $propertyId');
+  }
+}
+
+extension ResPlotQueryFilter
+    on QueryBuilder<ResPlot, ResPlot, QFilterCondition> {
+  QueryBuilder<ResPlot, ResPlot, QAfterFilterCondition> amenitiesIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'amenities',
+      ));
+    });
+  }
+
+  QueryBuilder<ResPlot, ResPlot, QAfterFilterCondition> amenitiesIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'amenities',
+      ));
+    });
+  }
+
+  QueryBuilder<ResPlot, ResPlot, QAfterFilterCondition> areaIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'area',
+      ));
+    });
+  }
+
+  QueryBuilder<ResPlot, ResPlot, QAfterFilterCondition> areaIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'area',
+      ));
+    });
+  }
+
+  QueryBuilder<ResPlot, ResPlot, QAfterFilterCondition> areaEqualTo(
+    String? value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'area',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<ResPlot, ResPlot, QAfterFilterCondition> areaGreaterThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'area',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<ResPlot, ResPlot, QAfterFilterCondition> areaLessThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'area',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<ResPlot, ResPlot, QAfterFilterCondition> areaBetween(
+    String? lower,
+    String? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'area',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<ResPlot, ResPlot, QAfterFilterCondition> areaStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'area',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<ResPlot, ResPlot, QAfterFilterCondition> areaEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'area',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<ResPlot, ResPlot, QAfterFilterCondition> areaContains(
+      String value,
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'area',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<ResPlot, ResPlot, QAfterFilterCondition> areaMatches(
+      String pattern,
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'area',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<ResPlot, ResPlot, QAfterFilterCondition> areaIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'area',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<ResPlot, ResPlot, QAfterFilterCondition> areaIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'area',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<ResPlot, ResPlot, QAfterFilterCondition> happinessEqualTo(
+      int value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'happiness',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<ResPlot, ResPlot, QAfterFilterCondition> happinessGreaterThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'happiness',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<ResPlot, ResPlot, QAfterFilterCondition> happinessLessThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'happiness',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<ResPlot, ResPlot, QAfterFilterCondition> happinessBetween(
+    int lower,
+    int upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'happiness',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<ResPlot, ResPlot, QAfterFilterCondition> idEqualTo(int value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'id',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<ResPlot, ResPlot, QAfterFilterCondition> idGreaterThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'id',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<ResPlot, ResPlot, QAfterFilterCondition> idLessThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'id',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<ResPlot, ResPlot, QAfterFilterCondition> idBetween(
+    int lower,
+    int upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'id',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<ResPlot, ResPlot, QAfterFilterCondition> maxResidentsEqualTo(
+      int value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'maxResidents',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<ResPlot, ResPlot, QAfterFilterCondition> maxResidentsGreaterThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'maxResidents',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<ResPlot, ResPlot, QAfterFilterCondition> maxResidentsLessThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'maxResidents',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<ResPlot, ResPlot, QAfterFilterCondition> maxResidentsBetween(
+    int lower,
+    int upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'maxResidents',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<ResPlot, ResPlot, QAfterFilterCondition> propertyValueEqualTo(
+      int value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'propertyValue',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<ResPlot, ResPlot, QAfterFilterCondition>
+      propertyValueGreaterThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'propertyValue',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<ResPlot, ResPlot, QAfterFilterCondition> propertyValueLessThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'propertyValue',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<ResPlot, ResPlot, QAfterFilterCondition> propertyValueBetween(
+    int lower,
+    int upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'propertyValue',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<ResPlot, ResPlot, QAfterFilterCondition> purchaseDateEqualTo(
+      int value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'purchaseDate',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<ResPlot, ResPlot, QAfterFilterCondition> purchaseDateGreaterThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'purchaseDate',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<ResPlot, ResPlot, QAfterFilterCondition> purchaseDateLessThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'purchaseDate',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<ResPlot, ResPlot, QAfterFilterCondition> purchaseDateBetween(
+    int lower,
+    int upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'purchaseDate',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<ResPlot, ResPlot, QAfterFilterCondition> rentEqualTo(int value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'rent',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<ResPlot, ResPlot, QAfterFilterCondition> rentGreaterThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'rent',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<ResPlot, ResPlot, QAfterFilterCondition> rentLessThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'rent',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<ResPlot, ResPlot, QAfterFilterCondition> rentBetween(
+    int lower,
+    int upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'rent',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<ResPlot, ResPlot, QAfterFilterCondition> residentsEqualTo(
+      int value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'residents',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<ResPlot, ResPlot, QAfterFilterCondition> residentsGreaterThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'residents',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<ResPlot, ResPlot, QAfterFilterCondition> residentsLessThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'residents',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<ResPlot, ResPlot, QAfterFilterCondition> residentsBetween(
+    int lower,
+    int upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'residents',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<ResPlot, ResPlot, QAfterFilterCondition> subAreaIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'subArea',
+      ));
+    });
+  }
+
+  QueryBuilder<ResPlot, ResPlot, QAfterFilterCondition> subAreaIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'subArea',
+      ));
+    });
+  }
+
+  QueryBuilder<ResPlot, ResPlot, QAfterFilterCondition> subAreaEqualTo(
+    String? value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'subArea',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<ResPlot, ResPlot, QAfterFilterCondition> subAreaGreaterThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'subArea',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<ResPlot, ResPlot, QAfterFilterCondition> subAreaLessThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'subArea',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<ResPlot, ResPlot, QAfterFilterCondition> subAreaBetween(
+    String? lower,
+    String? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'subArea',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<ResPlot, ResPlot, QAfterFilterCondition> subAreaStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'subArea',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<ResPlot, ResPlot, QAfterFilterCondition> subAreaEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'subArea',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<ResPlot, ResPlot, QAfterFilterCondition> subAreaContains(
+      String value,
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'subArea',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<ResPlot, ResPlot, QAfterFilterCondition> subAreaMatches(
+      String pattern,
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'subArea',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<ResPlot, ResPlot, QAfterFilterCondition> subAreaIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'subArea',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<ResPlot, ResPlot, QAfterFilterCondition> subAreaIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'subArea',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<ResPlot, ResPlot, QAfterFilterCondition> subTypeIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'subType',
+      ));
+    });
+  }
+
+  QueryBuilder<ResPlot, ResPlot, QAfterFilterCondition> subTypeIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'subType',
+      ));
+    });
+  }
+
+  QueryBuilder<ResPlot, ResPlot, QAfterFilterCondition> subTypeEqualTo(
+    String? value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'subType',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<ResPlot, ResPlot, QAfterFilterCondition> subTypeGreaterThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'subType',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<ResPlot, ResPlot, QAfterFilterCondition> subTypeLessThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'subType',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<ResPlot, ResPlot, QAfterFilterCondition> subTypeBetween(
+    String? lower,
+    String? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'subType',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<ResPlot, ResPlot, QAfterFilterCondition> subTypeStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'subType',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<ResPlot, ResPlot, QAfterFilterCondition> subTypeEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'subType',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<ResPlot, ResPlot, QAfterFilterCondition> subTypeContains(
+      String value,
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'subType',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<ResPlot, ResPlot, QAfterFilterCondition> subTypeMatches(
+      String pattern,
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'subType',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<ResPlot, ResPlot, QAfterFilterCondition> subTypeIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'subType',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<ResPlot, ResPlot, QAfterFilterCondition> subTypeIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'subType',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<ResPlot, ResPlot, QAfterFilterCondition> typeIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'type',
+      ));
+    });
+  }
+
+  QueryBuilder<ResPlot, ResPlot, QAfterFilterCondition> typeIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'type',
+      ));
+    });
+  }
+
+  QueryBuilder<ResPlot, ResPlot, QAfterFilterCondition> typeEqualTo(
+    String? value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'type',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<ResPlot, ResPlot, QAfterFilterCondition> typeGreaterThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'type',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<ResPlot, ResPlot, QAfterFilterCondition> typeLessThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'type',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<ResPlot, ResPlot, QAfterFilterCondition> typeBetween(
+    String? lower,
+    String? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'type',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<ResPlot, ResPlot, QAfterFilterCondition> typeStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'type',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<ResPlot, ResPlot, QAfterFilterCondition> typeEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'type',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<ResPlot, ResPlot, QAfterFilterCondition> typeContains(
+      String value,
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'type',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<ResPlot, ResPlot, QAfterFilterCondition> typeMatches(
+      String pattern,
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'type',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<ResPlot, ResPlot, QAfterFilterCondition> typeIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'type',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<ResPlot, ResPlot, QAfterFilterCondition> typeIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'type',
+        value: '',
+      ));
+    });
+  }
+}
+
+extension ResPlotQueryObject
+    on QueryBuilder<ResPlot, ResPlot, QFilterCondition> {
+  QueryBuilder<ResPlot, ResPlot, QAfterFilterCondition> amenities(
+      FilterQuery<Upgrades> q) {
+    return QueryBuilder.apply(this, (query) {
+      return query.object(q, r'amenities');
+    });
+  }
+}
+
+// coverage:ignore-file
+// ignore_for_file: duplicate_ignore, non_constant_identifier_names, constant_identifier_names, invalid_use_of_protected_member, unnecessary_cast, prefer_const_constructors, lines_longer_than_80_chars, require_trailing_commas, inference_failure_on_function_invocation, unnecessary_parenthesis, unnecessary_raw_strings, unnecessary_null_checks, join_return_with_assignment, prefer_final_locals, avoid_js_rounded_ints, avoid_positional_boolean_parameters, always_specify_types
+
+const BusPlotSchema = Schema(
+  name: r'BusPlot',
+  id: 791026558307473788,
+  properties: {
+    r'area': PropertySchema(
+      id: 0,
+      name: r'area',
+      type: IsarType.string,
+    ),
+    r'id': PropertySchema(
+      id: 1,
+      name: r'id',
+      type: IsarType.long,
+    ),
+    r'propertyValue': PropertySchema(
+      id: 2,
+      name: r'propertyValue',
+      type: IsarType.long,
+    ),
+    r'subarea': PropertySchema(
+      id: 3,
+      name: r'subarea',
+      type: IsarType.string,
+    ),
+    r'subtype': PropertySchema(
+      id: 4,
+      name: r'subtype',
+      type: IsarType.string,
+    ),
+    r'totalRevenue': PropertySchema(
+      id: 5,
+      name: r'totalRevenue',
+      type: IsarType.long,
+    )
+  },
+  estimateSize: _busPlotEstimateSize,
+  serialize: _busPlotSerialize,
+  deserialize: _busPlotDeserialize,
+  deserializeProp: _busPlotDeserializeProp,
+);
+
+int _busPlotEstimateSize(
+  BusPlot object,
+  List<int> offsets,
+  Map<Type, List<int>> allOffsets,
+) {
+  var bytesCount = offsets.last;
+  bytesCount += 3 + object.area.length * 3;
+  bytesCount += 3 + object.subarea.length * 3;
+  bytesCount += 3 + object.subtype.length * 3;
+  return bytesCount;
+}
+
+void _busPlotSerialize(
+  BusPlot object,
+  IsarWriter writer,
+  List<int> offsets,
+  Map<Type, List<int>> allOffsets,
+) {
+  writer.writeString(offsets[0], object.area);
+  writer.writeLong(offsets[1], object.id);
+  writer.writeLong(offsets[2], object.propertyValue);
+  writer.writeString(offsets[3], object.subarea);
+  writer.writeString(offsets[4], object.subtype);
+  writer.writeLong(offsets[5], object.totalRevenue);
+}
+
+BusPlot _busPlotDeserialize(
+  Id id,
+  IsarReader reader,
+  List<int> offsets,
+  Map<Type, List<int>> allOffsets,
+) {
+  final object = BusPlot(
+    propertyValue: reader.readLongOrNull(offsets[2]) ?? 50000,
+    subtype: reader.readStringOrNull(offsets[4]) ?? '',
+    totalRevenue: reader.readLongOrNull(offsets[5]) ?? 0,
+  );
+  object.area = reader.readString(offsets[0]);
+  object.id = reader.readLong(offsets[1]);
+  object.subarea = reader.readString(offsets[3]);
+  return object;
+}
+
+P _busPlotDeserializeProp<P>(
+  IsarReader reader,
+  int propertyId,
+  int offset,
+  Map<Type, List<int>> allOffsets,
+) {
+  switch (propertyId) {
+    case 0:
+      return (reader.readString(offset)) as P;
+    case 1:
+      return (reader.readLong(offset)) as P;
+    case 2:
+      return (reader.readLongOrNull(offset) ?? 50000) as P;
+    case 3:
+      return (reader.readString(offset)) as P;
+    case 4:
+      return (reader.readStringOrNull(offset) ?? '') as P;
+    case 5:
       return (reader.readLongOrNull(offset) ?? 0) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
   }
 }
 
-extension PlotQueryFilter on QueryBuilder<Plot, Plot, QFilterCondition> {
-  QueryBuilder<Plot, Plot, QAfterFilterCondition> happinessEqualTo(int value) {
+extension BusPlotQueryFilter
+    on QueryBuilder<BusPlot, BusPlot, QFilterCondition> {
+  QueryBuilder<BusPlot, BusPlot, QAfterFilterCondition> areaEqualTo(
+    String value, {
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'happiness',
+        property: r'area',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<BusPlot, BusPlot, QAfterFilterCondition> areaGreaterThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'area',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<BusPlot, BusPlot, QAfterFilterCondition> areaLessThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'area',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<BusPlot, BusPlot, QAfterFilterCondition> areaBetween(
+    String lower,
+    String upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'area',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<BusPlot, BusPlot, QAfterFilterCondition> areaStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'area',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<BusPlot, BusPlot, QAfterFilterCondition> areaEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'area',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<BusPlot, BusPlot, QAfterFilterCondition> areaContains(
+      String value,
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'area',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<BusPlot, BusPlot, QAfterFilterCondition> areaMatches(
+      String pattern,
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'area',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<BusPlot, BusPlot, QAfterFilterCondition> areaIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'area',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<BusPlot, BusPlot, QAfterFilterCondition> areaIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'area',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<BusPlot, BusPlot, QAfterFilterCondition> idEqualTo(int value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'id',
         value: value,
       ));
     });
   }
 
-  QueryBuilder<Plot, Plot, QAfterFilterCondition> happinessGreaterThan(
+  QueryBuilder<BusPlot, BusPlot, QAfterFilterCondition> idGreaterThan(
     int value, {
     bool include = false,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.greaterThan(
         include: include,
-        property: r'happiness',
+        property: r'id',
         value: value,
       ));
     });
   }
 
-  QueryBuilder<Plot, Plot, QAfterFilterCondition> happinessLessThan(
+  QueryBuilder<BusPlot, BusPlot, QAfterFilterCondition> idLessThan(
     int value, {
     bool include = false,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.lessThan(
         include: include,
-        property: r'happiness',
+        property: r'id',
         value: value,
       ));
     });
   }
 
-  QueryBuilder<Plot, Plot, QAfterFilterCondition> happinessBetween(
+  QueryBuilder<BusPlot, BusPlot, QAfterFilterCondition> idBetween(
     int lower,
     int upper, {
     bool includeLower = true,
@@ -2053,7 +3496,7 @@ extension PlotQueryFilter on QueryBuilder<Plot, Plot, QFilterCondition> {
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.between(
-        property: r'happiness',
+        property: r'id',
         lower: lower,
         includeLower: includeLower,
         upper: upper,
@@ -2062,95 +3505,44 @@ extension PlotQueryFilter on QueryBuilder<Plot, Plot, QFilterCondition> {
     });
   }
 
-  QueryBuilder<Plot, Plot, QAfterFilterCondition> levelEqualTo(int value) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'level',
-        value: value,
-      ));
-    });
-  }
-
-  QueryBuilder<Plot, Plot, QAfterFilterCondition> levelGreaterThan(
-    int value, {
-    bool include = false,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'level',
-        value: value,
-      ));
-    });
-  }
-
-  QueryBuilder<Plot, Plot, QAfterFilterCondition> levelLessThan(
-    int value, {
-    bool include = false,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'level',
-        value: value,
-      ));
-    });
-  }
-
-  QueryBuilder<Plot, Plot, QAfterFilterCondition> levelBetween(
-    int lower,
-    int upper, {
-    bool includeLower = true,
-    bool includeUpper = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'level',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-      ));
-    });
-  }
-
-  QueryBuilder<Plot, Plot, QAfterFilterCondition> maxResidentsEqualTo(
+  QueryBuilder<BusPlot, BusPlot, QAfterFilterCondition> propertyValueEqualTo(
       int value) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'maxResidents',
+        property: r'propertyValue',
         value: value,
       ));
     });
   }
 
-  QueryBuilder<Plot, Plot, QAfterFilterCondition> maxResidentsGreaterThan(
+  QueryBuilder<BusPlot, BusPlot, QAfterFilterCondition>
+      propertyValueGreaterThan(
     int value, {
     bool include = false,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.greaterThan(
         include: include,
-        property: r'maxResidents',
+        property: r'propertyValue',
         value: value,
       ));
     });
   }
 
-  QueryBuilder<Plot, Plot, QAfterFilterCondition> maxResidentsLessThan(
+  QueryBuilder<BusPlot, BusPlot, QAfterFilterCondition> propertyValueLessThan(
     int value, {
     bool include = false,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.lessThan(
         include: include,
-        property: r'maxResidents',
+        property: r'propertyValue',
         value: value,
       ));
     });
   }
 
-  QueryBuilder<Plot, Plot, QAfterFilterCondition> maxResidentsBetween(
+  QueryBuilder<BusPlot, BusPlot, QAfterFilterCondition> propertyValueBetween(
     int lower,
     int upper, {
     bool includeLower = true,
@@ -2158,7 +3550,7 @@ extension PlotQueryFilter on QueryBuilder<Plot, Plot, QFilterCondition> {
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.between(
-        property: r'maxResidents',
+        property: r'propertyValue',
         lower: lower,
         includeLower: includeLower,
         upper: upper,
@@ -2167,59 +3559,303 @@ extension PlotQueryFilter on QueryBuilder<Plot, Plot, QFilterCondition> {
     });
   }
 
-  QueryBuilder<Plot, Plot, QAfterFilterCondition> plotUpgradesIsNull() {
+  QueryBuilder<BusPlot, BusPlot, QAfterFilterCondition> subareaEqualTo(
+    String value, {
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(const FilterCondition.isNull(
-        property: r'plotUpgrades',
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'subarea',
+        value: value,
+        caseSensitive: caseSensitive,
       ));
     });
   }
 
-  QueryBuilder<Plot, Plot, QAfterFilterCondition> plotUpgradesIsNotNull() {
+  QueryBuilder<BusPlot, BusPlot, QAfterFilterCondition> subareaGreaterThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(const FilterCondition.isNotNull(
-        property: r'plotUpgrades',
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'subarea',
+        value: value,
+        caseSensitive: caseSensitive,
       ));
     });
   }
 
-  QueryBuilder<Plot, Plot, QAfterFilterCondition> propertyValueEqualTo(
+  QueryBuilder<BusPlot, BusPlot, QAfterFilterCondition> subareaLessThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'subarea',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<BusPlot, BusPlot, QAfterFilterCondition> subareaBetween(
+    String lower,
+    String upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'subarea',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<BusPlot, BusPlot, QAfterFilterCondition> subareaStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'subarea',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<BusPlot, BusPlot, QAfterFilterCondition> subareaEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'subarea',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<BusPlot, BusPlot, QAfterFilterCondition> subareaContains(
+      String value,
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'subarea',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<BusPlot, BusPlot, QAfterFilterCondition> subareaMatches(
+      String pattern,
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'subarea',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<BusPlot, BusPlot, QAfterFilterCondition> subareaIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'subarea',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<BusPlot, BusPlot, QAfterFilterCondition> subareaIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'subarea',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<BusPlot, BusPlot, QAfterFilterCondition> subtypeEqualTo(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'subtype',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<BusPlot, BusPlot, QAfterFilterCondition> subtypeGreaterThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'subtype',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<BusPlot, BusPlot, QAfterFilterCondition> subtypeLessThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'subtype',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<BusPlot, BusPlot, QAfterFilterCondition> subtypeBetween(
+    String lower,
+    String upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'subtype',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<BusPlot, BusPlot, QAfterFilterCondition> subtypeStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'subtype',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<BusPlot, BusPlot, QAfterFilterCondition> subtypeEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'subtype',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<BusPlot, BusPlot, QAfterFilterCondition> subtypeContains(
+      String value,
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'subtype',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<BusPlot, BusPlot, QAfterFilterCondition> subtypeMatches(
+      String pattern,
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'subtype',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<BusPlot, BusPlot, QAfterFilterCondition> subtypeIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'subtype',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<BusPlot, BusPlot, QAfterFilterCondition> subtypeIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'subtype',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<BusPlot, BusPlot, QAfterFilterCondition> totalRevenueEqualTo(
       int value) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'propertyValue',
+        property: r'totalRevenue',
         value: value,
       ));
     });
   }
 
-  QueryBuilder<Plot, Plot, QAfterFilterCondition> propertyValueGreaterThan(
+  QueryBuilder<BusPlot, BusPlot, QAfterFilterCondition> totalRevenueGreaterThan(
     int value, {
     bool include = false,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.greaterThan(
         include: include,
-        property: r'propertyValue',
+        property: r'totalRevenue',
         value: value,
       ));
     });
   }
 
-  QueryBuilder<Plot, Plot, QAfterFilterCondition> propertyValueLessThan(
+  QueryBuilder<BusPlot, BusPlot, QAfterFilterCondition> totalRevenueLessThan(
     int value, {
     bool include = false,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.lessThan(
         include: include,
-        property: r'propertyValue',
+        property: r'totalRevenue',
         value: value,
       ));
     });
   }
 
-  QueryBuilder<Plot, Plot, QAfterFilterCondition> propertyValueBetween(
+  QueryBuilder<BusPlot, BusPlot, QAfterFilterCondition> totalRevenueBetween(
     int lower,
     int upper, {
     bool includeLower = true,
@@ -2227,111 +3863,7 @@ extension PlotQueryFilter on QueryBuilder<Plot, Plot, QFilterCondition> {
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.between(
-        property: r'propertyValue',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-      ));
-    });
-  }
-
-  QueryBuilder<Plot, Plot, QAfterFilterCondition> rentEqualTo(int value) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'rent',
-        value: value,
-      ));
-    });
-  }
-
-  QueryBuilder<Plot, Plot, QAfterFilterCondition> rentGreaterThan(
-    int value, {
-    bool include = false,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'rent',
-        value: value,
-      ));
-    });
-  }
-
-  QueryBuilder<Plot, Plot, QAfterFilterCondition> rentLessThan(
-    int value, {
-    bool include = false,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'rent',
-        value: value,
-      ));
-    });
-  }
-
-  QueryBuilder<Plot, Plot, QAfterFilterCondition> rentBetween(
-    int lower,
-    int upper, {
-    bool includeLower = true,
-    bool includeUpper = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'rent',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-      ));
-    });
-  }
-
-  QueryBuilder<Plot, Plot, QAfterFilterCondition> residentsEqualTo(int value) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'residents',
-        value: value,
-      ));
-    });
-  }
-
-  QueryBuilder<Plot, Plot, QAfterFilterCondition> residentsGreaterThan(
-    int value, {
-    bool include = false,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'residents',
-        value: value,
-      ));
-    });
-  }
-
-  QueryBuilder<Plot, Plot, QAfterFilterCondition> residentsLessThan(
-    int value, {
-    bool include = false,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'residents',
-        value: value,
-      ));
-    });
-  }
-
-  QueryBuilder<Plot, Plot, QAfterFilterCondition> residentsBetween(
-    int lower,
-    int upper, {
-    bool includeLower = true,
-    bool includeUpper = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'residents',
+        property: r'totalRevenue',
         lower: lower,
         includeLower: includeLower,
         upper: upper,
@@ -2341,14 +3873,8 @@ extension PlotQueryFilter on QueryBuilder<Plot, Plot, QFilterCondition> {
   }
 }
 
-extension PlotQueryObject on QueryBuilder<Plot, Plot, QFilterCondition> {
-  QueryBuilder<Plot, Plot, QAfterFilterCondition> plotUpgrades(
-      FilterQuery<Upgrades> q) {
-    return QueryBuilder.apply(this, (query) {
-      return query.object(q, r'plotUpgrades');
-    });
-  }
-}
+extension BusPlotQueryObject
+    on QueryBuilder<BusPlot, BusPlot, QFilterCondition> {}
 
 // coverage:ignore-file
 // ignore_for_file: duplicate_ignore, non_constant_identifier_names, constant_identifier_names, invalid_use_of_protected_member, unnecessary_cast, prefer_const_constructors, lines_longer_than_80_chars, require_trailing_commas, inference_failure_on_function_invocation, unnecessary_parenthesis, unnecessary_raw_strings, unnecessary_null_checks, join_return_with_assignment, prefer_final_locals, avoid_js_rounded_ints, avoid_positional_boolean_parameters, always_specify_types

@@ -3,8 +3,10 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:real/button.dart';
 import 'package:real/provider/provider.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
+import 'package:real/screens/buyMenu.dart';
 
 import 'gameOver.dart';
 import 'staffMenu.dart';
@@ -62,48 +64,49 @@ class _GameScreenState extends ConsumerState<GameScreen>
         : 0;
 
     void checkForSituation() {
-      final response = saveProvider.checkForSituation();
-      if (response != null) {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => SituationScreen(
-              situation: situationsList[response],
-              index: response,
-            ),
-          ),
-        );
-      }
+      // final response = saveProvider.checkForSituation();
+      // if (response != null) {
+      //   Navigator.push(
+      //     context,
+      //     MaterialPageRoute(
+      //       builder: (context) => SituationScreen(
+      //         situation: situationsList[response],
+      //         index: response,
+      //       ),
+      //     ),
+      //   );
+      // }
     }
 
     Widget displayProperties() {
       if (propertyList != null &&
-          propertyList.plots != null &&
-          propertyList.plots!.isNotEmpty) {
-        if (isTappedList.length != propertyList.plots!.length) {
-          isTappedList = List<bool>.filled(propertyList.plots!.length, false);
+          propertyList.resPlots != null &&
+          propertyList.resPlots!.isNotEmpty) {
+        if (isTappedList.length != propertyList.resPlots!.length) {
+          isTappedList =
+              List<bool>.filled(propertyList.resPlots!.length, false);
         }
 
         return Flexible(
           child: ListView.builder(
             shrinkWrap: true,
-            itemCount: propertyList.plots!.length,
+            itemCount: propertyList.resPlots!.length,
             itemBuilder: (context, index) {
               final costToSearchManagerModifier =
                   save!.staff!.staffValues[0] == true ? 2 : 1;
               final costToSearch = '\$' +
-                  '${propertyList.plots![index].rent * (gameSettings['baseSearchForResidentCost'] / costToSearchManagerModifier)}';
+                  '${propertyList.resPlots![index].rent * (gameSettings['baseSearchForResidentCost'] / costToSearchManagerModifier)}';
 
               final plotIndex = index;
               Map<String, bool> upgradesMap = {};
               for (int i = 0;
                   i <
                       propertyList!
-                          .plots![plotIndex].plotUpgrades!.amenOptions.length;
+                          .resPlots![plotIndex].amenities!.amenOptions.length;
                   i++) {
                 upgradesMap[propertyList
-                        .plots![plotIndex].plotUpgrades!.amenOptions[i]] =
-                    propertyList.plots![plotIndex].plotUpgrades!.amenValues[i];
+                        .resPlots![plotIndex].amenities!.amenOptions[i]] =
+                    propertyList.resPlots![plotIndex].amenities!.amenValues[i];
               }
 
               var upgradeListString = "";
@@ -119,354 +122,124 @@ class _GameScreenState extends ConsumerState<GameScreen>
                 }
               });
 
-              return Padding(
-                padding: const EdgeInsets.only(
-                  top: 6.0,
-                  bottom: 4.0,
-                  left: 8.0,
-                  right: 8.0,
-                ),
-                child: GestureDetector(
-                  child: AnimatedContainer(
-                    duration:
-                        const Duration(milliseconds: tapAnimationDurationMS),
-                    decoration: BoxDecoration(
-                        border: Border.all(
-                          color: const Color.fromARGB(75, 0, 0, 0),
-                          strokeAlign: BorderSide.strokeAlignInside,
-                        ),
-                        borderRadius: BorderRadius.circular(10),
-                        color: isTappedList[index]
-                            ? propertyList.plots![index].happiness < 40
-                                ? sadColor.withOpacity(0.4)
-                                : propertyList.plots![index].happiness > 99
-                                    ? happyColor.withOpacity(0.8)
-                                    : happyColor.withOpacity(0.4)
-                            : propertyList.plots![index].happiness < 40
-                                ? sadColor
-                                : happyColor),
-                    child: Slidable(
-                      closeOnScroll: true,
-                      endActionPane: ActionPane(
-                        extentRatio: 0.7,
-                        motion: const ScrollMotion(),
-                        children: [
-                          SlidableAction(
-                            onPressed: (BuildContext context) {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => UpgradeMenu(
-                                    plotIndex: index,
-                                  ),
+              var amenitiesString = '';
+              final amenitiesList = propertyList
+                  .resPlots![plotIndex].amenities!.amenOptions
+                  .asMap()
+                  .entries
+                  .map((e) => e.value)
+                  .toList();
+
+              amenitiesList.forEach((amenity) {
+                final info = upgradeInfo[amenity];
+                if (info != null) {
+                  final icon = info['icon'];
+                  upgradeListString += icon as String;
+                }
+              });
+
+              return GestureDetector(
+                child: AnimatedContainer(
+                  duration:
+                      const Duration(milliseconds: tapAnimationDurationMS),
+                  child: Slidable(
+                    closeOnScroll: true,
+                    endActionPane: ActionPane(
+                      extentRatio: 0.7,
+                      motion: const ScrollMotion(),
+                      children: [
+                        SlidableAction(
+                          onPressed: (BuildContext context) {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => UpgradeMenu(
+                                  plotIndex: index,
                                 ),
-                              );
-                            },
-                            backgroundColor: amenitiesColor,
-                            foregroundColor: Colors.white,
-                            icon: Icons.home_repair_service,
-                            label: 'Amenities',
-                          ),
-                          SlidableAction(
-                            onPressed: (BuildContext context) async {
-                              final response =
-                                  await saveProvider.actionUpgradePlotLevel(
-                                      propertyIndex: plotIndex);
-                              if (response == 0) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    content: Text('Property upgraded.'),
-                                  ),
-                                );
-                              } else {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: Text(
-                                        'You need \$${response.toString()} to upgrade this property. '),
-                                  ),
-                                );
-                              }
-                            },
-                            backgroundColor: Colors.purple,
-                            foregroundColor: Colors.white,
-                            icon: Icons.arrow_upward_rounded,
-                            label: 'Upgrade',
-                          ),
-                          SlidableAction(
-                            borderRadius: BorderRadius.only(
-                              topRight: Radius.circular(10),
-                              bottomRight: Radius.circular(10),
-                            ),
-                            onPressed: (BuildContext context) {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => SellMenu(
-                                    plotIndex: index,
-                                  ),
-                                ),
-                              );
-                            },
-                            backgroundColor: Colors.blueAccent,
-                            foregroundColor: Colors.white,
-                            icon: Icons.wallet,
-                            label: 'Sell',
-                          ),
-                        ],
-                      ),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                            vertical: 16, horizontal: 16),
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          children: [
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Column(
-                                    mainAxisAlignment: MainAxisAlignment.start,
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.spaceBetween,
-                                        mainAxisSize: MainAxisSize.max,
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.center,
-                                        children: [
-                                          Row(
-                                            mainAxisSize: MainAxisSize.max,
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.end,
-                                            children: [
-                                              Text(
-                                                '\$${propertyList.plots![index].rent.toString()}',
-                                                style: const TextStyle(
-                                                  fontSize: 28,
-                                                ),
-                                              ),
-                                              const SizedBox(
-                                                width: 8,
-                                                height: 0,
-                                              ),
-                                              const Padding(
-                                                padding: EdgeInsets.only(
-                                                    bottom: 4.0),
-                                                child: Text(
-                                                  '/ month',
-                                                  style: TextStyle(
-                                                    fontSize: 12,
-                                                    color: Colors.grey,
-                                                  ),
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                          Container(
-                                            padding: const EdgeInsets.only(
-                                              left: 8.0,
-                                              right: 8.0,
-                                              top: 2.0,
-                                              bottom: 2.0,
-                                            ),
-                                            decoration: BoxDecoration(
-                                              color:
-                                                  Colors.black.withOpacity(0.5),
-                                              borderRadius:
-                                                  BorderRadius.circular(10),
-                                            ),
-                                            child: Column(
-                                              mainAxisAlignment:
-                                                  MainAxisAlignment.center,
-                                              children: [
-                                                Text(
-                                                  'Level ${propertyList.plots![index].level}',
-                                                  style: const TextStyle(
-                                                    fontSize: 14,
-                                                    color: Colors.white,
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ],
-                                  ),
-                                  const SizedBox(height: 8),
-                                  Row(
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          Row(
-                                            children: [
-                                              // Residents
-                                              Text(
-                                                '👭 ${propertyList.plots![index].residents}/${propertyList.plots![index].maxResidents}',
-                                                style: TextStyle(
-                                                  fontSize: 16,
-                                                  color: propertyList
-                                                              .plots![index]
-                                                              .residents <
-                                                          propertyList
-                                                              .plots![index]
-                                                              .maxResidents
-                                                      ? Colors.yellow
-                                                      : Colors.white,
-                                                ),
-                                              ),
-                                              const SizedBox(width: 12),
-                                              // Happiness
-                                              Text(
-                                                '😊 ${propertyList.plots![index].happiness}%',
-                                                style: const TextStyle(
-                                                  fontSize: 16,
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                          const SizedBox(height: 8),
-                                          Row(
-                                            mainAxisAlignment:
-                                                MainAxisAlignment.spaceBetween,
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.start,
-                                            children: [
-                                              Text(
-                                                'Costs $costToSearch to headhunt',
-                                                style: const TextStyle(
-                                                  fontSize: 14,
-                                                  color: Color.fromARGB(
-                                                      255, 190, 189, 189),
-                                                  // italic
-                                                  fontStyle: FontStyle.italic,
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ],
-                                      ),
-                                      Row(
-                                        children: [
-                                          InkWell(
-                                            onTap: () {
-                                              saveProvider.actionSetRent(
-                                                propertyList
-                                                        .plots![index].rent -
-                                                    50,
-                                                index,
-                                              );
-                                              checkForSituation();
-                                            },
-                                            child: Container(
-                                              decoration: BoxDecoration(
-                                                color: const Color.fromARGB(
-                                                    255, 255, 136, 0),
-                                                borderRadius:
-                                                    BorderRadius.circular(5),
-                                              ),
-                                              padding:
-                                                  const EdgeInsets.all(5.0),
-                                              child: const Icon(
-                                                Icons.arrow_downward_outlined,
-                                                size: 24,
-                                              ),
-                                            ),
-                                          ),
-                                          const SizedBox(width: 32),
-                                          InkWell(
-                                            onTap: () {
-                                              saveProvider.actionSetRent(
-                                                propertyList
-                                                        .plots![index].rent +
-                                                    50,
-                                                index,
-                                              );
-                                              checkForSituation();
-                                            },
-                                            child: Container(
-                                              decoration: BoxDecoration(
-                                                color: const Color.fromARGB(
-                                                    255, 0, 94, 255),
-                                                borderRadius:
-                                                    BorderRadius.circular(5),
-                                              ),
-                                              padding:
-                                                  const EdgeInsets.all(5.0),
-                                              child: const Icon(
-                                                Icons.arrow_upward_outlined,
-                                                size: 24,
-                                              ),
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ],
-                                  ),
-                                  upgradeListString == ""
-                                      ? const SizedBox.shrink()
-                                      : Column(
-                                          children: [
-                                            const SizedBox(height: 2),
-                                            Text(
-                                              upgradeListString,
-                                            ),
-                                          ],
-                                        ),
-                                ],
                               ),
+                            );
+                          },
+                          backgroundColor: amenitiesColor,
+                          foregroundColor: Colors.white,
+                          icon: Icons.home_repair_service,
+                          label: 'Amenities',
+                        ),
+                        SlidableAction(
+                          borderRadius: BorderRadius.only(
+                            topRight: Radius.circular(10),
+                            bottomRight: Radius.circular(10),
+                          ),
+                          onPressed: (BuildContext context) {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => SellMenu(
+                                  plotIndex: index,
+                                ),
+                              ),
+                            );
+                          },
+                          backgroundColor: Colors.blueAccent,
+                          foregroundColor: Colors.white,
+                          icon: Icons.wallet,
+                          label: 'Sell',
+                        ),
+                      ],
+                    ),
+                    child: CustomButton(
+                      title: '\$${propertyList.resPlots![index].rent}',
+                      subtitleRow: [],
+                      bodyRows: [
+                        'Residents: ${propertyList.resPlots![index].residents} / ${propertyList.resPlots![index].maxResidents}',
+                        '😊 ${propertyList.resPlots![index].happiness}%',
+                      ],
+                      backgroundColor: propertyList.resPlots![index].happiness > 50
+                          ? happyColor
+                          : sadColor,
+                      rightSide: [
+                        Column(
+                          children: [
+                            InkWell(
+                              child: const Text(
+                                '🔼',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 32,
+                                ),
+                              ),
+                              onTap: () {
+                                saveProvider.resSetRent(
+                                  propertyList.resPlots![index].id,
+                                  100,
+                                );
+                              },
+                            ),
+                            InkWell(
+                              child: const Text(
+                                '🔽',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 32,
+                                ),
+                              ),
+                              onTap: () {
+                                saveProvider.resSetRent(
+                                  propertyList.resPlots![index].id,
+                                  -100,
+                                );
+                              },
                             ),
                           ],
                         ),
-                      ),
+                      ],
+                      footer: amenitiesString,
+                      onTap: () {
+                        saveProvider.resSearchForResidents(
+                            propertyList.resPlots![index].id);
+                      },
+                      fontColor: Colors.white,
                     ),
                   ),
-                  onTap: () async {
-                    setState(() {
-                      isTappedList[index] = true;
-                      Timer(
-                          const Duration(milliseconds: tapAnimationDurationMS),
-                          () {
-                        setState(() {
-                          isTappedList[index] = false;
-                        });
-                      });
-                      checkForSituation();
-                    });
-                    final increase =
-                        await saveProvider.actionSearchForResidents(index);
-
-                    if (increase < 0) {
-                      // not enough money
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          backgroundColor: Color.fromARGB(255, 167, 46, 30),
-                          behavior: SnackBarBehavior.floating,
-                          width: 200,
-                          shape: const RoundedRectangleBorder(
-                            borderRadius: BorderRadius.all(
-                              Radius.circular(5),
-                            ),
-                          ),
-                          duration: const Duration(milliseconds: 600),
-                          content: Text(
-                            'You require ${-1 * increase} more money to search for residents.',
-                            textAlign: TextAlign.center,
-                            style: const TextStyle(
-                              color: Colors.white,
-                            ),
-                          ),
-                        ),
-                      );
-                    }
-                    HapticFeedback.lightImpact();
-                  },
                 ),
               );
             },
@@ -493,11 +266,26 @@ class _GameScreenState extends ConsumerState<GameScreen>
     return Scaffold(
       persistentFooterAlignment: AlignmentDirectional.center,
       persistentFooterButtons: [
+        // ElevatedButton(
+        //   onPressed: saveProvider.actionPurchaseProperty,
+        //   child: Text('Buy property (${save!.rulesNewPropCost})'),
+        //   style: ElevatedButton.styleFrom(
+        //     primary: const Color.fromARGB(255, 196, 118, 1),
+        //   ),
+        // ),
+        // button that navigates to buyMenu
         ElevatedButton(
-          onPressed: saveProvider.actionPurchaseProperty,
-          child: Text('Buy property (${save!.rulesNewPropCost})'),
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const BuyMenu(),
+              ),
+            );
+          },
+          child: const Text('Buy Property'),
           style: ElevatedButton.styleFrom(
-            primary: const Color.fromARGB(255, 196, 118, 1),
+            primary: Colors.purple,
           ),
         ),
         ElevatedButton(
@@ -602,7 +390,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
                   //       )
                   //     : const SizedBox.shrink(),
                   headerWidget(
-                    money: save!.money,
+                    money: save.money,
                     day: save.infoDay,
                     year: save.infoYear,
                     background: headerBackgroundColorARGB,

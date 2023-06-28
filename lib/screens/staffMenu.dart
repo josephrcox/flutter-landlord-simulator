@@ -39,7 +39,7 @@ class _StaffMenuState extends ConsumerState<StaffMenu> {
       backgroundColor: backgroundColorARGB,
       body: Column(
         children: [
-          _header(save.money, save.plotList!.plots!.length, context),
+          _header(save.money, save.plotList!.resPlots!.length, context),
           Expanded(
             child: ListView.builder(
               // scrollable list of upgrades

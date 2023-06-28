@@ -25,7 +25,7 @@ class _SellMenuState extends ConsumerState<SellMenu> {
 
     // ...
 
-    final value = save?.plotList?.plots![plotIndex].propertyValue;
+    final value = save?.plotList?.resPlots![plotIndex].propertyValue;
     Color backgroundColorARGB = const Color.fromARGB(255, 36, 59, 80);
     Color headerBackgroundColorARGB = const Color.fromARGB(255, 37, 68, 97);
 
@@ -60,7 +60,7 @@ class _SellMenuState extends ConsumerState<SellMenu> {
               const SizedBox(height: 32),
               ElevatedButton(
                 onPressed: () async {
-                  saveProvider.actionSellProperty(plotIndex);
+                  // saveProvider.actionSellProperty(plotIndex);
                   Navigator.pop(context);
                 },
                 child: const Text(

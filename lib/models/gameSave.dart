@@ -1,7 +1,11 @@
+import 'dart:math';
+
 import 'package:isar/isar.dart';
 import '../configSettings.dart';
 
 part 'gameSave.g.dart';
+
+final random = Random();
 
 @collection
 class GameSave {
@@ -36,23 +40,46 @@ class GameSave {
 
 @embedded
 class PlotList {
-  List<Plot>? plots;
+  List<ResPlot>? resPlots;
+  List<BusPlot>? busPlots;
 }
 
 @embedded
-class Plot {
+class ResPlot {
+  int id = random.nextInt(1000000000);
   int rent = gameSettings['defaultRent'];
+  String? type; // residential
+  String? subType; // singleFamilyHome
+  String? area = 'A';
+  String? subArea = '1';
   int residents = 0;
   int maxResidents = gameSettings['defaultMaxResidents'];
   int happiness = gameSettings['defaultHappiness'];
-  Upgrades? plotUpgrades;
+  Upgrades? amenities;
   int propertyValue;
-  int level = 1;
+  int purchaseDate;
 
-  Plot({
+  ResPlot({
     this.residents = 0,
-    this.plotUpgrades,
+    this.amenities,
     this.propertyValue = 50000,
+    this.purchaseDate = -1,
+  });
+}
+
+@embedded
+class BusPlot {
+  int id = random.nextInt(1000000000);
+  String area = 'A';
+  String subarea = '1';
+  String subtype;
+  int propertyValue;
+  int totalRevenue;
+
+  BusPlot({
+    this.subtype = '',
+    this.propertyValue = 50000,
+    this.totalRevenue = 0,
   });
 }
 

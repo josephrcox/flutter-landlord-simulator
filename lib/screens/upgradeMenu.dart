@@ -22,18 +22,18 @@ class _UpgradeMenuState extends ConsumerState<UpgradeMenu> {
     var save = saveProvider.save;
     final propertyList = save?.plotList;
     final plotIndex = widget.plotIndex;
-    final plotLevel = propertyList!.plots![plotIndex].level;
+    final plotLevel = 1;
 
     Map<String, bool> upgradesMap = {};
 
     for (int i = 0;
         i <
             propertyList!
-                .plots![widget.plotIndex].plotUpgrades!.amenOptions.length;
+                .resPlots![widget.plotIndex].amenities!.amenOptions.length;
         i++) {
       upgradesMap[
-              propertyList.plots![plotIndex].plotUpgrades!.amenOptions[i]] =
-          propertyList.plots![plotIndex].plotUpgrades!.amenValues[i];
+              propertyList.resPlots![plotIndex].amenities!.amenOptions[i]] =
+          propertyList.resPlots![plotIndex].amenities!.amenValues[i];
     }
 
     Color backgroundColorARGB = const Color.fromARGB(255, 36, 59, 80);
@@ -60,7 +60,7 @@ class _UpgradeMenuState extends ConsumerState<UpgradeMenu> {
 
                 final availableForUpgrade =
                     (upgradeInfo[propertyName]!['levelRequired'] as int) <=
-                            plotLevel
+                            1
                         ? true
                         : false;
 
@@ -68,23 +68,23 @@ class _UpgradeMenuState extends ConsumerState<UpgradeMenu> {
                   padding: const EdgeInsets.symmetric(horizontal: 8.0),
                   child: InkWell(
                     onTap: () async {
-                      if (availableForUpgrade) {
-                        final success = await saveProvider.actionToggleAmen(
-                          propertyIndex: plotIndex,
-                          upgradeIndex: index,
-                          upgradeName: upgradesMap.keys.elementAt(index),
-                          toggleTo: !propertyValue,
-                        );
-                        if (success) {
-                          setState(
-                            () {
-                              upgradesMap[propertyName] =
-                                  !propertyValue; // Toggle the boolean value
-                              save = saveProvider.save;
-                            },
-                          );
-                        }
-                      }
+                      // if (availableForUpgrade) {
+                      //   final success = await saveProvider.actionToggleAmen(
+                      //     propertyIndex: plotIndex,
+                      //     upgradeIndex: index,
+                      //     upgradeName: upgradesMap.keys.elementAt(index),
+                      //     toggleTo: !propertyValue,
+                      //   );
+                      //   if (success) {
+                      //     setState(
+                      //       () {
+                      //         upgradesMap[propertyName] =
+                      //             !propertyValue; // Toggle the boolean value
+                      //         save = saveProvider.save;
+                      //       },
+                      //     );
+                      //   }
+                      // }
                     },
                     child: Column(
                       children: [
@@ -306,13 +306,13 @@ Widget _header(PlotList? propertyList, int plotIndex, int money, context) {
           SizedBox(
             width: MediaQuery.of(context).size.width * 0.25,
             child: Text(
-              '\$${propertyList?.plots![plotIndex].rent.toString()} rent',
+              '\$${propertyList?.resPlots![plotIndex].rent.toString()} rent',
               style: const TextStyle(
                 fontSize: size,
               ),
             ),
           ),
-          Text('${propertyList?.plots![plotIndex].happiness}% 😊',
+          Text('${propertyList?.resPlots![plotIndex].happiness}% 😊',
               style: const TextStyle(fontSize: size)),
         ],
       ),
