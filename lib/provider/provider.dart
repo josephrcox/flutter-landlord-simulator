@@ -136,26 +136,76 @@ class SaveProvider with ChangeNotifier {
   void resSetRent(int id, int change) async {
     pauseLoop = true;
     final random = Random();
-    final plot = _save!.plotList!.resPlots!
-        .firstWhere((element) => element.id == id, orElse: () => ResPlot());
+
+    final index = _save!.plotList!.resPlots!.indexWhere((element) {
+      return element.id == id;
+    });
+    final plot = _save!.plotList!.resPlots![index];
+
     plot.rent += change;
     int happinessMultiplierBasedOnEconomicHealth =
         (_save!.economyHealth / 100).ceil();
-    print((9 / happinessMultiplierBasedOnEconomicHealth).ceil());
     if (change > 0) {
-      plot.happiness -= random.nextInt((9 / happinessMultiplierBasedOnEconomicHealth).ceil());
+      plot.happiness -= random
+          .nextInt((15 / happinessMultiplierBasedOnEconomicHealth).ceil());
+
+      if (plot.rent > (save!.economyHealth * 10) && plot.residents > 0) {
+        // If the economy is pretty bad for the rent, there is a 50% chance that a resident will leave
+        if (random.nextInt(10) >= 5) {
+          plot.residents -= 1;
+        }
+      }
     } else {
-      plot.happiness += random.nextInt((9 / happinessMultiplierBasedOnEconomicHealth).ceil());
+      plot.happiness += random
+          .nextInt((15 / happinessMultiplierBasedOnEconomicHealth).ceil());
     }
+
     await isar.writeTxn(() async {
-      final oldPlots = _save!.plotList!.resPlots!.toList();
-      oldPlots.removeWhere((element) => element.id == id);
-      oldPlots.add(plot);
+      _save!.plotList!.resPlots![index] = plot;
       await isar.gameSaves.put(_save!);
     });
 
     pauseLoop = false;
     notifyListeners();
+  }
+
+  int getPropertyValue(int id) {
+    final index = _save!.plotList!.resPlots!.indexWhere((element) {
+      return element.id == id;
+    });
+    final plot = _save!.plotList!.resPlots![index];
+
+    print(plot.purchaseDate);
+    var propertyValue = plot.propertyValue *
+        ((save!.infoDay - plot.purchaseDate) / 150) *
+        (plot.happiness / 85) *
+        ((save!.economyHealth / 150) / 8);
+
+    return propertyValue.toInt();
+  }
+
+  void sellProperty(bool resPlot, int plotId) async {
+    final index = resPlot
+        ? _save!.plotList!.resPlots!.indexWhere((element) {
+            return element.id == plotId;
+          })
+        : _save!.plotList!.busPlots!.indexWhere((element) {
+            return element.id == plotId;
+          });
+
+    final plot = resPlot
+        ? _save!.plotList!.resPlots![index]
+        : _save!.plotList!.busPlots![index];
+
+    final propertyValue = resPlot
+        ? getPropertyValue(_save!.plotList!.resPlots![index].id)
+        : getPropertyValue(_save!.plotList!.busPlots![index].id);
+
+    await isar.writeTxn(() async {
+      _save!.money += propertyValue;
+      _save!.plotList!.resPlots!.removeAt(index);
+      await isar.gameSaves.put(_save!);
+    });
   }
 
   Future<bool> actionToggleStaff(
@@ -213,6 +263,7 @@ class SaveProvider with ChangeNotifier {
             newPlot.amenities = Upgrades();
             newPlot.purchaseDate = _save!.infoDay;
             newPlot.maxResidents = type['maxResidents'] as int;
+            newPlot.type = type['id'] as String;
             await isar.writeTxn(() async {
               _save!.money -= type['cost_upfront'] as int;
               final newPlotList = _save!.plotList!.resPlots!.toList();
@@ -221,6 +272,7 @@ class SaveProvider with ChangeNotifier {
               await isar.gameSaves.put(_save!);
             });
             pauseLoop = false;
+            notifyListeners();
             return 'Success';
           } else {
             final newPlot = BusPlot();
@@ -232,31 +284,79 @@ class SaveProvider with ChangeNotifier {
               await isar.gameSaves.put(_save!);
             });
             pauseLoop = false;
+            notifyListeners();
             return 'Success';
           }
         }
       }
     }
-    notifyListeners();
   }
 
   void resSearchForResidents(int id) async {
     pauseLoop = true;
-    final plot = _save!.plotList!.resPlots!
-        .firstWhere((element) => element.id == id, orElse: () => ResPlot());
-    if (plot.residents < plot.maxResidents) {
-      plot.residents += 1;
+    final index = _save!.plotList!.resPlots!.indexWhere((element) {
+      return element.id == id;
+    });
+    final plot = _save!.plotList!.resPlots![index];
+
+    if (plot.residents >= plot.maxResidents) {
+      pauseLoop = false;
+      return;
     }
 
-    await isar.writeTxn(() async {
-      final oldPlots = _save!.plotList!.resPlots!.toList();
-      oldPlots.removeWhere((element) => element.id == id);
-      oldPlots.add(plot);
-      _save!.plotList!.resPlots = oldPlots;
-      await isar.gameSaves.put(_save!);
-    });
+    // The liklihood of a resident moving in is based on the happiness of the plot and the economyHealth
+    final random = Random();
+    final happinessMultiplierBasedOnEconomicHealth =
+        (_save!.economyHealth / 100).ceil();
+    final happinessMultiplierBasedOnPlotHappiness =
+        (plot.happiness / 100).ceil();
+    final happinessMultiplier = happinessMultiplierBasedOnEconomicHealth +
+        happinessMultiplierBasedOnPlotHappiness;
+    final liklihoodOfResidentMovingIn =
+        random.nextInt(100 * happinessMultiplier);
+    print(liklihoodOfResidentMovingIn);
+    if (liklihoodOfResidentMovingIn > 100) {
+      plot.residents++;
+      plot.happiness += random.nextInt(10);
+      await isar.writeTxn(() async {
+        _save!.plotList!.resPlots![index] = plot;
+        await isar.gameSaves.put(_save!);
+      });
+    }
     pauseLoop = false;
     notifyListeners();
+  }
+
+  bool resToggleAmenity(int id, int amenitityIndex) {
+    pauseLoop = true;
+
+    final index = _save!.plotList!.resPlots!.indexWhere((element) {
+      return element.id == id;
+    });
+    final plot = _save!.plotList!.resPlots![index];
+
+    final amenityConfig =
+        upgradeInfo[plot.amenities!.amenOptions[amenitityIndex]];
+    print(amenityConfig);
+
+    if (save!.money < (amenityConfig!['cost'] as int)) {
+      pauseLoop = false;
+      return false;
+    }
+
+    plot.amenities!.amenValues[amenitityIndex] =
+        !plot.amenities!.amenValues[amenitityIndex];
+
+    plot.happiness += amenityConfig!['instantHappiness'] as int;
+
+    isar.writeTxn(() async {
+      _save!.plotList!.resPlots![index] = plot;
+      await isar.gameSaves.put(_save!);
+      pauseLoop = false;
+      notifyListeners();
+      return true;
+    });
+    return false;
   }
 
   // int? checkForSituation() {
@@ -335,6 +435,7 @@ void loop(Isar isar, save, resetting) async {
   profit += loopAmenitiesProfits(save?.plotList?.resPlots);
   profit += loopStaffCosts(save.staff, save?.plotList?.resPlots.length);
   profit += loopPropertyTaxes(save?.plotList?.resPlots);
+  profit += loopPropertyPayments(save);
 
   save?.rulesTaxRate =
       loopTaxRateChanges(save, save?.rulesTaxRate, save?.money, false);
@@ -388,7 +489,6 @@ GameSave loopResLeaving(GameSave save) {
     final target =
         (plot.happiness).floor() * ((save.economyHealth * 1) / 100).floor();
     final roll = random.nextInt(target + 1);
-    print('roll: $roll, target: $target');
 
     if ((roll == target || save.economyHealth < 25) && (plot.residents > 0) ||
         (save.infoDay % 30 == 0 && plot.happiness < 25)) {
@@ -397,7 +497,6 @@ GameSave loopResLeaving(GameSave save) {
         final random = Random();
         save.economyHealth -= random.nextDouble() * 1.0;
         if (plot.residents <= 0) {
-          print('ALERT');
           return save;
         }
         plot.residents -= 1;
@@ -552,6 +651,25 @@ int loopPropertyTaxes(List<ResPlot>? plots) {
   return profit;
 }
 
+int loopPropertyPayments(GameSave save) {
+  var profit = 0;
+
+  for (var i = 0; i < save.plotList!.resPlots!.length; i++) {
+    final plot = save.plotList!.resPlots![i];
+    final resPlotConfigs = propertyTypes[0];
+    // find the config for this property type by matching the type of 'plot' with the id of the config
+    final resPlotConfig =
+        resPlotConfigs.firstWhere((element) => element['id'] == plot.type);
+    final daysOwned = save.infoDay - plot.purchaseDate;
+    if (daysOwned < (resPlotConfig['repayment_period'] as int)) {
+      profit -= (resPlotConfig['cost_daily'] as int);
+    }
+  }
+  print(profit);
+
+  return profit.toInt();
+}
+
 bool tooHigh = false;
 
 double loopEconomyHealth(GameSave save) {
@@ -564,9 +682,9 @@ double loopEconomyHealth(GameSave save) {
     int positives = 0;
     int negatives = 0;
 
-    int remaining = 10000;
+    int remaining = 3000;
     while (remaining > 0) {
-      int sprintLength = min(remaining, random.nextInt(120) + 60);
+      int sprintLength = min(remaining, random.nextInt(60) + 60);
       remaining -= sprintLength;
 
       // generate a sprint
@@ -645,7 +763,7 @@ double loopEconomyHealth(GameSave save) {
   }
 
   var newHealth =
-      (save.economyHealth + (healthModifier * 2)).clamp(0, 300.0).toDouble();
+      (save.economyHealth + (healthModifier)).clamp(0, 300.0).toDouble();
 
   // bring newHealth 25% closer to 150 if it is above 150
   if (newHealth > 250) {
@@ -655,8 +773,6 @@ double loopEconomyHealth(GameSave save) {
     tooHigh = false;
   }
 
-  // print(
-  //     'economy health: $newHealth, modifier: $healthModifier, trend number: ${economyTrends[economyTrendIndex]}');
   return newHealth;
 }
 

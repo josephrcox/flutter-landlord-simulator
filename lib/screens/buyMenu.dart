@@ -64,13 +64,16 @@ class _BuyMenuState extends ConsumerState<BuyMenu> {
                     bodyRows: [
                       'Upfront: \$${propertyTypes[i][j]['cost_upfront']}',
                       if (propertyTypes[i][j]['cost_daily'] != null)
-                        'Monthly: \$${((propertyTypes[i][j]['cost_daily'] as num) * 30).toStringAsFixed(0)}',
+                        'Monthly: \$${((propertyTypes[i][j]['cost_daily'] as num) * 30).toStringAsFixed(0)} for ${((propertyTypes[i][j]['repayment_period'] as num) / 30).toStringAsFixed(0)} months',
                       if (propertyTypes[i][j]['revenue_daily_max'] != null)
                         'Monthly revenue up to: \$${((propertyTypes[i][j]['revenue_daily_max'] as num) * 30).toStringAsFixed(0)}',
                     ],
                     backgroundColor: Colors.blueGrey,
                     fontColor: Colors.white,
-                    footer: 'footer',
+                    footer:
+                        propertyTypes[i][j]['repayment_period'] != null 
+                          ? 'Total cost: \$${(propertyTypes[i][j]['cost_upfront'] as int) + ((propertyTypes[i][j]['cost_daily'] as int) * ((propertyTypes[i][j]['repayment_period'] as int)))}'
+                          : 'Total cost: \$${propertyTypes[i][j]['cost_upfront'] as int}',
                     rightSide: [
                       Text(
                         '${propertyTypes[i][j]['icon']}',

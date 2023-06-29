@@ -123,20 +123,32 @@ class _GameScreenState extends ConsumerState<GameScreen>
               });
 
               var amenitiesString = '';
-              final amenitiesList = propertyList
-                  .resPlots![plotIndex].amenities!.amenOptions
-                  .asMap()
-                  .entries
-                  .map((e) => e.value)
-                  .toList();
-
-              amenitiesList.forEach((amenity) {
-                final info = upgradeInfo[amenity];
-                if (info != null) {
-                  final icon = info['icon'];
-                  upgradeListString += icon as String;
+              // for each amentity that the plot has set to true, get the icon and append to the string
+              for (int i = 0;
+                  i <
+                      propertyList
+                          .resPlots![plotIndex].amenities!.amenOptions.length;
+                  i++) {
+                if (propertyList
+                    .resPlots![plotIndex].amenities!.amenValues[i]) {
+                  final info = upgradeInfo[propertyList
+                      .resPlots![plotIndex].amenities!.amenOptions[i]];
+                  if (info != null) {
+                    final icon = info['icon'];
+                    amenitiesString += icon as String;
+                  }
                 }
-              });
+              }
+
+              var propertyIcon = '';
+              // Search propertyTypes for this exact type and get the icon
+              for (var category in propertyTypes) {
+                for (var type in category) {
+                  if (type['id'] == propertyList.resPlots![plotIndex].type) {
+                    propertyIcon = type['icon'] as String;
+                  }
+                }
+              }
 
               return GestureDetector(
                 child: AnimatedContainer(
@@ -155,6 +167,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
                               MaterialPageRoute(
                                 builder: (context) => UpgradeMenu(
                                   plotIndex: index,
+                                  plotId: propertyList.resPlots![index].id,
                                 ),
                               ),
                             );
@@ -165,7 +178,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
                           label: 'Amenities',
                         ),
                         SlidableAction(
-                          borderRadius: BorderRadius.only(
+                          borderRadius: const BorderRadius.only(
                             topRight: Radius.circular(10),
                             bottomRight: Radius.circular(10),
                           ),
@@ -174,7 +187,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
                               context,
                               MaterialPageRoute(
                                 builder: (context) => SellMenu(
-                                  plotIndex: index,
+                                  plotId: propertyList.resPlots![index].id
                                 ),
                               ),
                             );
@@ -188,14 +201,20 @@ class _GameScreenState extends ConsumerState<GameScreen>
                     ),
                     child: CustomButton(
                       title: '\$${propertyList.resPlots![index].rent}',
-                      subtitleRow: [],
-                      bodyRows: [
-                        'Residents: ${propertyList.resPlots![index].residents} / ${propertyList.resPlots![index].maxResidents}',
+                      subtitleRow: [
                         '😊 ${propertyList.resPlots![index].happiness}%',
+                        ' ',
+                        (propertyList.resPlots![index].residents <
+                                propertyList.resPlots![index].maxResidents)
+                            ? '👨‍👩‍👦 ${propertyList.resPlots![index].residents} / ${propertyList.resPlots![index].maxResidents} 📉'
+                            : '👨‍👩‍👦 ${propertyList.resPlots![index].residents} / ${propertyList.resPlots![index].maxResidents}'
                       ],
-                      backgroundColor: propertyList.resPlots![index].happiness > 50
-                          ? happyColor
-                          : sadColor,
+                      bodyRows: [],
+                      backgroundColor:
+                          propertyList.resPlots![index].happiness > 50
+                              ? happyColor
+                              : sadColor,
+                      leadingIcon: propertyIcon,
                       rightSide: [
                         Column(
                           children: [
@@ -204,7 +223,7 @@ class _GameScreenState extends ConsumerState<GameScreen>
                                 '🔼',
                                 style: TextStyle(
                                   color: Colors.white,
-                                  fontSize: 32,
+                                  fontSize: 36,
                                 ),
                               ),
                               onTap: () {
@@ -214,12 +233,13 @@ class _GameScreenState extends ConsumerState<GameScreen>
                                 );
                               },
                             ),
+                            const SizedBox(height: 8),
                             InkWell(
                               child: const Text(
-                                '🔽',
+                                '⬇️',
                                 style: TextStyle(
                                   color: Colors.white,
-                                  fontSize: 32,
+                                  fontSize: 36,
                                 ),
                               ),
                               onTap: () {

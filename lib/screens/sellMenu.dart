@@ -6,9 +6,9 @@ import '../../configSettings.dart';
 import '../models/gameSave.dart';
 
 class SellMenu extends ConsumerStatefulWidget {
-  final int plotIndex;
+  final int plotId;
 
-  const SellMenu({Key? key, required this.plotIndex}) : super(key: key);
+  const SellMenu({Key? key, required this.plotId}) : super(key: key);
 
   @override
   _SellMenuState createState() => _SellMenuState();
@@ -21,17 +21,16 @@ class _SellMenuState extends ConsumerState<SellMenu> {
     final saveProvider = ref.watch(saveProviderNotifier);
     var save = saveProvider.save;
     final propertyList = save?.plotList;
-    final plotIndex = widget.plotIndex;
 
     // ...
 
-    final value = save?.plotList?.resPlots![plotIndex].propertyValue;
+    final value = saveProvider.getPropertyValue(widget.plotId);
     Color backgroundColorARGB = const Color.fromARGB(255, 36, 59, 80);
     Color headerBackgroundColorARGB = const Color.fromARGB(255, 37, 68, 97);
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('Sell property #${plotIndex + 1}'),
+        title: Text('Sell property #${widget.plotId + 1}'),
         backgroundColor: headerBackgroundColorARGB,
         shadowColor: Colors.transparent,
       ),
@@ -60,7 +59,7 @@ class _SellMenuState extends ConsumerState<SellMenu> {
               const SizedBox(height: 32),
               ElevatedButton(
                 onPressed: () async {
-                  // saveProvider.actionSellProperty(plotIndex);
+                  saveProvider.sellProperty(true, widget.plotId);
                   Navigator.pop(context);
                 },
                 child: const Text(

@@ -14,6 +14,7 @@ class CustomButton extends StatefulWidget {
     required this.footer,
     required this.rightSide,
     required this.onTap,
+    this.leadingIcon,
     this.minHeight = 125,
   }) : super(key: key);
 
@@ -26,6 +27,7 @@ class CustomButton extends StatefulWidget {
   final List<Widget> rightSide;
   final Function onTap;
   final double minHeight;
+  final String? leadingIcon;
 
   @override
   _ButtonState createState() => _ButtonState();
@@ -49,53 +51,80 @@ class _ButtonState extends State<CustomButton> {
           ),
           child: Padding(
             padding: const EdgeInsets.all(16.0),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            child: Column(
               children: [
-                Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(widget.title,
-                        style: TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                            color: widget.fontColor)),
-                    const SizedBox(height: 7),
-                    Wrap(
-                      spacing: 10, // space between lines
-                      children: widget.subtitleRow
-                          .map(
-                            (subtitle) => Text(
-                              subtitle,
-                              style: TextStyle(
-                                fontSize: 14,
-                                color: widget.fontColor,
-                              ),
-                            ),
-                          )
-                          .toList(),
-                    ),
-                    ...widget.bodyRows
-                        .map(
-                          (bodyRow) => Padding(
-                            padding: const EdgeInsets.only(top: 8),
-                            child: Text(
-                              bodyRow,
-                              style: TextStyle(
-                                fontSize: 15,
-                                color: widget.fontColor,
-                              ),
-                            ),
-                          ),
-                        )
-                        .toList(),
-                  ],
-                ),
-                Column(
-                  mainAxisSize: MainAxisSize.min,
+                Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: widget.rightSide,
+                  children: [
+                    Row(
+                      children: [
+                        if (widget.leadingIcon != null)
+                          Text(widget.leadingIcon as String,
+                              style: TextStyle(fontSize: 72)),
+                        const SizedBox(width: 16),
+                        Column(
+                          mainAxisSize: MainAxisSize.max,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              widget.title,
+                              style: TextStyle(
+                                fontSize: 28,
+                                color: widget.fontColor,
+                              ),
+                            ),
+                            Wrap(
+                              spacing: 8,
+                              children: widget.subtitleRow
+                                  .map(
+                                    (subtitle) => Padding(
+                                      padding: const EdgeInsets.only(top: 4.0),
+                                      child: Text(
+                                        subtitle,
+                                        style: const TextStyle(
+                                          fontSize: 14,
+                                          color: Color.fromARGB(
+                                              255, 192, 191, 191),
+                                        ),
+                                      ),
+                                    ),
+                                  )
+                                  .toList(),
+                            ),
+                            ...widget.bodyRows
+                                .map(
+                                  (bodyRow) => Padding(
+                                    padding: const EdgeInsets.only(top: 4),
+                                    child: Text(
+                                      bodyRow,
+                                      style: TextStyle(
+                                        fontSize: 15,
+                                        color: widget.fontColor,
+                                      ),
+                                    ),
+                                  ),
+                                )
+                                .toList(),
+                            const SizedBox(
+                              height: 3,
+                            ),
+                            Text(
+                              widget.footer,
+                              style: TextStyle(
+                                fontSize: 16,
+                                color: widget.fontColor,
+                              ),
+                            )
+                          ],
+                        ),
+                      ],
+                    ),
+                    Column(
+                      mainAxisSize: MainAxisSize.min,
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: widget.rightSide,
+                    ),
+                  ],
                 ),
               ],
             ),

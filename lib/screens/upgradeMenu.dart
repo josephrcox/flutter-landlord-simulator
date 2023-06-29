@@ -7,9 +7,10 @@ import '../models/gameSave.dart';
 
 class UpgradeMenu extends ConsumerStatefulWidget {
   // require saveProvider to be passed in
-  const UpgradeMenu({Key? key, required this.plotIndex}) : super(key: key);
+  const UpgradeMenu({Key? key, required this.plotIndex, required this.plotId}) : super(key: key);
 
   final int plotIndex;
+  final int plotId;
 
   @override
   _UpgradeMenuState createState() => _UpgradeMenuState();
@@ -68,23 +69,20 @@ class _UpgradeMenuState extends ConsumerState<UpgradeMenu> {
                   padding: const EdgeInsets.symmetric(horizontal: 8.0),
                   child: InkWell(
                     onTap: () async {
-                      // if (availableForUpgrade) {
-                      //   final success = await saveProvider.actionToggleAmen(
-                      //     propertyIndex: plotIndex,
-                      //     upgradeIndex: index,
-                      //     upgradeName: upgradesMap.keys.elementAt(index),
-                      //     toggleTo: !propertyValue,
-                      //   );
-                      //   if (success) {
-                      //     setState(
-                      //       () {
-                      //         upgradesMap[propertyName] =
-                      //             !propertyValue; // Toggle the boolean value
-                      //         save = saveProvider.save;
-                      //       },
-                      //     );
-                      //   }
-                      // }
+                      if (availableForUpgrade) {
+                        final success = await saveProvider.resToggleAmenity(
+                          widget.plotId, index
+                        );
+                        // if (success) {
+                        //   setState(
+                        //     () {
+                        //       upgradesMap[propertyName] =
+                        //           !propertyValue; // Toggle the boolean value
+                        //       save = saveProvider.save;
+                        //     },
+                        //   );
+                        // }
+                      }
                     },
                     child: Column(
                       children: [
